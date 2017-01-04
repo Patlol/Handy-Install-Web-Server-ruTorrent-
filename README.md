@@ -13,6 +13,7 @@ Install on Debian 8 or Ubuntu 16 server
 - <a href="https://github.com/cakebox/cakebox">Cakebox</a>
 - <a href="http://www.webmin.com/">WebMin</a>
 
-Pour plus d'infos voir le <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki">Wiki</a>
 
-Contributions (pull requests), commentaires et autres prises de parole sont les bienvenues.
+Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki">Wiki</a> in french
+
+Feedback is welcome. Issues and pull requests can be submitted via GitHub. Fork unrestrained
