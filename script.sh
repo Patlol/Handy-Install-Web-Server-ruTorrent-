@@ -135,9 +135,9 @@ erreurApt() {
 	echo "Souvent due au changement de nom des paquets (version)"
 	echo
 	echo "Dans une autre console, vérifier le nom des paquets en cause avec"
-	echo "\"sudo aptitude search <nom partiel du paquet('php' pour 'php7.0-dev' par exemple)> | grep ^i\" pour trouver le nom correcte."
+	echo "\"sudo aptitude search <nom partiel du paquet('php' pour 'php7.0-dev' par exemple)> | grep ^i\" pour trouver les noms correctes."
 	echo
-	echo "L'installer manuellement avec \"sudo apt-get install <nom correcte du paquet>\"."
+	echo "Les installer manuellement avec \"sudo apt-get install <nom correcte du paquet>\"."
 	echo "Si cela ne fonctionne pas vérifier vos sources de repository"
 	echo "et leurs disponibilité."
 	echo
@@ -258,7 +258,6 @@ then
 fi
 echo "Votre IP : "$IP
 echo "Vous êtes logué en : "$loguser
-echo "Port aléatoire pour ssh : "$portSSH
 echo
 echo "Durée du script : environ 10mn"
 #----------------------------------------------------------
@@ -347,7 +346,8 @@ case $loguser in
 			echo "Vous avez un utilisateur $user1000, vous pouvez"
 			echo -e "\tSoit vous loguer avec l'utilisateur $user1000 :"
 			echo -e "\t     'login $user1000'"
-			echo -e "\t     'sudo $repLance/`basename $0`'"
+			echo -e "\t     'cd $repLance'"
+			echo -e "\t     'sudo ./`basename $0`'"
 			echo -e "\tSoit créer un nouvel utilisateur"
 			tmp=""; yno=""
 			until [[ $tmp == "ok" ]]; do
@@ -357,7 +357,8 @@ case $loguser in
 					[nN] | [nN][oO][nN])
 						echo "A bientôt ! avec"
 						echo "'login $user1000'"
-						echo "'sudo $repLance/`basename $0`'"
+						echo "'cd $repLance'"
+						echo "'sudo ./`basename $0`'"
 						chmod u+rwx,g+rx,o+rx $0
 						tmp="ok"
 						sleep 1
@@ -366,7 +367,8 @@ case $loguser in
 						creauser  # creauser()
 						echo "A bientôt ! avec"
 						echo "'login $userLinux'"
-						echo "'sudo $repLance/`basename $0`'"
+						echo "'cd $repLance'"
+						echo "'sudo ./`basename $0`'"
 						chmod u+rwx,g+rx,o+rx $0						
 						tmp="ok"
 						sleep 1
@@ -388,7 +390,8 @@ case $loguser in
 			creauser
 			echo "A bientôt ! avec"
 			echo "'login $userLinux'"
-			echo "'sudo $0'"
+			echo "'cd $repLance'"
+			echo "'sudo ./`basename $0`'"
 			chmod u+rwx,g+rx,o+rx $0			
 			exit
 		fi
@@ -552,6 +555,7 @@ echo
 echo "Distribution : "$description
 echo "Architecture : "$arch
 echo "Votre IP : "$IP
+echo "Port aléatoire pour SSh : "$portSSH
 echo "Votre nom de user actuel : "$loguser
 
 if [ -z "$homeDispo" ]
@@ -567,7 +571,6 @@ if [[ $user == "root" ]]
 then
 	echo "Mot de passe de votre utilisateur Linux : "$pwLinux
 fi
-echo "Port aléatoire pour SSh : "$portSSH
 echo "Nom de votre utilisateur ruTorrent : "$userRuto
 echo "Mot de passe de votre utilisateur ruTorrent : "$pwRuto
 if [[ $installCake != "oui" ]]
@@ -650,19 +653,12 @@ sortie=$?
 apt-get upgrade -yq
 if [[ $? -eq 0 && $sortie -eq 0 ]]
 then 
-	echo "******************************"	
-	echo "|   Mise à jour effectuée    |"
-	echo "******************************"
+	echo "****************************"	
+	echo "|  Mise à jour effectuée   |"
+	echo "****************************"
 	sleep 2
 else
-	echo; echo "Une erreur c'est produite durant la màj des paquets."
-	echo
-	echo "Dans une autre console, exécutez"
-	echo "\"sudo apt-get update\" puis \"sudo apt-get upgrade\""
-	echo "voir les messages d'erreur, corrigez le problème"
-	echo
-	echo "Puis reprendre l'installation"
-	ouinon
+	erreurApt  # erreurApt()
 fi
 
 echo
@@ -1070,7 +1066,7 @@ sleep 2
 # chmod sur les répertoires www et html
 chmod o+r /var/www
 chmod u+rwx,g+rwx /var/www/html
-ouinon
+
 # prérequis
 
 apt-get install -y git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery
@@ -1086,15 +1082,15 @@ fi
 
 cd /tmp
 echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php
-ouinon
+
 mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
 # chown -R $userLinux:$userLinux /home/$userLinux/.composer
 
 ln -s /usr/bin/nodejs /usr/bin/node
-ouinon
+
 npm install -g bower
-ouinon
+
 # CakeBox
 
 chmod -R 777 /root
@@ -1106,13 +1102,14 @@ cd /var/www/html/cakebox/
 git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))
 cd /var/www/html
 chown -R $userLinux:$userLinux cakebox/
+chown -R $userLinux:$userLinux /home/$userLinux/.composer
 
 cd /var/www/html/cakebox
 echo $userLinux | sudo -S -u $userLinux composer install
  # chown -R $userLinux:$userLinux /home/$userLinux/.config
-ouinon
+
 echo $userLinux | sudo -S -u $userLinux bower install
-ouinon
+
 chmod -R 700 /root
 
 cd /var/www/html/cakebox/config/
