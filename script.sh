@@ -47,7 +47,7 @@ case $yno in
 		echo "Désolé, à bientôt !"
 		sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 		if [ -e /var/www/html/info.php ]; then rm /var/www/html/info.php; fi
-		exit
+		exit 1
 	;;
 	[Oo] | [Oo][Uu][Ii])
 		echo "On continu !"
@@ -78,11 +78,7 @@ creauser() {
 echo
 tmp=""; tmp2=""
 until [[ $tmp == "ok" ]]; do
-	if [[ $user1000 == "" ]]; then	
-		echo -n "Choisir un nom d'utilisateur linux différent de root : "
-	else
-		echo -n "Choisir un nom d'utilisateur linux différent de root et $user1000 : "
-	fi
+	echo -n "Choisir un nom d'utilisateur linux : "
 	read userLinux
 	egrep "^$userLinux" /etc/passwd >/dev/null
 	if [[ $? -eq 0 ]]; then
@@ -104,6 +100,8 @@ until [[ $tmp == "ok" ]]; do
 						#  créer l'utilisateur $userlinux
 						pass=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
 						useradd -m -G adm,dip,plugdev,www-data,sudo,cdrom -p $pass $userLinux
+						echo "bash" >> /home/$userLinux/.profile
+						echo $userLinux > $repLance/pass1
 						if [[ $? -ne 0 ]]; then
 							echo "Impossible de créer un utilisateur linux"
 							ouinon
@@ -117,7 +115,7 @@ until [[ $tmp == "ok" ]]; do
 					;;
 				esac
 			done  # fin création d'un utilisateur
-				;;
+		;;
 		[nN] | [nN][oO][nN])
 			echo "Nom d'utilisateur invalidé. Reprendre la saisie"
 			sleep 1
@@ -125,7 +123,7 @@ until [[ $tmp == "ok" ]]; do
 		*)
 			echo "Entrée invalide"
 			sleep 1
-		;;
+			;;
 	esac
 done
 }  # creauser
@@ -134,7 +132,7 @@ erreurApt() {
 	echo; echo "Une erreur c'est produite durant l'installation des paquets."
 	echo "Souvent due au changement de nom des paquets (version)"
 	echo
-	echo "Dans une autre console, vérifier le nom des paquets en cause avec"
+	echo "Dans une autre console (cf. Tips sur github), vérifier le nom des paquets en cause avec"
 	echo "\"sudo aptitude search <nom partiel du paquet('php' pour 'php7.0-dev' par exemple)> | grep ^i\" pour trouver les noms correctes."
 	echo
 	echo "Les installer manuellement avec \"sudo apt-get install <nom correcte du paquet>\"."
@@ -162,7 +160,7 @@ if [[ $(id -u) -ne 0 ]]; then
 	echo
 	echo "id : "`id`
 	echo
-	exit
+	exit 1
 fi
 
 # info système
@@ -202,7 +200,7 @@ if [ $nameDistrib == "Debian" -a $os_version_M -lt 8 -o $nameDistrib == "Ubuntu"
 	echo
 	echo "Ce script fonctionne sur un serveur Debian 8.xx ou Ubuntu 16.xx"
 	echo
-	exit
+	exit 1
 fi
 
 if [ $nameDistrib != "Debian" -a $nameDistrib != "Ubuntu" ]; then
@@ -211,7 +209,7 @@ if [ $nameDistrib != "Debian" -a $nameDistrib != "Ubuntu" ]; then
 	echo
 	echo "Ce script fonctionne sur un serveur Debian 8.xx ou Ubuntu 16.xx !!!"
 	echo
-	exit
+	exit 1
 fi
 
 
@@ -241,7 +239,7 @@ done
 #    ID, PW, questions
 #############################
 
-
+echo
 clear
 echo "***********************************************"
 echo "|  Récupération des informations nécessaires  |"
@@ -263,30 +261,15 @@ echo "Durée du script : environ 10mn"
 #----------------------------------------------------------
 # vérif place sur disque
 
-# /home
 echo
 echo
 echo "Place disponible sur les partitions du disques"
 echo
-if [ -z "$homeDispo" ]
+
+if [ -z "$homeDispo" ]  # /
 then
 	echo "Vous n'avez pas de partition /home."
-else
-	echo "Votre partition /home a $homeDispo de libre."
-	len=${#homeDispo}
-	entier=${homeDispo:0:len-1}
-	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')	
-	miniDispo=299
- 	if [ "$entier" -lt "$miniDispo" ]
- 	then
-		echo "ATTENTION seulement "$homeDispo", c'est elle qui va recevoir les fichiers téléchargés !"
-	fi
-fi
-
-# /
-echo "Votre partition root (/) a "$rootDispo" de libre."
-if [ -z "$homeDispo" ]  # si il n'y a pas de partition /home
-then
+	echo "Votre partition root (/) a "$rootDispo" de libre."
 	len=${#rootDispo}
 	entier=${rootDispo:0:len-1}
 	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
@@ -295,9 +278,28 @@ then
  	then
 		echo
 		echo
-		echo "ATTENTION seulement "$rootDispo", c'est elle qui va recevoir les fichiers téléchargés !"
+		echo "*************************************************************************************"
+		echo "|                                                                                   |"
+		echo "|    ATTENTION seulement "$rootDispo", pour stocker les fichiers téléchargés !      |"
+		echo "|                                                                                   |"
+		echo "*************************************************************************************"
+	fi
+else  # /home
+	echo "Votre partition /home a $homeDispo de libre."
+	len=${#homeDispo}
+	entier=${homeDispo:0:len-1}
+	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')	
+	miniDispo=299
+ 	if [ "$entier" -lt "$miniDispo" ]
+ 	then
+		echo "************************************************************************************"
+		echo "|                                                                                  |"
+		echo "|    ATTENTION seulement "$homeDispo", pour stocker les fichiers téléchargés !     |"
+		echo "|                                                                                  |"
+		echo "************************************************************************************"		
 	fi
 fi
+
 echo
 echo
 echo "*******************************************************************************"
@@ -310,97 +312,53 @@ echo "|    Une installation quelconque risque d'être endommagée par ce script 
 echo "|         Ne jamais exécuter ce script sur un serveur en production           |"
 echo "|                                                                             |"
 echo "*******************************************************************************"
-tmp=""
-until [[ $tmp == "ok" ]]; do
-echo
-echo -n "Voulez-vous continuer l'installation ? (o/n) "
-read yno
 
-case $yno in
-	[nN] | [nN][oO][nN])
-		echo "Au revoir, a bientôt."03hoQQGV
-		exit
-	;;
-	[Oo] | [Oo][Uu][Ii])
-		echo "Allons-y !"
-		tmp="ok"
-	;;
-	*)
-		echo "Entrée invalide"
-		sleep 1
-	;;
-esac
-done
+if [ ! -e $repLance"/pass1" ]; then   # évite ce passage si 2éme passe
+	tmp=""
+	until [[ $tmp == "ok" ]]; do
+		echo
+		echo -n "Voulez-vous continuer l'installation ? (o/n) "
+		read yno
+
+		case $yno in
+			[nN] | [nN][oO][nN])
+				echo "Au revoir, a bientôt."
+				exit 0
+			;;
+			[Oo] | [Oo][Uu][Ii])
+				echo "Allons-y !"
+				tmp="ok"
+			;;
+			*)
+				echo "Entrée invalide"
+				sleep 1
+			;;
+		esac
+	done
 
 #------------------------------------------------
 
 # linux user
 
-user1000=$(cat /etc/passwd | grep 1000 | awk -F":" '{ print $1 }')
-case $loguser in
-	"root")
-		if [[ $user1000 != "" ]]
-		then
-			echo
-			echo "Vous avez lancé le script depuis '$loguser'"
-			echo "Vous avez un utilisateur $user1000, vous pouvez"
-			echo -e "\tSoit vous loguer avec l'utilisateur $user1000 :"
-			echo -e "\t     'login $user1000'"
-			echo -e "\t     'cd $repLance'"
-			echo -e "\t     'sudo ./`basename $0`'"
-			echo -e "\tSoit créer un nouvel utilisateur"
-			tmp=""; yno=""
-			until [[ $tmp == "ok" ]]; do
-				echo
-				echo -n "Voulez-vous créer un nouvel utilidateur ? (o/n) "; read yno
-				case $yno in
-					[nN] | [nN][oO][nN])
-						echo "A bientôt ! avec"
-						echo "'login $user1000'"
-						echo "'cd $repLance'"
-						echo "'sudo ./`basename $0`'"
-						chmod u+rwx,g+rx,o+rx $0
-						tmp="ok"
-						sleep 1
-					;;
-					[Oo] | [Oo][Uu][Ii])
-						creauser  # creauser()
-						echo "A bientôt ! avec"
-						echo "'login $userLinux'"
-						echo "'cd $repLance'"
-						echo "'sudo ./`basename $0`'"
-						chmod u+rwx,g+rx,o+rx $0						
-						tmp="ok"
-						sleep 1
-					;;
-					*)
-						echo "Entrée invalide"
-						sleep 1
-					;;
-					esac
-			done
-			exit
-		else
-			echo
-			echo "Vous avez lancé le script depuis '$loguser'"
-			echo
-			echo "Vous n'avez pas d'autre utilisateur que root sur ce système"
-			echo "Vous allez en créer un"
-			echo
-			creauser
-			echo "A bientôt ! avec"
-			echo "'login $userLinux'"
-			echo "'cd $repLance'"
-			echo "'sudo ./`basename $0`'"
-			chmod u+rwx,g+rx,o+rx $0			
-			exit
-		fi
-	;;
-	*)
-		userLinux=$loguser
-		usermod -aG www-data $userLinux		
-	;;
-esac	
+	echo
+	echo "Vous avez lancé le script depuis '$loguser'"
+	echo "Vous allez devoir créer un utilisateur spécifique"
+	echo
+	creauser
+	echo "A bientôt ! avec"
+	echo "'login $userLinux'"
+	echo "'cd $repLance'"
+	echo "'sudo ./`basename $0`'"
+	chmod u+rwx,g+rx,o+rx $0			
+	exit 0
+else
+	userLinux=$(cat pass1)
+	if [[ $userLinux != $loguser ]]; then
+		echo
+		echo "Vous deviez lancer le script avec $userLinux !"
+		exit 1
+	fi
+fi   # fin de évite ce passage si 2éme passe
 
 # Rutorrent user
 
@@ -468,7 +426,8 @@ until [[ $tmp3 == "ok" ]]; do
 		[Oo] | [Oo][Uu][Ii])
 			until [[ $tmp == "ok" ]]; do
 				echo
-				echo -n "Choisir un nom d'utilisateur Cakebox : "
+				echo "Choisir un nom d'utilisateur Cakebox"
+				echo -n "(peut-être le même que pour rutorrent) : "
 				read userCake
 				echo -n "Vous confirmez '$userCake' comme nom d'utilisateur ? (o/n) "
 				read yno1
@@ -555,8 +514,8 @@ echo
 echo "Distribution : "$description
 echo "Architecture : "$arch
 echo "Votre IP : "$IP
-echo "Port aléatoire pour SSh : "$portSSH
-echo "Votre nom de user actuel : "$loguser
+
+# echo "Votre nom de user actuel : "$loguser
 
 if [ -z "$homeDispo" ]
 then
@@ -566,11 +525,8 @@ else
 fi
 echo "Votre partition root (/) a "$rootDispo" de libre."
 echo
-echo "Nom de votre utilisateur Linux (accès SSH et FTP) : "$userLinux
-if [[ $user == "root" ]]
-then
-	echo "Mot de passe de votre utilisateur Linux : "$pwLinux
-fi
+echo "Nom de votre utilisateur Linux (accès SSH et SFTP) : "$userLinux
+echo "Port aléatoire pour SSh : "$portSSH
 echo "Nom de votre utilisateur ruTorrent : "$userRuto
 echo "Mot de passe de votre utilisateur ruTorrent : "$pwRuto
 if [[ $installCake != "oui" ]]
@@ -608,7 +564,7 @@ read yno
 case $yno in
 	[nN] | [nN][oO][nN])
 		echo "Au revoir, a bientôt."
-		exit
+		exit 0
 	;;
 	[Oo] | [Oo][Uu][Ii])
 		echo "Allons-y !"
@@ -743,7 +699,7 @@ else
 	echo "pour savoir si c'est apache ou php qui pose problème"
 	echo "Si les deux fonctionnent continuer, si non :"
 	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console, réglé le problème."
+	echo "Dans une autre console (cf. Tips sur github), réglé le problème."
 	echo
 	echo "Puis reprendre l'installation"
 	ouinon
@@ -788,9 +744,9 @@ sleep 2
 cat $repLance/rto_rtorrent.rc << EOF > /home/$userLinux/.rtorrent.rc
 EOF
 
-#-----------------------------------------------------------------
-
 sed -i 's/<username>/'$userLinux'/g' /home/$userLinux/.rtorrent.rc
+
+#-----------------------------------------------------------------
 
 echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads
 echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/watch
@@ -807,15 +763,15 @@ echo
 #-----------------------------------------------------------------
 cat $repLance/rto_rtorrent.conf << EOF > /etc/init/rtorrent.conf
 EOF
-#-----------------------------------------------------------------
 
 chmod u+rwx,g+rwx,o+rx  /etc/init/rtorrent.conf
 sed -i 's/<username>/'$userLinux'/g' /etc/init/rtorrent.conf
 
+#-----------------------------------------------------------------
+
 cat $repLance/rto_rtorrentd.sh << EOF > /etc/init.d/rtorrentd.sh
 EOF
 
-#-----------------------------------------------------------------
 chmod u+rwx,g+rwx,o+rx  /etc/init.d/rtorrentd.sh
 sed -i 's/<username>/'$userLinux'/g' /etc/init.d/rtorrentd.sh
 
@@ -824,6 +780,9 @@ ln -s /etc/init.d/rtorrentd.sh  /etc/rc5.d/S99rtorrentd.sh
 ln -s /etc/init.d/rtorrentd.sh  /etc/rc6.d/K01rtorrentd.sh
 systemctl daemon-reload
 service rtorrentd start
+
+#-----------------------------------------------------------------
+
 sleep 2
 sortie=`pgrep rtorrent`
 
@@ -836,9 +795,10 @@ then
 else
 	echo; echo "Il y a un problème avec rtorrent !!!"
 	echo
-	echo "1) Dans une autre console taper 'ps aux | grep rtorrent'"
-	echo "et 'ps aux | grep rtd' Si il y a des processus (3 et 2)"
-	echo "fausse alerte, continuer. Si non tenter votre chance avec"
+	echo "1) Dans une autre console (cf. Tips sur github)"
+	echo "taper 'ps aux | grep rtorrent' et 'ps aux | grep rtd' Si il y a des processus"
+	echo "autre que ceux de grep, fausse alerte, continuer."
+	echo "Si non tenter votre chance avec"
 	echo "su -l <nom utilisateur> -c 'screen -fn -dmS rtd nice -19 rtorrent'"
 	echo "Mêmes vérif, même conclusion, le daemon devrait démarer au reboot"
 	echo "Vérifier après le reboot comme indiqué ci-dessus"
@@ -856,22 +816,21 @@ else
 	echo "vérifier également la présence de liens symboliques dans les"
 	echo "fichiers /etc/rc6d rc5.d et rc4.d"
 	echo
-	echo "Relancer le daemon depuis une autre console avec "
-	echo "systemctl daemon-reload"
-	echo "service rtorrentd start"
+	echo "Relancer le daemon avec 'systemctl daemon-reload'"
+	echo "et 'service rtorrentd start'"
 	echo "'ps aux | grep rtorrent', 'ps aux | grep rtd' et 'pgrep rtorrent'"
 	echo "doit vous donner des processus et un port"
 	echo "- Si oui vous pouvez continuer"
 	echo
-	echo "- Si non, retenter votre chance en recommençant l'installation"
+	echo "- Si non, tenter votre chance en recommençant l'installation"
 	echo
 	echo "4) Si rtorrent ne tourne pas correctement (2ème paragraphe)"
 	echo "vérifier /home/<votre nom d'user>/.rtorrent.rc comme dit"
-	echo "plus haut. Si non, retentez votre chance en recommençant"
+	echo "plus haut. Si non, tentez votre chance en recommençant"
 	echo "l'installation"
 	echo
 	echo "5) Si vous recommencez l'installation gardez un œil attentif sur les"
-	echo "compilations et installations de xmlrpc, rtorrent et librtorrent"
+	echo "installations de xmlrpc, rtorrent et librtorrent"
 	echo "Bonne chance, linux est avec vous !"
 	ouinon
 fi
@@ -959,9 +918,10 @@ chmod -R 755 rutorrent
 cd /var/www/html/rutorrent/share/users/
 mkdir -p $userRuto/torrents; mkdir -p $userRuto/settings
 chown -R www-data:www-data $userRuto
-chmod -R 777 $userRuto; chmod u+rwx,g+rx,o+rx $userRuto   # ?
+chmod -R 777 $userRuto; 
 
 echo 'O:6:"rTheme":2:{s:4:"hash";s:9:"theme.dat";s:7:"current";s:8:"Oblivion";}' > /var/www/html/rutorrent/share/users/$userRuto/settings/theme.dat
+chmod u+rwx,g+rx,o+rx $userRuto 
 chmod 666 /var/www/html/rutorrent/share/users/$userRuto/settings/theme.dat
 chown www-data:www-data /var/www/html/rutorrent/share/users/$userRuto/settings/theme.dat
 
@@ -1041,7 +1001,7 @@ else
 	echo "Dans un navigateur enter '$IP/rutorrent' comme URL"
 	echo "Si c'est ok continuez, si non :"
 	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console, réglé le problème."
+	echo "Dans une autre console (cf. Tips sur guthub), réglé le problème."
 	echo
 	echo "Puis reprendre l'installation"
 	ouinon
@@ -1063,11 +1023,7 @@ echo
 echo
 sleep 2
 
-# chmod sur les répertoires www et html
-chmod o+r /var/www
-chmod u+rwx,g+rwx /var/www/html
-
-# prérequis
+# install prérequis ****************************************
 
 apt-get install -y git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery
 if [[ $? -eq 0 ]]
@@ -1080,40 +1036,57 @@ else
 	erreurApt
 fi
 
+# install composer /tmp
 cd /tmp
 echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php
 
 mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
-# chown -R $userLinux:$userLinux /home/$userLinux/.composer
 
+# nodejs
 ln -s /usr/bin/nodejs /usr/bin/node
 
+# install bower
 npm install -g bower
 
-# CakeBox
+# CakeBox depuis github sur /html  ********************************************
 
-chmod -R 777 /root
+# chmod sur les répertoires www et html
+
+chmod o+r /var/www
+chmod u+rwx,g+rwx /var/www/html
+
 cd /var/www/html
 git clone https://github.com/Cakebox/Cakebox-light.git cakebox
-# chown -R $userLinux:$userLinux cakebox/
-cd /var/www/html/cakebox/
 
+cd /var/www/html/cakebox/
 git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))
 cd /var/www/html
+
 chown -R $userLinux:$userLinux cakebox/
-chown -R $userLinux:$userLinux /home/$userLinux/.composer
+
+# traitement cakebox composer bower  *****************************************
+
+# sur Debian .composer est sur /root
+if [[ $nameDistrib == "Debian"  ]]; then
+	chmod o+x /root; chmod -R o+wx /root/.composer
+fi
+# sur ubuntu .composer est sur /home/user
+if [[ $nameDistrib == "Ubuntu" ]]; then
+	chown -R $userLinux:$userLinux /home/$userLinux/.composer
+fi
 
 cd /var/www/html/cakebox
 echo $userLinux | sudo -S -u $userLinux composer install
- # chown -R $userLinux:$userLinux /home/$userLinux/.config
-
 echo $userLinux | sudo -S -u $userLinux bower install
 
-chmod -R 700 /root
+# pour Debian remise en l'état  de /root 
+if [[ $nameDistrib == "Debian" ]]; then
+	chmod -R o-w /root/.composer; chmod o-x /root
+fi
 
+# conbfiguration ***********************************************************
 cd /var/www/html/cakebox/config/
-
 echo $userLinux | sudo -S -u $userLinux cp default.php.dist default.php
 
 sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" /var/www/html/cakebox/config/default.php
@@ -1188,11 +1161,12 @@ else
 	echo "Dans un navigateur enter '$IP/cakebox' comme URL"
 	echo "Si c'est ok continuez, si non :"
 	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console, régler le problème."
+	echo "Dans une autre console (cf. Tips sur github), régler le problème."
 	echo
 	echo "Puis reprendre l'installation"
 	ouinon
 fi
+chmod 755 /var/www/html
 sleep 2
 fi  # cakebox
 
@@ -1251,7 +1225,7 @@ else
 	echo "Accepter l'exception au certificat pour ce site"
 	echo "Si c'est ok continuez, si non :"
 	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console, régler le problème."
+	echo "Dans une autre console (cf. Tips sur Github), régler le problème."
 	echo
 	echo "Puis reprendre l'installation"
 	ouinon
@@ -1296,29 +1270,37 @@ sleep 2
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 
 # générique de fin
+hostName=$(hostname -f)
 clear
 echo
 echo
 echo
 echo "Vous pouvez télécharger et streamer à loisir vos films (de vacances) !"
 echo "Pour accéder à ruTorrent :"
-echo -en "\thttp://$IP/rutorrent"
+echo -en "\thttp(s)://$IP/rutorrent"
 echo "   ID : $userRuto  PW : $pwRuto"
+echo -e "\tou http(s)://$hostName/rutorrent"
+
 if [[ $installCake == "oui" ]]; then
 echo "Pour accéder à Cakebox :"
 echo -en "\thttp://$IP/cakebox"
 echo "   ID : $userCake  PW : $pwCake"
+echo -e "\tou http://$hostName/cakebox"
+echo -e "\t /!\\ NE PAS utiliser https si vous voulez streamer !"
 echo -e "\tSur votre poste en local pour le streaming utiliser firefox"
 echo -e "\tPenser à vérifier la présence du plugin vlc sur firefox"
 echo -e "\tSur linux : sudo apt-get install browser-plugin-vlc"
 fi
+
 if [[ $installWebMin == "oui" ]]; then
 echo "Pour accéder à WebMin :"
 echo -e "\thttps://$IP:10000"
+echo -e "\tou https://$hostName:10000"
 echo -e "\tID : root  PW : votre mot de passe root"
 echo -e "\tAccépter la connexion non sécurisée et"
 echo -e "\tl'exception pour ce certificat !"
 fi
+
 echo
 sleep 1
 echo "En cas de problème concernant strictement"
@@ -1352,7 +1334,7 @@ echo
 echo -n "Voulez-vous rebooter maintenant ? (o/n) "; read yno
 case $yno in
 	[nN] | [nN][oO][nN])
-		exit
+		exit 0
 	;;
 	[Oo] | [Oo][Uu][Ii])
 		reboot
@@ -1363,6 +1345,6 @@ case $yno in
 	;;
 esac
 done
-exit 0
+
 
 
