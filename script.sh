@@ -5,7 +5,7 @@
 
 ##################################################
 #     variables install paquets Ubuntu/Debian
-##################################################
+##################################################  
 
 #  Debian
 
@@ -510,6 +510,59 @@ until [[ $tmp == "ok" ]]; do
 		;;
 	esac # yno
 done  # tmp
+
+
+# port ssh
+
+echo
+echo
+echo "Dans le but de sécuriser SSH et SFTP il est proposé"
+echo "de changer le port standard (22) et d'interdire root"
+echo "c'est une mesure de sécurité fortement recommandée."
+echo "L'utilisateur sera $userLinux et un port aléatoire"
+echo "ou désigné par vous."
+echo
+tmp=""; port=0
+until [[ $tmp == "ok" ]]; do
+echo
+echo -n "Souhaitez-vous appliquer cette modification ? (o/n) "; read yno
+case $yno in
+	[nN] | [nN][oO][nN])
+		echo
+		echo "Le port reste 22 et l'utilisateur root"
+		changePort="non"
+		portSSH="22"
+		tmp="ok"
+		sleep 2
+	;;
+	[Oo] | [Oo][Uu][Ii])
+		echo
+		echo "L'utilisateur sera $userLinux"
+		echo "Le port aléatoire proposé est $portSSH"
+		echo "Souhaitez-vous un autre port (entre 20000 65535)"
+		echo -n "Si oui saisissez le ici "; read port
+		if [[ $port -eq 0 ]]; then
+			tmp="ok"
+			changePort="oui"
+			sleep 1	
+		elif [ $port -gt 65535 -o $port -lt 20000 ]; then
+				echo "entrée invalide (entre 20000 et 65535)"
+				sleep 2
+			else
+				changePort="oui"
+				portSSH=$port
+				tmp="ok"
+				sleep 1	
+		fi
+	;;
+	*)
+		echo
+		echo "Entrée invalide"
+		sleep 1
+	;;
+esac
+done  #  fin port ssh
+
 
 #  Récapitulation
 
@@ -1238,11 +1291,12 @@ else
 	echo "Puis reprendre l'installation"
 	ouinon
 fi
+sleep 2
 fi   # Webmin
-sleep 3
 
 # sécuriser ssh
 
+if [[ $changePort == "oui" ]]; then
 echo
 echo
 echo "********************************************"
@@ -1272,7 +1326,8 @@ if [[ $? -ne 0 ]]; then
 	echo "avant d'avoir résolu ce problème."
 	ouinon
 fi
-sleep 2
+fi  # changePort
+sleep 3
 
 # remettre sudoers en ordre
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
@@ -1319,6 +1374,7 @@ echo "et poster sur https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent
 echo "Et consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki"
 echo
 sleep 1
+if [[ $changePort == "oui" ]]; then   # ssh sécurisé
 echo "************************************************"
 echo "|     ATTENTION le port standard et root       |"
 echo "|     n'ont plus d'accès en SSH et SFTP        |"
@@ -1343,6 +1399,21 @@ else echo -e "\tVotre mot de passe"
 fi
 echo
 sleep 1
+else   # ssh n'est pas sécurisé
+echo "Pour accéder à votre serveur en ssh :"
+echo "Depuis linux, sur une console :"
+echo -e "\tssh root@$IP"
+echo "Depuis windows utiliser PuTTY"
+echo
+sleep 1
+echo "Pour accéder aux fichiers via SFTP :"
+echo -en "\tHôte : $IP"
+echo -e "\tPort : 22"
+echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
+echo -e "\tAuthentification : normale"
+echo -e "\tIdentifiant : root"
+fi   # ssh pas sécurisé/ sécurisé
+echo
 echo "REBOOTEZ VOTRE SERVEUR"
 echo
 tmp=""
