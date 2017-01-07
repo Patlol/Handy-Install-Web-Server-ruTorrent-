@@ -3,9 +3,9 @@
 # Version bêta testée sur ubuntu et debian server vps Ovh
 # à tester sur kimsufi et autres hébergeurs
 
-##########################################
-#     variables install Ubuntu/Debian
-##########################################
+##################################################
+#     variables install paquets Ubuntu/Debian
+##################################################
 
 #  Debian
 
@@ -156,7 +156,7 @@ erreurApt() {
 
 if [[ $(id -u) -ne 0 ]]; then
 	echo
-	echo "Ce script nécessite d'être exécuté avec un utilisateur et sudo."
+	echo "Ce script nécessite d'être exécuté avec sudo."
 	echo
 	echo "id : "`id`
 	echo
@@ -341,7 +341,11 @@ if [ ! -e $repLance"/pass1" ]; then   # évite ce passage si 2éme passe
 # linux user
 
 	echo
-	echo "Vous avez lancé le script depuis '$loguser'"
+	if [[ $loguser != "root" ]]; then
+		echo "Vous avez lancé le script depuis $loguser avec 'sudo'"
+	else
+		echo "Vous avez lancé le script depuis root"
+	fi
 	echo "Vous allez devoir créer un utilisateur spécifique"
 	echo
 	creauser
@@ -355,7 +359,11 @@ else
 	userLinux=$(cat pass1)
 	if [[ $userLinux != $loguser ]]; then
 		echo
-		echo "Vous deviez lancer le script avec $userLinux !"
+		echo "Vous êtes logué avec $loguser"		
+		echo "Vous deviez lancer le script en étant logué avec $userLinux !"
+		echo "'sudo login $userLinux'"
+		echo "'cd $repLance'"
+		echo "'sudo ./`basename $0`'"
 		exit 1
 	fi
 fi   # fin de évite ce passage si 2éme passe
@@ -1273,13 +1281,14 @@ sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/
 hostName=$(hostname -f)
 clear
 echo
-echo
-echo
 echo "Vous pouvez télécharger et streamer à loisir vos films (de vacances) !"
+echo
 echo "Pour accéder à ruTorrent :"
 echo -en "\thttp(s)://$IP/rutorrent"
 echo "   ID : $userRuto  PW : $pwRuto"
 echo -e "\tou http(s)://$hostName/rutorrent"
+echo -e "\tEn https accépter la connexion non sécurisée et"
+echo -e "\tl'exception pour ce certificat !"
 
 if [[ $installCake == "oui" ]]; then
 echo "Pour accéder à Cakebox :"
@@ -1304,17 +1313,25 @@ fi
 echo
 sleep 1
 echo "En cas de problème concernant strictement"
-echo "ce script, vous pouvez aller sur"
-echo "github : https://github.com/Patlol"
+echo "ce script, vous pouvez aller"
+echo "Consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki"
+echo "et poster sur https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues"
+echo "Et consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki"
 echo
 sleep 1
+echo "************************************************"
+echo "|     ATTENTION le port standard et root       |"
+echo "|     n'ont plus d'accès en SSH et SFTP        |"
+echo "************************************************"
+echo
 echo "Pour accéder à votre serveur en ssh :"
 echo "Depuis linux, sur une console :"
 echo -e "\tssh -p$portSSH  $userLinux@$IP"
+echo -e "\tsur la console du serveur 'su $userLinux'"
 echo "Depuis windows utiliser PuTTY"
 echo
 sleep 1
-echo "Pour accéder aux fichiers via FTP :"
+echo "Pour accéder aux fichiers via SFTP :"
 echo -en "\tHôte : $IP"
 echo -e "\tPort : $portSSH"
 echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
@@ -1337,6 +1354,7 @@ case $yno in
 		exit 0
 	;;
 	[Oo] | [Oo][Uu][Ii])
+		sleep 2
 		reboot
 	;;
 	*)
