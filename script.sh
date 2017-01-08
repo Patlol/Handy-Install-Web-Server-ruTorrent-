@@ -130,15 +130,15 @@ done
 
 erreurApt() {
 	echo; echo "Une erreur c'est produite durant l'installation des paquets."
+	messageErreur
+}   #  fin erreurApt()
+
+messageErreur() {
 	echo; echo "Consulter le wiki"
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 	echo; echo "puis continuer/arrêter l'installation"
 	ouinon
-}   #  fin erreurApt()
-
-
-
-
+}  # fin messageErreur
 
 #############################
 #     Début du script
@@ -748,10 +748,7 @@ then
 	sleep 2
 else
 	echo; echo "Une erreur apache/php c'est produite"
-	echo; echo "Consulter le wiki"
-	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
-	echo; echo "puis continuer/arrêter l'installation"
-	ouinon
+	messageErreur    #  messageErreur()
 fi
 rm /var/www/html/info.php
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > /var/www/html/.htaccess
@@ -843,10 +840,7 @@ then
 	sleep 2
 else
 	echo; echo "Il y a un problème avec rtorrent !!!"
-	echo; echo "Consulter le wiki"
-	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
-	echo; echo "puis continuer/arrêter l'installation"
-	ouinon
+	messageErreur
 fi
 
 
@@ -1011,10 +1005,7 @@ then
 	echo "****************************"
 else
 	echo; echo "Une erreur c'est produite sur ruTorrent"
-	echo; echo "Consulter le wiki"
-	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
-	echo; echo "puis continuer/arrêter l'installation"	
-	ouinon
+	messageErreur
 fi
 sleep 2
 
