@@ -130,16 +130,9 @@ done
 
 erreurApt() {
 	echo; echo "Une erreur c'est produite durant l'installation des paquets."
-	echo "Souvent due au changement de nom des paquets (version)"
-	echo
-	echo "Dans une autre console (cf. Tips sur github), vérifier le nom des paquets en cause avec"
-	echo "\"sudo aptitude search <nom partiel du paquet('php' pour 'php7.0-dev' par exemple)> | grep ^i\" pour trouver les noms correctes."
-	echo
-	echo "Les installer manuellement avec \"sudo apt-get install <nom correcte du paquet>\"."
-	echo "Si cela ne fonctionne pas vérifier vos sources de repository"
-	echo "et leurs disponibilité."
-	echo
-	echo "Puis recommencer l'installation"
+	echo; echo "Consulter le wiki"
+	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	echo; echo "puis continuer/arrêter l'installation"
 	ouinon
 }   #  fin erreurApt()
 
@@ -754,15 +747,10 @@ then
 	echo "***********************************************"
 	sleep 2
 else
-	echo; echo "Une erreur c'est produite"
-	echo
-	echo "Sur un navigateur entrer '$IP/info.php' et '$IP' comme URL"
-	echo "pour savoir si c'est apache ou php qui pose problème"
-	echo "Si les deux fonctionnent continuer, si non :"
-	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console (cf. Tips sur github), réglé le problème."
-	echo
-	echo "Puis reprendre l'installation"
+	echo; echo "Une erreur apache/php c'est produite"
+	echo; echo "Consulter le wiki"
+	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	echo; echo "puis continuer/arrêter l'installation"
 	ouinon
 fi
 rm /var/www/html/info.php
@@ -802,7 +790,7 @@ echo "|    Configuration de .rtorrent.rc      |"
 echo "*****************************************"
 sleep 2
 #-----------------------------------------------------------------
-cat $repLance/rto_rtorrent.rc << EOF > /home/$userLinux/.rtorrent.rc
+cat $repLance/fichiers-conf/rto_rtorrent.rc << EOF > /home/$userLinux/.rtorrent.rc
 EOF
 
 sed -i 's/<username>/'$userLinux'/g' /home/$userLinux/.rtorrent.rc
@@ -822,7 +810,7 @@ sleep 2
 echo
 
 #-----------------------------------------------------------------
-cat $repLance/rto_rtorrent.conf << EOF > /etc/init/rtorrent.conf
+cat $repLance/fichiers-conf/rto_rtorrent.conf << EOF > /etc/init/rtorrent.conf
 EOF
 
 chmod u+rwx,g+rwx,o+rx  /etc/init/rtorrent.conf
@@ -830,7 +818,7 @@ sed -i 's/<username>/'$userLinux'/g' /etc/init/rtorrent.conf
 
 #-----------------------------------------------------------------
 
-cat $repLance/rto_rtorrentd.sh << EOF > /etc/init.d/rtorrentd.sh
+cat $repLance/fichiers-conf/rto_rtorrentd.sh << EOF > /etc/init.d/rtorrentd.sh
 EOF
 
 chmod u+rwx,g+rwx,o+rx  /etc/init.d/rtorrentd.sh
@@ -855,44 +843,9 @@ then
 	sleep 2
 else
 	echo; echo "Il y a un problème avec rtorrent !!!"
-	echo
-	echo "1) Dans une autre console (cf. Tips sur github)"
-	echo "taper 'ps aux | grep rtorrent' et 'ps aux | grep rtd' Si il y a des processus"
-	echo "autre que ceux de grep, fausse alerte, continuer."
-	echo "Si non tenter votre chance avec"
-	echo "su -l <nom utilisateur> -c 'screen -fn -dmS rtd nice -19 rtorrent'"
-	echo "Mêmes vérif, même conclusion, le daemon devrait démarer au reboot"
-	echo "Vérifier après le reboot comme indiqué ci-dessus"
-	echo
-	echo "2) Si non, vérifier que rtorrent tourne correctement :"
-	echo "Dans une autre console, taper 'rtorrent'"
-	echo "Pour sortir de rtorrent 'Ctrl-q'"
-	echo
-	echo "3) Si rtorrent tourne correctement en console, c'est au niveau"
-	echo "des fichiers gérant le daemon qu'est le problème :"
-	echo "/etc/init/rtorrent.conf ou /etc/init.d/rtorrentd.sh, vérifier"
-	echo "leur présence, qu'ils sont bien en rwxrwxr-x root:root et que"
-	echo "leur contenu est ok par rapport aux sources de ce script"
-	echo "idem avec /home/<votre nom d'user>/.rtorrent.rc"
-	echo "vérifier également la présence de liens symboliques dans les"
-	echo "fichiers /etc/rc6d rc5.d et rc4.d"
-	echo
-	echo "Relancer le daemon avec 'systemctl daemon-reload'"
-	echo "et 'service rtorrentd start'"
-	echo "'ps aux | grep rtorrent', 'ps aux | grep rtd' et 'pgrep rtorrent'"
-	echo "doit vous donner des processus et un port"
-	echo "- Si oui vous pouvez continuer"
-	echo
-	echo "- Si non, tenter votre chance en recommençant l'installation"
-	echo
-	echo "4) Si rtorrent ne tourne pas correctement (2ème paragraphe)"
-	echo "vérifier /home/<votre nom d'user>/.rtorrent.rc comme dit"
-	echo "plus haut. Si non, tentez votre chance en recommençant"
-	echo "l'installation"
-	echo
-	echo "5) Si vous recommencez l'installation gardez un œil attentif sur les"
-	echo "installations de xmlrpc, rtorrent et librtorrent"
-	echo "Bonne chance, linux est avec vous !"
+	echo; echo "Consulter le wiki"
+	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	echo; echo "puis continuer/arrêter l'installation"
 	ouinon
 fi
 
@@ -932,7 +885,7 @@ sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
 
 cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.old
 #-----------------------------------------------------------------
-cat $repLance/apa_000-default.conf << EOF > /etc/apache2/sites-available/000-default.conf
+cat $repLance/fichiers-conf/apa_000-default.conf << EOF > /etc/apache2/sites-available/000-default.conf
 EOF
 #-------------------------------------------------------------------
 
@@ -967,7 +920,7 @@ chown -R www-data:www-data /var/www/html/rutorrent
 mv /var/www/html/rutorrent/conf/config.php /var/www/html/rutorrent/conf/config.php.old
 cd /var/www/html/rutorrent/conf
 
-cat $repLance/ruto_config.php << EOF > /var/www/html/rutorrent/conf/config.php
+cat $repLance/fichiers-conf/ruto_config.php << EOF > /var/www/html/rutorrent/conf/config.php
 EOF
 
 cd /var/www/html
@@ -1030,7 +983,7 @@ cd /var/www/html/rutorrent/plugins
 mkdir conf
 cd conf
 
-cat $repLance/ruto_plugins.ini << EOF > /var/www/html/rutorrent/plugins/conf/plugins.ini
+cat $repLance/fichiers-conf/ruto_plugins.ini << EOF > /var/www/html/rutorrent/plugins/conf/plugins.ini
 EOF
 
 cd ..
@@ -1057,277 +1010,38 @@ then
 	echo "|  ruTorrent fonctionne    |"
 	echo "****************************"
 else
-	echo; echo "Une erreur c'est produite"
-	echo
-	echo "Dans un navigateur enter '$IP/rutorrent' comme URL"
-	echo "Si c'est ok continuez, si non :"
-	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console (cf. Tips sur guthub), réglé le problème."
-	echo
-	echo "Puis reprendre l'installation"
+	echo; echo "Une erreur c'est produite sur ruTorrent"
+	echo; echo "Consulter le wiki"
+	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	echo; echo "puis continuer/arrêter l'installation"	
 	ouinon
 fi
 sleep 2
+
 
 # install cakebox and Co
 
 if [[ $installCake == "oui" ]]
 then
-clear
-echo
-echo
-echo
-echo "*************************************************"
-echo "|           Installation de CakeBox             |"
-echo "*************************************************"
-echo
-echo
-sleep 2
-
-# install prérequis ****************************************
-
-apt-get install -y git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery
-if [[ $? -eq 0 ]]
-then 
-	echo "****************************"	
-	echo "|     Paquets installés    |"
-	echo "****************************"
-	sleep 2
-else
-	erreurApt
-fi
-
-# install composer /tmp
-cd /tmp
-echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php
-
-mv /tmp/composer.phar /usr/bin/composer
-chmod +x /usr/bin/composer
-
-# nodejs
-ln -s /usr/bin/nodejs /usr/bin/node
-
-# install bower
-npm install -g bower
-
-# CakeBox depuis github sur /html  ********************************************
-
-# chmod sur les répertoires www et html
-
-chmod o+r /var/www
-chmod u+rwx,g+rwx /var/www/html
-
-cd /var/www/html
-git clone https://github.com/Cakebox/Cakebox-light.git cakebox
-
-cd /var/www/html/cakebox/
-git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))
-cd /var/www/html
-
-chown -R $userLinux:$userLinux cakebox/
-
-# traitement cakebox composer bower  *****************************************
-
-# sur Debian .composer est sur /root
-if [[ $nameDistrib == "Debian"  ]]; then
-	chmod o+x /root; chmod -R o+wx /root/.composer
-fi
-# sur ubuntu .composer est sur /home/user
-if [[ $nameDistrib == "Ubuntu" ]]; then
-	chown -R $userLinux:$userLinux /home/$userLinux/.composer
-fi
-
-cd /var/www/html/cakebox
-echo $userLinux | sudo -S -u $userLinux composer install
-echo $userLinux | sudo -S -u $userLinux bower install
-
-# pour Debian remise en l'état  de /root 
-if [[ $nameDistrib == "Debian" ]]; then
-	chmod -R o-w /root/.composer; chmod o-x /root
-fi
-
-# conbfiguration ***********************************************************
-cd /var/www/html/cakebox/config/
-echo $userLinux | sudo -S -u $userLinux cp default.php.dist default.php
-
-sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" /var/www/html/cakebox/config/default.php
-sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" /var/www/html/cakebox/config/default.php
-chown -R www-data:www-data /var/www/html/cakebox/config
-
-# config apache et ajout de l'alias sur apache
-
-a2enmod headers
-a2enmod rewrite
-
-a2enconf javascript-common
-
-cat /var/www/html/cakebox/webconf-example/apache2-alias.conf.example << EOF > /etc/apache2/sites-available/cakebox.conf
-EOF
-
-sed -i -e 's|'\$ALIAS'|cakebox|g' -e 's|'\$CAKEBOXREP'|/var/www/html/cakebox|g' -e 's|'\$VIDEOREP'|/home/'$userLinux'/downloads|g' /etc/apache2/sites-available/cakebox.conf
-sed -i "/.*VirtualHost.*/d" /etc/apache2/sites-available/cakebox.conf
-
-a2ensite cakebox.conf
-serviceapache2restart
-
-
-# install plugin cakebox sur rutorrent
-echo
-echo "*******************************************************"
-echo "|   Installation du plugin ruTorrent pour Cakebox     |"
-echo "*******************************************************"
-sleep 2
-echo
-
-cd /var/www/html/rutorrent/plugins
-git clone https://github.com/Cakebox/linkcakebox.git linkcakebox
-chown -R www-data:www-data /var/www/html/rutorrent/plugins/linkcakebox
-
-sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox';|; s|\(\$dirpath.*\)|\$dirpath = '\/home\/"$userLinux"\/downloads\/';|" /var/www/html/rutorrent/plugins/linkcakebox/conf.php
-
-echo -e "[linkcakebox]\nenabled = yes" >> /var/www/html/rutorrent/plugins/plugins.ini
-
-chown www-data:www-data /var/www/html/cakebox/
-chown -R www-data:www-data /var/www/html/cakebox/public
-
-#  sécuriser cakebox
-echo
-echo "*************************"
-echo "|   Sécuriser Cakebox   |"
-echo "*************************"
-sleep 2
-echo
-
-a2enmod auth_basic
-cd /var/www/html/cakebox/public
-
-echo -e 'AuthName "Entrer votre identifiant et mot de passe"\nAuthType Basic\nAuthUserFile "/var/www/html/cakebox/public/.htpasswd"\nRequire valid-user' > .htaccess
-chown www-data:www-data .htaccess 
-
-htpasswd -bc ./.htpasswd $userCake $pwCake
-chown www-data:www-data .htpasswd
-
-serviceapache2restart
-
-headTest=`curl -Is http://$IP/cakebox/| head -n 1`
-headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ $headTest == Unauthorized* ]]
-then
-	echo "***************************"
-	echo "|   Cakebox fonctionne    |"
-	echo "***************************"	
-else
-	echo; echo "Une erreur c'est produite"
-	echo
-	echo "Dans un navigateur enter '$IP/cakebox' comme URL"
-	echo "Si c'est ok continuez, si non :"
-	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console (cf. Tips sur github), régler le problème."
-	echo
-	echo "Puis reprendre l'installation"
-	ouinon
-fi
-chmod 755 /var/www/html
-sleep 2
+. $repLance/insert/cakeboxinstall
 fi  # cakebox
 
 
+# install webmin
+
 if [[ $installWebMin == "oui" ]]
 then
-clear
-echo
-echo
-echo
-echo "*************************************************"
-echo "|           Installation de WebMin              |"
-echo "*************************************************"
-echo
-echo
-sleep 2
-
-
-cd /tmp
-
-if [[ $nameDistrib == "Debian" ]]; then
-	wget $upDebWebMinD
-	apt-get install -y $paquetWebMinD
-	sortie1=$?
-	dpkg --install $debWebMinD
-	sortie2=$?
-#	apt-get -f install -y
-else
-	wget $upDebWebMinU
-	apt-get install -y /tmp/$debWebMinU
-	sortie1=$?; sortie2=0
-fi
-let sortie=$sortie1+$sortie2
-if [[ $sortie -eq 0 ]]
-then 
-	echo "****************************"	
-	echo "|     Paquets installés    |"
-	echo "****************************"
-	sleep 2
-else
-	erreurApt
-fi
-
-headTest=`curl -Is http://$IP:10000 | head -n 1`
-headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ $headTest == Document* ]]
-then 	 
-	echo "******************************"
-	echo "|     WebMin fonctionne      |"
-	echo "******************************"
-	echo "Accepter l'exception au certificat pour ce site"
-else
-	echo; echo "Une erreur c'est produite"
-	echo
-	echo "Dans un navigateur enter 'https://$IP:10000' comme URL"
-	echo "Accepter l'exception au certificat pour ce site"
-	echo "Si c'est ok continuez, si non :"
-	echo "Vérifier qu'il n'y a pas de messages d'erreur dans la console."
-	echo "Dans une autre console (cf. Tips sur Github), régler le problème."
-	echo
-	echo "Puis reprendre l'installation"
-	ouinon
-fi
-sleep 2
+. $repLance/insert/webmininstall
 fi   # Webmin
+
 
 # sécuriser ssh
 
 if [[ $changePort == "oui" ]]; then
-echo
-echo
-echo "********************************************"
-echo "|             Sécuriser ssh                |"
-echo "********************************************"
-echo
-echo
-sleep 2
-sed -i -e 's/^Port.*/Port '$portSSH'/' -e 's/^Protocol.*/Protocol 2/' -e 's/^PermitRootLogin.*/PermitRootLogin no/' -e 's/^X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
-echo -e "UseDNS no\nAllowUsers $userLinux" >> /etc/ssh/sshd_config
-service ssh restart
-service ssh status
-if [[ $? -ne 0 ]]; then
-	echo
-	echo "Pour plus d'infos 'sudo journalctl -xe'"
-	echo	
-	echo "Il y a un problème sur le fichier /etc/ssh/sshd_config"
-	echo "Le vérifiez avant de couper la connexion ssh"
-	echo "En particulier : Port $portSSH et AllowUsers $userLinux"
-	echo
-	echo "Après correction 'sudo service ssh restart' et 'service ssh status'"
-	echo "Vous pouvez finir le script l'installation est terminée."
-	echo
-	echo "              /!\\"
-	echo
-	echo "NE PAS REBOOTER, NE PAS COUPER votre connection SSH"
-	echo "avant d'avoir résolu ce problème."
-	ouinon
-fi
+. $repLance/insert/sshsecuinstall
 fi  # changePort
 sleep 3
+
 
 # remettre sudoers en ordre
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
@@ -1371,7 +1085,6 @@ echo "En cas de problème concernant strictement"
 echo "ce script, vous pouvez aller"
 echo "Consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki"
 echo "et poster sur https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues"
-echo "Et consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki"
 echo
 sleep 1
 if [[ $changePort == "oui" ]]; then   # ssh sécurisé
