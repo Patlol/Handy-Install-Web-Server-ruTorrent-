@@ -580,7 +580,7 @@ fi
 echo "Votre partition root (/) a "$rootDispo" de libre."
 echo
 echo "Nom de votre utilisateur Linux (accès SSH et SFTP) : "$userLinux
-echo "Port aléatoire pour SSh : "$portSSH
+echo "Port pour SSh : "$portSSH
 echo "Nom de votre utilisateur ruTorrent : "$userRuto
 echo "Mot de passe de votre utilisateur ruTorrent : "$pwRuto
 if [[ $installCake != "oui" ]]
@@ -674,6 +674,19 @@ fi
 echo
 echo "$userLinux ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers;
 usermod -aG www-data $userLinux
+
+# config mc
+
+# mc user
+mkdir -p /home/$userLinux/.config/mc/
+cp $repLance/fichiers-conf/mc_panels.ini /home/$userLinux/.config/mc/panels.ini
+cd /home/$userLinux
+chown -R $userLinux:$userLinux .config/
+
+# mc root
+mkdir -p /root/.config/mc/
+cp $repLance/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
+
 echo
 echo "******************************"
 echo "|    Utilisateur linux ok    |"
@@ -1037,7 +1050,9 @@ sleep 3
 # remettre sudoers en ordre
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 
+
 # générique de fin
+
 hostName=$(hostname -f)
 clear
 echo
@@ -1051,23 +1066,23 @@ echo -e "\tEn https accépter la connexion non sécurisée et"
 echo -e "\tl'exception pour ce certificat !"
 
 if [[ $installCake == "oui" ]]; then
-echo "Pour accéder à Cakebox :"
-echo -en "\thttp://$IP/cakebox"
-echo "   ID : $userCake  PW : $pwCake"
-echo -e "\tou http://$hostName/cakebox"
-echo -e "\t /!\\ NE PAS utiliser https si vous voulez streamer !"
-echo -e "\tSur votre poste en local pour le streaming utiliser firefox"
-echo -e "\tPenser à vérifier la présence du plugin vlc sur firefox"
-echo -e "\tSur linux : sudo apt-get install browser-plugin-vlc"
+	echo "Pour accéder à Cakebox :"
+	echo -en "\thttp://$IP/cakebox"
+	echo "   ID : $userCake  PW : $pwCake"
+	echo -e "\tou http://$hostName/cakebox"
+	echo -e "\t /!\\ NE PAS utiliser https si vous voulez streamer !"
+	echo -e "\tSur votre poste en local pour le streaming utiliser firefox"
+	echo -e "\tPenser à vérifier la présence du plugin vlc sur firefox"
+	echo -e "\tSur linux : sudo apt-get install browser-plugin-vlc"
 fi
 
 if [[ $installWebMin == "oui" ]]; then
-echo "Pour accéder à WebMin :"
-echo -e "\thttps://$IP:10000"
-echo -e "\tou https://$hostName:10000"
-echo -e "\tID : root  PW : votre mot de passe root"
-echo -e "\tAccépter la connexion non sécurisée et"
-echo -e "\tl'exception pour ce certificat !"
+	echo "Pour accéder à WebMin :"
+	echo -e "\thttps://$IP:10000"
+	echo -e "\tou https://$hostName:10000"
+	echo -e "\tID : root  PW : votre mot de passe root"
+	echo -e "\tAccépter la connexion non sécurisée et"
+	echo -e "\tl'exception pour ce certificat !"
 fi
 
 echo
@@ -1079,64 +1094,65 @@ echo "et poster sur https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent
 echo
 sleep 1
 if [[ $changePort == "oui" ]]; then   # ssh sécurisé
-echo "************************************************"
-echo "|     ATTENTION le port standard et root       |"
-echo "|     n'ont plus d'accès en SSH et SFTP        |"
-echo "************************************************"
-echo
-echo "Pour accéder à votre serveur en ssh :"
-echo "Depuis linux, sur une console :"
-echo -e "\tssh -p$portSSH  $userLinux@$IP"
-echo -e "\tsur la console du serveur 'su $userLinux'"
-echo "Depuis windows utiliser PuTTY"
-echo
-sleep 1
-echo "Pour accéder aux fichiers via SFTP :"
-echo -en "\tHôte : $IP"
-echo -e "\tPort : $portSSH"
-echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
-echo -e "\tAuthentification : normale"
-echo -en "\tIdentifiant : $userLinux"
-if [[ $pwLinux != "" ]]
-then echo -e "\tMot de passe : $pwLinux"
-else echo -e "\tVotre mot de passe"
-fi
-echo
-sleep 1
+	echo "************************************************"
+	echo "|     ATTENTION le port standard et root       |"
+	echo "|     n'ont plus d'accès en SSH et SFTP        |"
+	echo "************************************************"
+	echo
+	echo "Pour accéder à votre serveur en ssh :"
+	echo "Depuis linux, sur une console :"
+	echo -e "\tssh -p$portSSH  $userLinux@$IP"
+	echo -e "\tsur la console du serveur 'su $userLinux'"
+	echo "Depuis windows utiliser PuTTY"
+	echo
+	sleep 1
+	echo "Pour accéder aux fichiers via SFTP :"
+	echo -en "\tHôte : $IP"
+	echo -e "\tPort : $portSSH"
+	echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
+	echo -e "\tAuthentification : normale"
+	echo -en "\tIdentifiant : $userLinux"
+	if [[ $pwLinux != "" ]]; then
+		echo -e "\tMot de passe : $pwLinux"
+	else 
+		echo -e "\tVotre mot de passe"
+	fi
+	echo
+	sleep 1
 else   # ssh n'est pas sécurisé
-echo "Pour accéder à votre serveur en ssh :"
-echo "Depuis linux, sur une console :"
-echo -e "\tssh root@$IP"
-echo "Depuis windows utiliser PuTTY"
-echo
-sleep 1
-echo "Pour accéder aux fichiers via SFTP :"
-echo -en "\tHôte : $IP"
-echo -e "\tPort : 22"
-echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
-echo -e "\tAuthentification : normale"
-echo -e "\tIdentifiant : root"
+	echo "Pour accéder à votre serveur en ssh :"
+	echo "Depuis linux, sur une console :"
+	echo -e "\tssh root@$IP"
+	echo "Depuis windows utiliser PuTTY"
+	echo
+	sleep 1
+	echo "Pour accéder aux fichiers via SFTP :"
+	echo -en "\tHôte : $IP"
+	echo -e "\tPort : 22"
+	echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
+	echo -e "\tAuthentification : normale"
+	echo -e "\tIdentifiant : root"
 fi   # ssh pas sécurisé/ sécurisé
 echo
 echo "REBOOTEZ VOTRE SERVEUR"
 echo
 tmp=""
 until [[ $tmp == "ok" ]]; do
-echo
-echo -n "Voulez-vous rebooter maintenant ? (o/n) "; read yno
-case $yno in
-	[nN] | [nN][oO][nN])
-		exit 0
-	;;
-	[Oo] | [Oo][Uu][Ii])
-		sleep 2
-		reboot
-	;;
-	*)
-		echo "Entrée invalide"
-		sleep 1
-	;;
-esac
+	echo
+	echo -n "Voulez-vous rebooter maintenant ? (o/n) "; read yno
+	case $yno in
+		[nN] | [nN][oO][nN])
+			exit 0
+		;;
+		[Oo] | [Oo][Uu][Ii])
+			sleep 2
+			reboot
+		;;
+		*)
+			echo "Entrée invalide"
+			sleep 1
+		;;
+	esac
 done
 
 
