@@ -17,18 +17,23 @@ NAME=rtorrentd.sh
 SCRIPTNAME=/etc/init.d/$NAME
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+__go() {
+          echo "Starting rtorrent... "
+          sudo chmod 775 /var/run/screen
+          su -l <username> -c "screen -fn -dmS rtd nice -19 rtorrent"
+          echo "Terminated"
+
+}
+
 case $1 in
         start)
-                echo "Starting rtorrent... "
-                sudo chmod 775 /var/run/screen
-                su -l <username> -c "screen -fn -dmS rtd nice -19 rtorrent"
-                echo "Terminated"
+                __go
         ;;
         stop)
                 if [ "$(ps aux | grep -e '.*rtorrent$' -c)" != 0  ]; then
                 {
                         echo "Shutting down rtorrent... "
-                        kill `ps aux | grep --max-count=1 -e '.*rtorrent$' | awk -F" " '{print $2}'`
+                        kill `ps aux | grep -e '.*SCREEN.*rtorrent$' | awk -F" " '{print $2}'`
                         echo "Terminated"
                 }
                 else
@@ -42,17 +47,13 @@ case $1 in
                 if [ "$(ps aux | grep -e '.*rtorrent$' -c)" != 0  ]; then
                 {
                         echo "Shutting down rtorrent... "
-                        kill `ps aux | grep --max-count=1 -e '.*rtorrent$' | awk -F" " '{print $2}'`
-                        echo "Starting rtorrent... "
-                        su -l <username> -c "screen -fn -dmS rtd nice -19 rtorrent"
-                        echo "Terminated"
+                        kill `ps aux | grep -e '.*SCREEN.*rtorrent$' | awk -F" " '{print $2}'`
+                        __go
                 }
                 else
                 {
                         echo "rtorrent not yet started !"
-                        echo "Starting rtorrent... "
-                        su -l <username> -c "screen -fn -dmS rtd nice -19 rtorrent"
-                        echo "Terminated"
+                        __go
                 }
                 fi
         ;;
