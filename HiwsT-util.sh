@@ -163,7 +163,7 @@ service rtorrentd restart
 
 #  ruTorrent ------------------------------------------------------------------
 
-# dossier conf/users/user
+# dossier conf/users/userRuto
 mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
 cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
 cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
