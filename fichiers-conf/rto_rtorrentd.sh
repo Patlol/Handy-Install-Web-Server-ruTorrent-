@@ -20,9 +20,9 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 __go() {
           echo "Starting rtorrent... "
           sudo chmod 775 /var/run/screen
-          su -l <username> -c "screen -fn -dmS rtd nice -19 rtorrent"
+          su --command="screen -dmS <username>-rtd rtorrent" "<username>"
+          # su -l <username> -c "screen -fn -dmS rtd nice -19 rtorrent"
           echo "Terminated"
-
 }
 
 case $1 in

@@ -11,6 +11,16 @@
 #############################
 
 
+__verifSaisie() {
+if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+	yno="o"
+else 	echo "Uniquement des caractères alphanumériques"
+	echo "Entre 2 et 15 caractères"
+	yno="n"
+fi
+}
+
+
 __ouinon() {
 local tmp=""; local yno=""
 until [[ $tmp == "ok" ]]; do
@@ -18,7 +28,7 @@ echo
 echo -n "Voulez-vous continuer ? (o/n) "; read yno
 case $yno in
 	[nN] | [nN][oO][nN])
-		echo "Désolé, à bientôt !"
+		echo "A bientôt !"
 		exit 1
 	;;
 	[Oo] | [Oo][Uu][Ii])
@@ -47,29 +57,31 @@ __IDuserRuto() {
 echo
 local tmp=""; local tmp2=""; local yno=""
 until [[ $tmp == "ok" ]]; do
-	echo -n "Choisir un nom d'utilisateur ruTorrent : "
+	echo -n "Choisir un nom d'utilisateur ruTorrent (ni espace ni \) : "
 	read userRuto
-	
-	# user linux ?
-	egrep "^$userRuto" /etc/passwd >/dev/null
-	if [[ $? -eq 0 ]]; then
-		echo "$userRuto existe déjà, c'est un utilisateur linux" 
-		yno="N"
-	else
-		# user ruTorrent ?   
-		egrep "^$userRuto:rutorrent" /etc/apache2/.htpasswd > /dev/null
+	__verifSaisie $userRuto
+	if [[ $yno == "o" ]]; then
+		# user linux ?
+		egrep "^$userRuto" /etc/passwd >/dev/null
 		if [[ $? -eq 0 ]]; then
-			echo "$userRuto existe déjà, c'est un utilisateur ruTorrent" 
+			echo "$userRuto existe déjà, c'est un utilisateur linux" 
 			yno="N"
 		else
-			# user cakebox ?
-			egrep "^$userRuto" /var/www/html/cakebox/public/.htpasswd > /dev/null
+			# user ruTorrent ?   
+			egrep "^$userRuto:rutorrent" /etc/apache2/.htpasswd > /dev/null
 			if [[ $? -eq 0 ]]; then
-				echo "$userRuto existe déjà, c'est un utilisateur cakebox" 
+				echo "$userRuto existe déjà, c'est un utilisateur ruTorrent" 
 				yno="N"
 			else
-				echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
-				read yno
+				# user cakebox ?
+				egrep "^$userRuto" /var/www/html/cakebox/public/.htpasswd > /dev/null
+				if [[ $? -eq 0 ]]; then
+					echo "$userRuto existe déjà, c'est un utilisateur cakebox" 
+					yno="N"
+				else
+					echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
+					read yno
+				fi
 			fi
 		fi
 	fi
@@ -77,13 +89,14 @@ until [[ $tmp == "ok" ]]; do
 	case $yno in
 		[Oo] | [Oo][Uu][Ii])   # saisie ID et PW d'un utilisateur
 			until [[ $tmp2 == "ok" ]]; do
-				echo -n "Choisissez un mot de passe : "
+				echo -n "Choisissez un mot de passe (ni espace ni \) : "
 				read pwRuto
 				echo -n "Resaisissez ce mot de passe : "
 				read pwRuto2
 				case $pwRuto2 in
 					$pwRuto)
 						tmp2="ok"; tmp="ok"
+						sleep 2
 					;;
 					*)
 						echo "Les deux saisies du mot de passe ne sont pas identiques. Recommencez"
@@ -108,6 +121,18 @@ done
 
 __creaUserRuto () { 
 
+clear
+echo
+echo "**************************************"
+echo "|  Création d'un nouvel utilisateur  |"
+echo "|            ruTorrent               |"
+echo "**************************************"
+echo
+echo -e "\tNom utilisateur : $userRuto"
+echo -e "\tMot de passe    : $pwRuto"
+echo
+sleep 2
+
 #  créer l'utilisateur linux $userRuto  ---------------------------------
 
 #  group sftp pour interdire de sortir de /home/user en sftp
@@ -118,26 +143,31 @@ if [[ $? -eq 1 ]]; then
 fi
 
 pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' $pwRuto)
-useradd -m -G sftp -p $pass $userRuto
+useradd -m -G adm,dip,plugdev,www-data,sudo,cdrom,sftp -p $pass $userRuto
 erreur=$?
+echo "bash" >> /home/$userRuto/.profile
+
 if [[ $erreur -ne 0 ]]; then
 	echo "Impossible de créer l'utilisateur ruTorrent $userRuto"
 	echo "Erreur $erreur sur 'useradd'"
 	__messageErreur
 	exit 1
 fi
+echo "Utilisateur $userRuto créé"
+echo
 
 mkdir -p /home/$userRuto/downloads/watch
 mkdir -p /home/$userRuto/downloads/.session
 chown -R $userRuto:$userRuto /home/$userRuto/
 
+echo "Répertoire /home/$userRuto créé"
+echo
 #  rtorrent ------------------------------------------------
 
 # incrémenter le port, écrir le fichier témoin
 if [ -e /var/www/html/rutorrent/conf/scgi_port ]; then
 	port=$(cat /var/www/html/rutorrent/conf/scgi_port)
-else
-	port=5000
+else 	port=5000
 fi
 
 let "port += 1"
@@ -148,18 +178,30 @@ cp $repLance/fichiers-conf/rto_rtorrent.rc /home/$userRuto/.rtorrent.rc
 sed -i 's/<username>/'$userRuto'/g' /home/$userRuto/.rtorrent.rc
 sed -i 's/scgi_port.*/scgi_port = 127.0.0.1:'$port'/' /home/$userRuto/.rtorrent.rc
 
+echo "/home/$userRuto/rtorrent.rc créé"
+echo
+
 #  fichiers daemon rtorrent
-#  rtorrent.conf créé
-cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/rtorrent_$userRuto.conf
-chmod u+rwx,g+rwx,o+rx  /etc/init/rtorrent_$userRuto.conf
-sed -i 's/<username>/'$userRuto'/g' /etc/init/rtorrent_$userRuto.conf
+#  créé rtorrent.conf 
+cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
+chmod u+rwx,g+rwx,o+rx  /etc/init/$userRuto-rtorrent.conf
+sed -i 's/<username>/'$userRuto'/g' /etc/init/$userRuto-rtorrent.conf
 
 #  rtorrentd.sh modifié
-sed -i '23 i\          su -l '$userRuto' -c  "screen -fn -dmS rtd nice -19 rtorrent"' /etc/init.d/rtorrentd.sh
+sed -i '23 i\          su --command="screen -dmS <username>-rtd rtorrent" "<username>"' /etc/init.d/rtorrentd.sh
+sed -i 's/<username>/'$userRuto'/g' /etc/init.d/rtorrentd.sh
 systemctl daemon-reload
 service rtorrentd restart
-
-
+if [[ $? -eq 0 ]]; then
+	echo "rtorrent en daemon fonctionne."
+	echo
+else	echo "Un problème est survenu."
+	ps aux | grep -e '.*torrernt$'
+	echo
+	service rtorrentd status
+	__messageErreur
+	exit 1
+fi
 
 #  ruTorrent ------------------------------------------------------------------
 
@@ -168,14 +210,22 @@ mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
 cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
 cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
 sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
+echo "Dossier users/$userRuto sur ruTorrent crée"
+echo
 
 # sécuriser ruTorrent
 (echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) >> /etc/apache2/.htpasswd
 sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
 service apache2 restart
+if [[ $? -eq o ]]; then
+	echo "Mot de passe apache de $userRuto créé"
+	echo
+else	service apache2 status
+	__messageErreur
+	exit 1
+fi
 
 
-if [[ 10 -eq 20 ]]; then
 # modif pour sftp / sécu sftp -------------------------------------------------------
 
 # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
@@ -190,8 +240,9 @@ sed -i 's|^Subsystem sftp /usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_conf
 if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
 fi
+service ssh restart > /dev/null
+service ssh status
 
-fi
 }   #  fin creauserruto
 
 
@@ -216,7 +267,7 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t2  Ajouter un utilisateur Cakebix"
 	echo -e "\t3  Supprimer un utilisateur ruTorrent"
 	echo -e "\t4  Supprimer un utilisateur Cakebox"
-	echo -e "\t5  Relancer rtorrent (multiutilisateur)"
+	echo -e "\t5  Relancer rtorrent manuellement"
 	echo -e "\t0  Sortir"
 	echo
 
@@ -236,21 +287,33 @@ until [[ $tmp == "ok" ]]; do
 				echo "|   Ajout d'un utilisateur ruTorrent   |"
 				echo "****************************************"
 				echo
+				echo "Le nouvel utilisateur aura un accès SFTP"
+				echo "Avec son ID et mot de passe, même port"
+				echo "Il sera limité à son répertoire"
+				echo
 				__IDuserRuto
 				__creaUserRuto
-		
-				echo "fini"
+				
+				echo
+				echo "Utilisateur $userRuto crée"
+				echo "Mot de passe $pwRuto"
 				__ouinon
 				tmp2="ok"
 			;;
 			[2]) 
-
+				echo "En construction ..."
+				sleep 3
+				tmp2="ok"				
 			;;
 			[3]) 
-
+				echo "En construction ..."
+				sleep 3
+				tmp2="ok"				
 			;;
 			[4])
-				
+				echo "En construction ..."
+				sleep 3
+				tmp2="ok"				
 			;;
 			[5])
 				clear
@@ -259,6 +322,9 @@ until [[ $tmp == "ok" ]]; do
 				echo "|   Relancer rtorrent   |"
 				echo "*************************"
 				echo
+				echo "En construction ..."
+				sleep 3
+				tmp2="ok"
 				#usermod -s /bin/bash pat2
 				#service rtorrentd restart
 				#service rtorrentd status

@@ -37,7 +37,18 @@ debWebMinU="webmin-current.deb"
 #############################
 
 
-ouinon() {
+__verifSaisie() {
+if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+	yno="o"
+else 	echo "Uniquement des caractères alphanumériques"
+	echo "Entre 2 et 15 caractères"
+	yno="n"
+fi
+}
+
+
+
+__ouinon() {
 tmp=""
 until [[ $tmp == "ok" ]]; do
 echo
@@ -60,9 +71,9 @@ case $yno in
 	;;
 esac
 done
-}    #  fin ouinon(
+}    #  fin __ouinon(
 
-serviceapache2restart() {
+__serviceapache2restart() {
 service apache2 restart
 if [ $? != 0 ]
 then
@@ -70,28 +81,31 @@ then
 	service apache2 status
 	echo "Régler le problème et relancer le script"
 	echo "Google est votre ami  !"
-	ouinon
+	__ouinon
 fi
-}   #  fin serviceapache2restart()
+}   #  fin __serviceapache2restart()
 
-creauser() {
+__creauser() {
 echo
 tmp=""; tmp2=""
 until [[ $tmp == "ok" ]]; do
-	echo -n "Choisir un nom d'utilisateur linux : "
+	echo -n "Choisir un nom d'utilisateur linux (ni espace ni \) : "
 	read userLinux
-	egrep "^$userLinux" /etc/passwd >/dev/null
-	if [[ $? -eq 0 ]]; then
-		echo "$userLinux existe déjà, choisir un autre nom"
-		yno="N"
-	else
-		echo -n "Vous confirmez '$userLinux' comme nom d'utilisateur ? (o/n) "
-		read yno
+	__verifSaisie $userLinux
+	if [[ $yno == "o" ]]; then
+		egrep "^$userLinux" /etc/passwd >/dev/null
+		if [[ $? -eq 0 ]]; then
+			echo "$userLinux existe déjà, choisir un autre nom"
+			yno="N"
+		else
+			echo -n "Vous confirmez '$userLinux' comme nom d'utilisateur ? (o/n) "
+			read yno
+		fi
 	fi
 	case $yno in
 		[Oo] | [Oo][Uu][Ii])   # création d'un utilisateur
 			until [[ $tmp2 == "ok" ]]; do
-				echo -n "Choisissez un mot de passe : "
+				echo -n "Choisissez un mot de passe (ni espace ni \) : "
 				read pwLinux
 				echo -n "Resaisissez ce mot de passe : "
 				read pwLinux2
@@ -104,7 +118,7 @@ until [[ $tmp == "ok" ]]; do
 						echo $userLinux > $repLance/pass1
 						if [[ $? -ne 0 ]]; then
 							echo "Impossible de créer un utilisateur linux"
-							ouinon
+							__ouinon
 						fi
 						tmp2="ok"; tmp="ok"
 					;;
@@ -126,19 +140,19 @@ until [[ $tmp == "ok" ]]; do
 			;;
 	esac
 done
-}  # creauser
+}  # __creauser
 
-erreurApt() {
+__erreurApt() {
 	echo; echo "Une erreur c'est produite durant l'installation des paquets."
-	messageErreur
-}   #  fin erreurApt()
+	__messageErreur
+}   #  fin __erreurApt()
 
-messageErreur() {
+__messageErreur() {
 	echo; echo "Consulter le wiki"
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 	echo; echo "puis continuer/arrêter l'installation"
-	ouinon
-}  # fin messageErreur
+	__ouinon
+}  # fin __messageErreur
 
 #############################
 #     Début du script
@@ -161,7 +175,7 @@ fi
 lsb_release &> /dev/null
 if [ $? -ne 0 ]; then
 	apt-get install -y lsb-release
-	erreurApt
+	__erreurApt
 fi
 
 repLance=$(echo `pwd`)
@@ -184,7 +198,7 @@ if [ $nameDistrib == "Debian" -a $os_version_M -gt 8 -o $nameDistrib == "Ubuntu"
 	echo
 	echo "Ce script est prévu pour fonctionner sur un serveur Debian 8.xx ou Ubuntu 16.xx"
 	echo "Vous risquez d'avoir des problèmes de version à l'installation"
-	ouinon
+	__ouinon
 fi
 
 if [ $nameDistrib == "Debian" -a $os_version_M -lt 8 -o $nameDistrib == "Ubuntu" -a $os_version_M -lt 16 ]; then
@@ -341,7 +355,7 @@ if [ ! -e $repLance"/pass1" ]; then   # évite ce passage si 2éme passe
 	fi
 	echo "Vous allez devoir créer un utilisateur spécifique"
 	echo
-	creauser
+	__creauser
 	echo "A bientôt ! avec"
 	echo "'login $userLinux'"
 	echo "'cd $repLance'"
@@ -370,14 +384,17 @@ tmp=""; tmp2=""
 until [[ $tmp == "ok" ]]; do
 	echo
 	echo "Il est préférable de choisir un nom différent de celui de l'utilisateur Linux"
-	echo -n "Choisir un nom d'utilisateur ruTorrent : "
+	echo -n "Choisir un nom d'utilisateur ruTorrent (ni espace ni \) : "
 	read userRuto
-	echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
-	read yno
+	__verifSaisie $userRuto
+	if [[ $yno == "o" ]]; then
+		echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
+		read yno
+	fi
 	case $yno in
 		[Oo] | [Oo][Uu][Ii])
 			until [[ $tmp2 == "ok" ]]; do
-				echo -n "Choisissez un mot de passe : "
+				echo -n "Choisissez un mot de passe (ni espace ni \) : "
 				read pwRuto
 				echo -n "Resaisissez ce mot de passe : "
 				read pwRuto2
@@ -428,14 +445,18 @@ until [[ $tmp3 == "ok" ]]; do
 			until [[ $tmp == "ok" ]]; do
 				echo
 				echo "Choisir un nom d'utilisateur Cakebox"
-				echo -n "(peut-être le même que pour rutorrent) : "
+				echo -n "(peut-être le même que pour rutorrent) (ni espace ni \) : "
 				read userCake
-				echo -n "Vous confirmez '$userCake' comme nom d'utilisateur ? (o/n) "
-				read yno1
+				__verifSaisie $userCake
+				yno1=$yno
+				if [[ $yno1 == "o" ]]; then
+					echo -n "Vous confirmez '$userCake' comme nom d'utilisateur ? (o/n) "
+					read yno1
+				fi
 				case $yno1 in
 					[Oo] | [Oo][Uu][Ii])
 						until [[ $tmp2 == "ok" ]]; do
-							echo -n "Choisissez un mot de passe : "
+							echo -n "Choisissez un mot de passe (ni espace ni \) : "
 							read pwCake
 							echo -n "Resaisissez ce mot de passe : "
 							read pwCake2
@@ -668,7 +689,7 @@ then
 	echo "****************************"
 	sleep 2
 else
-	erreurApt  # erreurApt()
+	__erreurApt  # __erreurApt()
 fi
 
 echo
@@ -677,13 +698,13 @@ usermod -aG www-data $userLinux
 
 # config mc
 
-# mc user
+# config mc user
 mkdir -p /home/$userLinux/.config/mc/
 cp $repLance/fichiers-conf/mc_panels.ini /home/$userLinux/.config/mc/panels.ini
 cd /home/$userLinux
 chown -R $userLinux:$userLinux .config/
 
-# mc root
+# config mc root
 mkdir -p /root/.config/mc/
 cp $repLance/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
 
@@ -716,7 +737,7 @@ then
 	echo "****************************"
 	sleep 2
 else
-	erreurApt  # erreurApt()
+	__erreurApt  # __erreurApt()
 fi
 
 echo
@@ -738,7 +759,7 @@ cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.old
 sed -i 's/^Timeout[ 0-9]*/Timeout 30/' /etc/apache2/apache2.conf
 echo "ServerTokens Prod" >> /etc/apache2/apache2.conf
 echo "ServerSignature Off" >> /etc/apache2/apache2.conf
-serviceapache2restart
+__serviceapache2restart
 	
 echo "***********************************************"
 echo "|      Fin de configuration d'Apache          |"
@@ -761,7 +782,7 @@ then
 	sleep 2
 else
 	echo; echo "Une erreur apache/php c'est produite"
-	messageErreur    #  messageErreur()
+	__messageErreur    #  __messageErreur()
 fi
 rm /var/www/html/info.php
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > /var/www/html/.htaccess
@@ -790,7 +811,7 @@ then
 	echo "****************************"
 	sleep 2
 else
-	erreurApt
+	__erreurApt
 fi
 
 # configuration rtorrent
@@ -800,8 +821,7 @@ echo "|    Configuration de .rtorrent.rc      |"
 echo "*****************************************"
 sleep 2
 #-----------------------------------------------------------------
-cat $repLance/fichiers-conf/rto_rtorrent.rc << EOF > /home/$userLinux/.rtorrent.rc
-EOF
+cp $repLance/fichiers-conf/rto_rtorrent.rc /home/$userLinux/.rtorrent.rc
 
 sed -i 's/<username>/'$userLinux'/g' /home/$userLinux/.rtorrent.rc
 
@@ -820,16 +840,14 @@ sleep 2
 echo
 
 #-----------------------------------------------------------------
-cat $repLance/fichiers-conf/rto_rtorrent.conf << EOF > /etc/init/rtorrent.conf
-EOF
+cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/$userLinux-rtorrent.conf
 
-chmod u+rwx,g+rwx,o+rx  /etc/init/rtorrent.conf
-sed -i 's/<username>/'$userLinux'/g' /etc/init/rtorrent.conf
+chmod u+rwx,g+rwx,o+rx  /etc/init/$userLinux-rtorrent.conf
+sed -i 's/<username>/'$userLinux'/g' /etc/init/$userLinux-rtorrent.conf
 
 #-----------------------------------------------------------------
 
-cat $repLance/fichiers-conf/rto_rtorrentd.sh << EOF > /etc/init.d/rtorrentd.sh
-EOF
+cp $repLance/fichiers-conf/rto_rtorrentd.sh /etc/init.d/rtorrentd.sh
 
 chmod u+rwx,g+rwx,o+rx  /etc/init.d/rtorrentd.sh
 sed -i 's/<username>/'$userLinux'/g' /etc/init.d/rtorrentd.sh
@@ -853,7 +871,7 @@ then
 	sleep 2
 else
 	echo; echo "Il y a un problème avec rtorrent !!!"
-	messageErreur
+	__messageErreur
 fi
 
 
@@ -879,7 +897,7 @@ cp /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-available/de
 sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" /etc/apache2/sites-available/default-ssl.conf
 
 a2ensite default-ssl
-serviceapache2restart
+__serviceapache2restart
 
 
 # création de userRuto
@@ -892,12 +910,11 @@ sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
 
 cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.old
 #-----------------------------------------------------------------
-cat $repLance/fichiers-conf/apa_000-default.conf << EOF > /etc/apache2/sites-available/000-default.conf
-EOF
+cp $repLance/fichiers-conf/apa_000-default.conf /etc/apache2/sites-available/000-default.conf
 #-------------------------------------------------------------------
 
 sed -i 's/<server IP>/'$IP'/g' /etc/apache2/sites-available/000-default.conf
-serviceapache2restart
+__serviceapache2restart
 
 echo
 echo "************************************************************"
@@ -927,8 +944,7 @@ chown -R www-data:www-data /var/www/html/rutorrent
 mv /var/www/html/rutorrent/conf/config.php /var/www/html/rutorrent/conf/config.php.old
 cd /var/www/html/rutorrent/conf
 
-cat $repLance/fichiers-conf/ruto_config.php << EOF > /var/www/html/rutorrent/conf/config.php
-EOF
+cp $repLance/fichiers-conf/ruto_config.php /var/www/html/rutorrent/conf/config.php
 
 cd /var/www/html
 chown -R www-data:www-data rutorrent
@@ -975,7 +991,7 @@ then
 	echo "****************************"
 	sleep 2
 else
-	erreurApt
+	__erreurApt
 fi
 
 # installation des plugins rutorrent
@@ -990,8 +1006,14 @@ cd /var/www/html/rutorrent/plugins
 mkdir conf
 cd conf
 
-cat $repLance/fichiers-conf/ruto_plugins.ini << EOF > /var/www/html/rutorrent/plugins/conf/plugins.ini
-EOF
+cp $repLance/fichiers-conf/ruto_plugins.ini /var/www/html/rutorrent/plugins/conf/plugins.ini
+
+# création de conf/users/userRuto en prévision du multiusers
+mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
+cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
+cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
+port=5000
+sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
 
 cd ..
 chown -R www-data:www-data conf/
@@ -1018,7 +1040,7 @@ then
 	echo "****************************"
 else
 	echo; echo "Une erreur c'est produite sur ruTorrent"
-	messageErreur
+	__messageErreur
 fi
 sleep 2
 
@@ -1050,6 +1072,9 @@ sleep 3
 # remettre sudoers en ordre
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 
+# copie les script dans home
+cd ../$repLance
+cp -r  Handy-Install-Web-Server-ruTorrent-/ /home/$userLinux/HiwsT
 
 # générique de fin
 
@@ -1142,6 +1167,8 @@ until [[ $tmp == "ok" ]]; do
 	echo -n "Voulez-vous rebooter maintenant ? (o/n) "; read yno
 	case $yno in
 		[nN] | [nN][oO][nN])
+			echo
+			echo "Il faudra rebooter pour que tout fonctionne à 100%"
 			exit 0
 		;;
 		[Oo] | [Oo][Uu][Ii])
