@@ -1073,8 +1073,8 @@ sleep 3
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 
 # copie les script dans home
-cd ../$repLance
-cp -r  Handy-Install-Web-Server-ruTorrent-/ /home/$userLinux/HiwsT
+
+cp -r  $repLance /home/$userLinux/HiwsT
 
 # générique de fin
 
