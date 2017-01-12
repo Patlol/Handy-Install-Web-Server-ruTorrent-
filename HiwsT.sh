@@ -5,7 +5,7 @@
 
 ##################################################
 #     variables install paquets Ubuntu/Debian
-##################################################  
+##################################################
 
 #  Debian
 
@@ -31,6 +31,9 @@ paquetsMediaU="mediainfo ffmpeg"
 upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
 debWebMinU="webmin-current.deb"
 
+REPWEB="/var/www/html"
+REPAPA2="/etc/apache2"
+REPLANCE=$(echo `pwd`)
 
 #############################
 #       Fonctions
@@ -49,7 +52,7 @@ fi
 
 
 __ouinon() {
-tmp=""
+local tmp=""
 until [[ $tmp == "ok" ]]; do
 echo
 echo -n "Voulez-vous continuer ? (o/n) "; read yno
@@ -57,7 +60,7 @@ case $yno in
 	[nN] | [nN][oO][nN])
 		echo "Désolé, à bientôt !"
 		sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
-		if [ -e /var/www/html/info.php ]; then rm /var/www/html/info.php; fi
+		if [ -e $REPWEB/info.php ]; then rm $REPWEB/info.php; fi
 		exit 1
 	;;
 	[Oo] | [Oo][Uu][Ii])
@@ -87,7 +90,7 @@ fi
 
 __creauser() {
 echo
-tmp=""; tmp2=""
+local tmp=""; local tmp2=""
 until [[ $tmp == "ok" ]]; do
 	echo -n "Choisir un nom d'utilisateur linux (ni espace ni \) : "
 	read userLinux
@@ -113,9 +116,9 @@ until [[ $tmp == "ok" ]]; do
 					$pwLinux)
 						#  créer l'utilisateur $userlinux
 						pass=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
-						useradd -m -G adm,dip,plugdev,www-data,sudo,cdrom -p $pass $userLinux
+						useradd -m -G adm,dip,plugdev,www-data,sudo -p $pass $userLinux
 						echo "bash" >> /home/$userLinux/.profile
-						echo $userLinux > $repLance/pass1
+						echo $userLinux > $REPLANCE/pass1
 						if [[ $? -ne 0 ]]; then
 							echo "Impossible de créer un utilisateur linux"
 							__ouinon
@@ -178,16 +181,15 @@ if [ $? -ne 0 ]; then
 	__erreurApt
 fi
 
-repLance=$(echo `pwd`)
 arch=$(uname -m)
 interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'  # pas tjs eth0 ...
-IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')  
+IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
 distrib=$(cat /etc/issue | awk -F"\\" '{ print $1 }')
 nameDistrib=$(lsb_release -si)  # Debian ou Ubuntu
 os_version=$(lsb_release -sr)   # 18 , 8.041 ...
 os_version_M=$(echo $os_version | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')  # version majeur
 description=$(lsb_release -sd)     #  nom de code
-user=$(id -un)       #  root avec user sudo 
+user=$(id -un)       #  root avec user sudo
 loguser=$(logname)   #  user avec user sudo
 
 # ubuntu / debian et bonne version ?
@@ -227,14 +229,14 @@ rootDispo=$(df -h | grep  /$ | awk -F" " '{ print $4 }')
 
 # portSSH aléatoire
 
-RANDOM=$$  # N° processus du script
+processus=$$  # N° processus du script
 portSSH=0   #   initialise 20000 65535
-PLANCHER=20000
-ECHELLE=65534
-while [ "$portSSH" -le $PLANCHER ]
+plancher=20000
+echelle=65534
+while [ "$portSSH" -le $plancher ]
 do
-  portSSH=$RANDOM
-  let "portSSH %= $ECHELLE"  # Ramène $portSSH dans $ECHELLE.
+  portSSH=$processus
+  let "portSSH %= $echelle"  # Ramène $portSSH dans $ECHELLE.
 done
 
 #--------------------------------------------------------------
@@ -295,7 +297,7 @@ else  # /home
 	echo "Votre partition /home a $homeDispo de libre."
 	len=${#homeDispo}
 	entier=${homeDispo:0:len-1}
-	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')	
+	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
 	miniDispo=299
  	if [ "$entier" -lt "$miniDispo" ]
  	then
@@ -303,7 +305,7 @@ else  # /home
 		echo "|                                                                                  |"
 		echo "|    ATTENTION seulement "$homeDispo", pour stocker les fichiers téléchargés !     |"
 		echo "|                                                                                  |"
-		echo "************************************************************************************"		
+		echo "************************************************************************************"
 	fi
 fi
 
@@ -320,56 +322,39 @@ echo "|         Ne jamais exécuter ce script sur un serveur en production      
 echo "|                                                                             |"
 echo "*******************************************************************************"
 
-if [ ! -e $repLance"/pass1" ]; then   # évite ce passage si 2éme passe
-	tmp=""
-	until [[ $tmp == "ok" ]]; do
-		echo
-		echo -n "Voulez-vous continuer l'installation ? (o/n) "
-		read yno
-
-		case $yno in
-			[nN] | [nN][oO][nN])
-				echo "Au revoir, a bientôt."
-				exit 0
-			;;
-			[Oo] | [Oo][Uu][Ii])
-				echo "Allons-y !"
-				tmp="ok"
-			;;
-			*)
-				echo "Entrée invalide"
-				sleep 1
-			;;
-		esac
-	done
+if [ ! -e $REPLANCE"/pass1" ]; then   # évite ce passage si 2éme passe
+	__ouinon
 
 #------------------------------------------------
 
 # linux user
 
 	echo
-	if [[ $loguser != "root" ]]; then
-		echo "Vous avez lancé le script depuis $loguser avec 'sudo'"
-	else
-		echo "Vous avez lancé le script depuis root"
+	#if [[ $loguser != "root" ]]; then
+	#	echo "Vous avez lancé le script depuis $loguser avec 'sudo'"
+	#else
+	#	echo "Vous avez lancé le script depuis root"
+	#fi
+	echo "Voulez vous créer un utilisateur spécifique ? "
+	read rep
+	if [[ $rep == "o" ]]; then
+		echo
+		__creauser
+		echo "A bientôt ! avec"
+		echo "'login $userLinux'"
+		echo "'cd $REPLANCE'"
+		echo "'sudo ./`basename $0`'"
+		chmod u+rwx,g+rx,o+rx $0
+		exit 0
 	fi
-	echo "Vous allez devoir créer un utilisateur spécifique"
-	echo
-	__creauser
-	echo "A bientôt ! avec"
-	echo "'login $userLinux'"
-	echo "'cd $repLance'"
-	echo "'sudo ./`basename $0`'"
-	chmod u+rwx,g+rx,o+rx $0			
-	exit 0
 else
 	userLinux=$(cat pass1)
 	if [[ $userLinux != $loguser ]]; then
 		echo
-		echo "Vous êtes logué avec $loguser"		
+		echo "Vous êtes logué avec $loguser"
 		echo "Vous deviez lancer le script en étant logué avec $userLinux !"
 		echo "'sudo login $userLinux'"
-		echo "'cd $repLance'"
+		echo "'cd $REPLANCE'"
 		echo "'sudo ./`basename $0`'"
 		exit 1
 	fi
@@ -558,7 +543,7 @@ case $yno in
 		if [[ $port -eq 0 ]]; then
 			tmp="ok"
 			changePort="oui"
-			sleep 1	
+			sleep 1
 		elif [ $port -gt 65535 -o $port -lt 20000 ]; then
 				echo "entrée invalide (entre 20000 et 65535)"
 				sleep 2
@@ -566,7 +551,7 @@ case $yno in
 				changePort="oui"
 				portSSH=$port
 				tmp="ok"
-				sleep 1	
+				sleep 1
 		fi
 	;;
 	*)
@@ -683,8 +668,8 @@ apt-get update -yq
 sortie=$?
 apt-get upgrade -yq
 if [[ $? -eq 0 && $sortie -eq 0 ]]
-then 
-	echo "****************************"	
+then
+	echo "****************************"
 	echo "|  Mise à jour effectuée   |"
 	echo "****************************"
 	sleep 2
@@ -700,13 +685,12 @@ usermod -aG www-data $userLinux
 
 # config mc user
 mkdir -p /home/$userLinux/.config/mc/
-cp $repLance/fichiers-conf/mc_panels.ini /home/$userLinux/.config/mc/panels.ini
-cd /home/$userLinux
-chown -R $userLinux:$userLinux .config/
+cp $REPLANCE/fichiers-conf/mc_panels.ini /home/$userLinux/.config/mc/panels.ini
+chown -R $userLinux:$userLinux /home/$userLinux/.config/
 
 # config mc root
 mkdir -p /root/.config/mc/
-cp $repLance/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
+cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
 
 echo
 echo "******************************"
@@ -731,8 +715,8 @@ else
 fi
 apt-get install -y $paquets
 if [[ $? -eq 0 ]]
-then 
-	echo "****************************"	
+then
+	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
 	sleep 2
@@ -755,12 +739,12 @@ a2enmod reqtimeout
 a2enmod authn_file
 a2enmod rewrite
 
-cp /etc/apache2/apache2.conf /etc/apache2/apache2.conf.old
-sed -i 's/^Timeout[ 0-9]*/Timeout 30/' /etc/apache2/apache2.conf
-echo "ServerTokens Prod" >> /etc/apache2/apache2.conf
-echo "ServerSignature Off" >> /etc/apache2/apache2.conf
+cp $REPAPA2/apache2.conf $REPAPA2/apache2.conf.old
+sed -i 's/^Timeout[ 0-9]*/Timeout 30/' $REPAPA2/apache2.conf
+echo "ServerTokens Prod" >> $REPAPA2/apache2.conf
+echo "ServerSignature Off" >> $REPAPA2/apache2.conf
 __serviceapache2restart
-	
+
 echo "***********************************************"
 echo "|      Fin de configuration d'Apache          |"
 echo "***********************************************"
@@ -769,13 +753,13 @@ echo
 
 # vérif bon fonctionnement apache et php
 
-echo "<?php phpinfo(); ?>" >/var/www/html/info.php
+echo "<?php phpinfo(); ?>" >$REPWEB/info.php
 headTest1=`curl -Is http://$IP/info.php/| head -n 1`
 headTest2=`curl -Is http://$IP/| head -n 1`
 headTest1=$(echo $headTest1 | awk -F" " '{ print $3 }')
 headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
 if [[ $headTest1 == OK* ]] && [[ $headTest2 == OK* ]]
-then 
+then
 	echo "***********************************************"
 	echo "|        Apache et php fonctionne             |"
 	echo "***********************************************"
@@ -784,8 +768,8 @@ else
 	echo; echo "Une erreur apache/php c'est produite"
 	__messageErreur    #  __messageErreur()
 fi
-rm /var/www/html/info.php
-echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > /var/www/html/.htaccess
+rm $REPWEB/info.php
+echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess
 
 
 # téléchargement rtorrent libtorrent xmlrpc
@@ -805,8 +789,8 @@ else
 fi
 apt-get install -y $paquets
 if [[ $? -eq 0 ]]
-then 
-	echo "****************************"	
+then
+	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
 	sleep 2
@@ -821,15 +805,19 @@ echo "|    Configuration de .rtorrent.rc      |"
 echo "*****************************************"
 sleep 2
 #-----------------------------------------------------------------
-cp $repLance/fichiers-conf/rto_rtorrent.rc /home/$userLinux/.rtorrent.rc
+cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/$userLinux/.rtorrent.rc
 
 sed -i 's/<username>/'$userLinux'/g' /home/$userLinux/.rtorrent.rc
 
 #-----------------------------------------------------------------
 
-echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads
-echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/watch
-echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/.session
+#echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads
+#echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/watch
+#echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/.session
+mkdir -p /home/$userLinux/downloads/watch
+mkdir -p /home/$userLinux/downloads/.session
+chown -R /home/$userLinux/downloads
+
 
 # mettre rtorrent en deamon / screen
 echo
@@ -840,14 +828,14 @@ sleep 2
 echo
 
 #-----------------------------------------------------------------
-cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/$userLinux-rtorrent.conf
+cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/$userLinux-rtorrent.conf
 
 chmod u+rwx,g+rwx,o+rx  /etc/init/$userLinux-rtorrent.conf
 sed -i 's/<username>/'$userLinux'/g' /etc/init/$userLinux-rtorrent.conf
 
 #-----------------------------------------------------------------
 
-cp $repLance/fichiers-conf/rto_rtorrentd.sh /etc/init.d/rtorrentd.sh
+cp $REPLANCE/fichiers-conf/rto_rtorrentd.sh /etc/init.d/rtorrentd.sh
 
 chmod u+rwx,g+rwx,o+rx  /etc/init.d/rtorrentd.sh
 sed -i 's/<username>/'$userLinux'/g' /etc/init.d/rtorrentd.sh
@@ -864,7 +852,7 @@ sleep 2
 sortie=`pgrep rtorrent`
 
 if [ -n "$sortie" ]
-then 
+then
 	echo "*************************************************"
 	echo "|  rtorrent en daemon fonctionne correctement  |"
 	echo "*************************************************"
@@ -888,13 +876,13 @@ echo
 
 # certif ssl
 
-openssl req -new -x509 -days 365 -nodes -newkey rsa:2048 -out /etc/apache2/apache.pem -keyout /etc/apache2/apache.pem -subj "/C=FR/ST=Paris/L=Paris/O=Global Security/OU=RUTO Department/CN=$IP"
+openssl req -new -x509 -days 365 -nodes -newkey rsa:2048 -out $REPAPA2/apache.pem -keyout $REPAPA2/apache.pem -subj "/C=FR/ST=Paris/L=Paris/O=Global Security/OU=RUTO Department/CN=$IP"
 
-chmod 600 /etc/apache2/apache.pem
+chmod 600 $REPAPA2/apache.pem
 
-cp /etc/apache2/sites-available/default-ssl.conf /etc/apache2/sites-available/default-ssl.conf.old
+cp $REPAPA2/sites-available/default-ssl.conf $REPAPA2/sites-available/default-ssl.conf.old
 
-sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" /etc/apache2/sites-available/default-ssl.conf
+sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" $REPAPA2/sites-available/default-ssl.conf
 
 a2ensite default-ssl
 __serviceapache2restart
@@ -902,18 +890,18 @@ __serviceapache2restart
 
 # création de userRuto
 
-(echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) > /etc/apache2/.htpasswd
-sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
+(echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) > $REPAPA2/.htpasswd
+sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
 
 
 # Modifier la configuration du site par défaut (pour rutorrent)
 
-cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.old
+cp $REPAPA2/sites-available/000-default.conf $REPAPA2/sites-available/000-default.conf.old
 #-----------------------------------------------------------------
-cp $repLance/fichiers-conf/apa_000-default.conf /etc/apache2/sites-available/000-default.conf
+cp $REPLANCE/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
 #-------------------------------------------------------------------
 
-sed -i 's/<server IP>/'$IP'/g' /etc/apache2/sites-available/000-default.conf
+sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
 __serviceapache2restart
 
 echo
@@ -930,37 +918,34 @@ sleep 2
 
 # téléchargement
 
-cd /var/www/html
-mkdir source
-cd source
+mkdir $REPWEB/source
+cd $REPWEB/source
 wget https://github.com/Novik/ruTorrent/archive/master.zip
 unzip master.zip
-mv ruTorrent-master /var/www/html/rutorrent
-cd /var/www/html
-chown -R www-data:www-data /var/www/html/rutorrent
+mv ruTorrent-master $REPWEB/rutorrent
+
+chown -R www-data:www-data $REPWEB/rutorrent
 
 # fichier de config,  échapper les $variable
 
-mv /var/www/html/rutorrent/conf/config.php /var/www/html/rutorrent/conf/config.php.old
-cd /var/www/html/rutorrent/conf
+mv $REPWEB/rutorrent/conf/config.php $REPWEB/rutorrent/conf/config.php.old
 
-cp $repLance/fichiers-conf/ruto_config.php /var/www/html/rutorrent/conf/config.php
+cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
 
-cd /var/www/html
-chown -R www-data:www-data rutorrent
-chmod -R 755 rutorrent
+chown -R www-data:www-data $REPWEB/rutorrent
+chmod -R 755 $REPWEB/rutorrent
 
 # modif du thème de rutorrent
 
-cd /var/www/html/rutorrent/share/users/
-mkdir -p $userRuto/torrents; mkdir -p $userRuto/settings
-chown -R www-data:www-data $userRuto
-chmod -R 777 $userRuto; 
+mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
+mkdir $REPWEB/rutorrent/share/users/$userRuto/settings
+chown -R www-data:www-data $REPWEB/rutorrent/share/users/$userRuto
+chmod -R 777 $REPWEB/rutorrent/share/users/$userRuto
 
-echo 'O:6:"rTheme":2:{s:4:"hash";s:9:"theme.dat";s:7:"current";s:8:"Oblivion";}' > /var/www/html/rutorrent/share/users/$userRuto/settings/theme.dat
-chmod u+rwx,g+rx,o+rx $userRuto 
-chmod 666 /var/www/html/rutorrent/share/users/$userRuto/settings/theme.dat
-chown www-data:www-data /var/www/html/rutorrent/share/users/$userRuto/settings/theme.dat
+echo 'O:6:"rTheme":2:{s:4:"hash";s:9:"theme.dat";s:7:"current";s:8:"Oblivion";}' > $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
+chmod u+rwx,g+rx,o+rx $REPWEB/rutorrent/share/users/$userRuto
+chmod 666 $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
+chown www-data:www-data $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
 
 
 # installation de mediainfo et ffmpeg
@@ -985,8 +970,8 @@ else
 	sortie=$?
 fi
 if [[ $sortie -eq 0 ]]
-then 
-	echo "****************************"	
+then
+	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
 	sleep 2
@@ -1002,40 +987,34 @@ echo "|      Installation des plugins ruTorrent       |"
 echo "*************************************************"
 sleep 2
 
-cd /var/www/html/rutorrent/plugins
-mkdir conf
-cd conf
+mkdir $REPWEB/rutorrent/plugins/conf
 
-cp $repLance/fichiers-conf/ruto_plugins.ini /var/www/html/rutorrent/plugins/conf/plugins.ini
+cp $REPLANCE/fichiers-conf/ruto_plugins.ini $REPWEB/rutorrent/plugins/conf/plugins.ini
 
 # création de conf/users/userRuto en prévision du multiusers
-mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
-cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
-cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
+mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
+cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
+cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
 port=5000
-sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
+sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
-cd ..
-chown -R www-data:www-data conf/
+chown -R www-data:www-data $REPWEB/rutorrent/conf
 
 # Ajouter le plugin log-off
 
-cd /var/www/html/rutorrent/plugins
+cd $REPWEB/rutorrent/plugins
 wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz
-
 tar -zxf logoff-1.3.tar.gz
-cd logoff
 
-sed -i "s|\(\$logoffURL.*\)|\$logoffURL = \"https://www.qwant.com/\";|" /var/www/html/rutorrent/plugins/logoff/conf.php
-sed -i "s|\(\$allowSwitch.*\)|\$allowSwitch = \"$userRuto\";|" /var/www/html/rutorrent/plugins/logoff/conf.php
+sed -i "s|\(\$logoffURL.*\)|\$logoffURL = \"https://www.qwant.com/\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
+sed -i "s|\(\$allowSwitch.*\)|\$allowSwitch = \"$userRuto\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
 
-cd ..
-chown -R www-data:www-data logoff
+chown -R www-data:www-data $REPWEB/rutorrent/plugins/logoff
 headTest=`curl -Is http://$IP/rutorrent/| head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 if [[ $headTest == Unauthorized* ]]
-then 
-	echo "****************************"	
+then
+	echo "****************************"
 	echo "|  ruTorrent fonctionne    |"
 	echo "****************************"
 else
@@ -1049,7 +1028,7 @@ sleep 2
 
 if [[ $installCake == "oui" ]]
 then
-. $repLance/insert/cakeboxinstall
+. $REPLANCE/insert/cakeboxinstall.sh
 fi  # cakebox
 
 
@@ -1057,14 +1036,14 @@ fi  # cakebox
 
 if [[ $installWebMin == "oui" ]]
 then
-. $repLance/insert/webmininstall
+. $REPLANCE/insert/webmininstall.sh
 fi   # Webmin
 
 
 # sécuriser ssh
 
 if [[ $changePort == "oui" ]]; then
-. $repLance/insert/sshsecuinstall
+. $REPLANCE/insert/sshsecuinstall.sh
 fi  # changePort
 sleep 3
 
@@ -1073,8 +1052,7 @@ sleep 3
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 
 # copie les script dans home
-
-cp -r  $repLance /home/$userLinux/HiwsT
+cp -r  $REPLANCE /home/$userLinux/HiwsT
 
 # générique de fin
 
@@ -1139,7 +1117,7 @@ if [[ $changePort == "oui" ]]; then   # ssh sécurisé
 	echo -en "\tIdentifiant : $userLinux"
 	if [[ $pwLinux != "" ]]; then
 		echo -e "\tMot de passe : $pwLinux"
-	else 
+	else
 		echo -e "\tVotre mot de passe"
 	fi
 	echo
@@ -1181,6 +1159,3 @@ until [[ $tmp == "ok" ]]; do
 		;;
 	esac
 done
-
-
-

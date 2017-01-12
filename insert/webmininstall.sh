@@ -14,11 +14,10 @@ cd /tmp
 
 if [[ $nameDistrib == "Debian" ]]; then
 	wget $upDebWebMinD
-	apt-get install -y $paquetWebMinD
+	apt-get -f install -y $paquetWebMinD
 	sortie1=$?
 	dpkg --install $debWebMinD
 	sortie2=$?
-#	apt-get -f install -y
 else
 	wget $upDebWebMinU
 	apt-get install -y /tmp/$debWebMinU
