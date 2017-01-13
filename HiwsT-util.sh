@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent et cakebox
-# L'ajout ou la suppression d'utilisateur rutorrent et cakebox 
+# L'ajout ou la suppression d'utilisateur rutorrent et cakebox
 # Version beta
 
 
@@ -53,7 +53,7 @@ __messageErreur() {
 
 
 
-__IDuserRuto() {
+__IDuserRuto() {    # saisie ID et PW
 echo
 local tmp=""; local tmp2=""; local yno=""
 until [[ $tmp == "ok" ]]; do
@@ -64,19 +64,19 @@ until [[ $tmp == "ok" ]]; do
 		# user linux ?
 		egrep "^$userRuto" /etc/passwd >/dev/null
 		if [[ $? -eq 0 ]]; then
-			echo "$userRuto existe déjà, c'est un utilisateur linux" 
+			echo "$userRuto existe déjà, c'est un utilisateur linux"
 			yno="N"
 		else
-			# user ruTorrent ?   
+			# user ruTorrent ?
 			egrep "^$userRuto:rutorrent" /etc/apache2/.htpasswd > /dev/null
 			if [[ $? -eq 0 ]]; then
-				echo "$userRuto existe déjà, c'est un utilisateur ruTorrent" 
+				echo "$userRuto existe déjà, c'est un utilisateur ruTorrent"
 				yno="N"
 			else
 				# user cakebox ?
 				egrep "^$userRuto" /var/www/html/cakebox/public/.htpasswd > /dev/null
 				if [[ $? -eq 0 ]]; then
-					echo "$userRuto existe déjà, c'est un utilisateur cakebox" 
+					echo "$userRuto existe déjà, c'est un utilisateur cakebox"
 					yno="N"
 				else
 					echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
@@ -85,7 +85,7 @@ until [[ $tmp == "ok" ]]; do
 			fi
 		fi
 	fi
-	
+
 	case $yno in
 		[Oo] | [Oo][Uu][Ii])   # saisie ID et PW d'un utilisateur
 			until [[ $tmp2 == "ok" ]]; do
@@ -104,7 +104,7 @@ until [[ $tmp == "ok" ]]; do
 						sleep 1
 					;;
 				esac
-			done  # fin création d'un utilisateur
+			done  # fin saisie d'un utilisateur
 		;;
 		[nN] | [nN][oO][nN])
 			echo "Nom d'utilisateur invalidé. Reprendre la saisie"
@@ -116,10 +116,10 @@ until [[ $tmp == "ok" ]]; do
 			;;
 	esac
 done
-}  # creauser
+}  # fin IDuserRuto
 
 
-__creaUserRuto () { 
+__creaUserRuto () {
 
 clear
 echo
@@ -135,8 +135,8 @@ sleep 2
 
 #  créer l'utilisateur linux $userRuto  ---------------------------------
 
-#  group sftp pour interdire de sortir de /home/user en sftp
 # Ajout du group sftp si n'existe pas
+#  group sftp pour interdire de sortir de /home/user en sftp
 egrep "^sftp" /etc/group > /dev/null
 if [[ $? -eq 1 ]]; then
 	addgroup sftp
@@ -153,14 +153,14 @@ if [[ $erreur -ne 0 ]]; then
 	__messageErreur
 	exit 1
 fi
-echo "Utilisateur $userRuto créé"
+echo "Utilisateur linux $userRuto créé"
 echo
 
 mkdir -p /home/$userRuto/downloads/watch
 mkdir -p /home/$userRuto/downloads/.session
 chown -R $userRuto:$userRuto /home/$userRuto/
 
-echo "Répertoire /home/$userRuto créé"
+echo "Répertoire/sous-répertoires /home/$userRuto créé"
 echo
 #  rtorrent ------------------------------------------------
 
@@ -182,7 +182,7 @@ echo "/home/$userRuto/rtorrent.rc créé"
 echo
 
 #  fichiers daemon rtorrent
-#  créé rtorrent.conf 
+#  créé rtorrent.conf
 cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
 chmod u+rwx,g+rwx,o+rx  /etc/init/$userRuto-rtorrent.conf
 sed -i 's/<username>/'$userRuto'/g' /etc/init/$userRuto-rtorrent.conf
@@ -218,7 +218,7 @@ echo
 sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
 service apache2 restart
 if [[ $? -eq o ]]; then
-	echo "Mot de passe apache de $userRuto créé"
+	echo "Mot de passe de $userRuto créé"
 	echo
 else	service apache2 status
 	__messageErreur
@@ -242,7 +242,7 @@ if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]
 fi
 service ssh restart > /dev/null
 service ssh status
-
+echo "Sécurisation SFTP faite : seulement accès a /home/$userRuto"
 }   #  fin creauserruto
 
 
@@ -263,12 +263,12 @@ until [[ $tmp == "ok" ]]; do
 	echo; echo; echo
 	echo "Voulez-vous"
 	echo
-	echo -e "\t1  Ajouter un utilisateur ruTorrent"
-	echo -e "\t2  Ajouter un utilisateur Cakebix"
-	echo -e "\t3  Supprimer un utilisateur ruTorrent"
-	echo -e "\t4  Supprimer un utilisateur Cakebox"
-	echo -e "\t5  Relancer rtorrent manuellement"
-	echo -e "\t0  Sortir"
+	echo -e "\t1)  Ajouter un utilisateur ruTorrent"
+	# echo -e "\t2)  Ajouter un utilisateur Cakebix"
+	# echo -e "\t3)  Supprimer un utilisateur ruTorrent"
+	# echo -e "\t4)  Supprimer un utilisateur Cakebox"
+	# echo -e "\t5)  Relancer rtorrent manuellement"
+	echo -e "\t0)  Sortir"
 	echo
 
 	local tmp2=""
@@ -280,7 +280,7 @@ until [[ $tmp == "ok" ]]; do
 			[0])
 				exit 0
 			;;
-			[1])
+			[1])  # + user ruTorrent
 				clear
 				echo
 				echo "****************************************"
@@ -293,27 +293,27 @@ until [[ $tmp == "ok" ]]; do
 				echo
 				__IDuserRuto
 				__creaUserRuto
-				
+
 				echo
 				echo "Utilisateur $userRuto crée"
 				echo "Mot de passe $pwRuto"
 				__ouinon
 				tmp2="ok"
 			;;
-			[2]) 
+			[2])
 				echo "En construction ..."
 				sleep 3
-				tmp2="ok"				
+				tmp2="ok"
 			;;
-			[3]) 
+			[3])
 				echo "En construction ..."
 				sleep 3
-				tmp2="ok"				
+				tmp2="ok"
 			;;
 			[4])
 				echo "En construction ..."
 				sleep 3
-				tmp2="ok"				
+				tmp2="ok"
 			;;
 			[5])
 				clear
@@ -328,7 +328,6 @@ until [[ $tmp == "ok" ]]; do
 				#usermod -s /bin/bash pat2
 				#service rtorrentd restart
 				#service rtorrentd status
-				#ouinon
 				#usermod -s /bin/false pat2
 			;;
 			*)
@@ -366,29 +365,6 @@ repLance=$(echo `pwd`)
 
 
 	__menu
-	
+
 	echo
 	echo "Au revoir"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

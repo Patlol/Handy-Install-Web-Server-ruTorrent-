@@ -7,7 +7,7 @@ Install on Debian 8 or Ubuntu 16 server
 - rtorrent
 - librtorrent
 - xmlrpc
-- <a href="https://github.com/Novik/ruTorrent/">rutorrent</a>
+- <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a>
 - mediainfo
 - ffmpeg
 - <a href="https://github.com/cakebox/cakebox">Cakebox</a>

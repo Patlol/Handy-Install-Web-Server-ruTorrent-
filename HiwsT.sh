@@ -229,16 +229,15 @@ rootDispo=$(df -h | grep  /$ | awk -F" " '{ print $4 }')
 
 # portSSH aléatoire
 
-processus=$$  # N° processus du script
+RANDOM=$$  # N° processus du script
 portSSH=0   #   initialise 20000 65535
-plancher=20000
-echelle=65534
-while [ "$portSSH" -le $plancher ]
-do
-  portSSH=$processus
-  let "portSSH %= $echelle"  # Ramène $portSSH dans $ECHELLE.
-done
-
+PLANCHER=20000
+ECHELLE=65534
+while [ "$portSSH" -le $PLANCHER ]
+ do
+  portSSH=$RANDOM
+  let "portSSH %= $ECHELLE"  # Ramène $portSSH dans $ECHELLE.
+ done
 #--------------------------------------------------------------
 
 
@@ -265,6 +264,7 @@ then
 fi
 echo "Votre IP : "$IP
 echo "Vous êtes logué en : "$loguser
+echo "Le script tourne sous : $user"
 echo
 echo "Durée du script : environ 10mn"
 #----------------------------------------------------------
@@ -322,38 +322,31 @@ echo "|         Ne jamais exécuter ce script sur un serveur en production      
 echo "|                                                                             |"
 echo "*******************************************************************************"
 
-if [ ! -e $REPLANCE"/pass1" ]; then   # évite ce passage si 2éme passe
+if [ ! -e $REPLANCE"/pass1" ]; then   # évite de tourner en rond si 2éme passage
 	__ouinon
 
 #------------------------------------------------
 
-# linux user
+# Création de linux user
 
 	echo
-	#if [[ $loguser != "root" ]]; then
-	#	echo "Vous avez lancé le script depuis $loguser avec 'sudo'"
-	#else
-	#	echo "Vous avez lancé le script depuis root"
-	#fi
-	echo "Voulez vous créer un utilisateur spécifique ? "
-	read rep
-	if [[ $rep == "o" ]]; then
-		echo
-		__creauser
-		echo "A bientôt ! avec"
-		echo "'login $userLinux'"
-		echo "'cd $REPLANCE'"
-		echo "'sudo ./`basename $0`'"
-		chmod u+rwx,g+rx,o+rx $0
-		exit 0
+	echo "Vous allez créer un utilisateur spécifique"
+	echo
+	__creauser
+	echo "A bientôt !"
+	echo "su '$userLinux'"
+	echo "'cd $REPLANCE'"
+	echo "'sudo ./`basename $0`'"
+	chmod u+rwx,g+rx,o+rx $0
+	exit 0
 	fi
-else
+else   # si 2ème passage
 	userLinux=$(cat pass1)
-	if [[ $userLinux != $loguser ]]; then
+	if [[ 10 -eq 20 ]]; then # $userLinux != $loguser ]]; then
 		echo
-		echo "Vous êtes logué avec $loguser"
+		echo "Vous utiliser $user"
 		echo "Vous deviez lancer le script en étant logué avec $userLinux !"
-		echo "'sudo login $userLinux'"
+		echo "'su $userLinux'"
 		echo "'cd $REPLANCE'"
 		echo "'sudo ./`basename $0`'"
 		exit 1
@@ -529,6 +522,7 @@ case $yno in
 	[nN] | [nN][oO][nN])
 		echo
 		echo "Le port reste 22 et l'utilisateur root"
+		sleep 2
 		changePort="non"
 		portSSH="22"
 		tmp="ok"
@@ -585,8 +579,14 @@ else
 fi
 echo "Votre partition root (/) a "$rootDispo" de libre."
 echo
-echo "Nom de votre utilisateur Linux (accès SSH et SFTP) : "$userLinux
-echo "Port pour SSh : "$portSSH
+if [[ $changePort == "oui" ]]; then
+	echo "Nom de votre utilisateur Linux (accès SSH et SFTP) : "$userLinux
+	echo "Port pour SSh : "$portSSH
+else
+	echo "Nom de votre utilisateur accès SSH et SFTP : root"
+  echo "Port pour SSh : "$portSSH
+	echo "Nom de votre utilisateur Linux : "$userLinux
+fi
 echo "Nom de votre utilisateur ruTorrent : "$userRuto
 echo "Mot de passe de votre utilisateur ruTorrent : "$pwRuto
 if [[ $installCake != "oui" ]]
@@ -816,8 +816,7 @@ sed -i 's/<username>/'$userLinux'/g' /home/$userLinux/.rtorrent.rc
 #echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/.session
 mkdir -p /home/$userLinux/downloads/watch
 mkdir -p /home/$userLinux/downloads/.session
-chown -R /home/$userLinux/downloads
-
+chown -R $userLinux:$userLinux /home/$userLinux/downloads
 
 # mettre rtorrent en deamon / screen
 echo
@@ -867,6 +866,7 @@ fi
 
 echo
 echo "**************************************************************"
+echo "|                        ruTorrent :                         |"
 echo "|  Création certificat auto signé et utilisateur ruTorrennt  |"
 echo "|            Modifications apache pour ruTorrent             |"
 echo "**************************************************************"
@@ -926,7 +926,7 @@ mv ruTorrent-master $REPWEB/rutorrent
 
 chown -R www-data:www-data $REPWEB/rutorrent
 
-# fichier de config,  échapper les $variable
+# fichier de config
 
 mv $REPWEB/rutorrent/conf/config.php $REPWEB/rutorrent/conf/config.php.old
 
@@ -1146,7 +1146,7 @@ until [[ $tmp == "ok" ]]; do
 	case $yno in
 		[nN] | [nN][oO][nN])
 			echo
-			echo "Il faudra rebooter pour que tout fonctionne à 100%"
+			echo "Il peut être nécessaire de rebooter pour que tout fonctionne à 100%"
 			exit 0
 		;;
 		[Oo] | [Oo][Uu][Ii])

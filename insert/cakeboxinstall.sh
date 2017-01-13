@@ -40,14 +40,13 @@ npm install -g bower
 # chmod sur les répertoires www et html
 
 chmod o+r /var/www
-chmod u+rwx,g+rwx $REPWB
-git clone https://github.com/Micdu70/cakebox.git $REPWB/cakebox
-# git clone https://github.com/Cakebox/Cakebox-light.git $REPWB/cakebox
-
-cd $REPWB/cakebox/
+chmod u+rwx,g+rwx $REPWEB
+# git clone https://github.com/Micdu70/cakebox.git $REPWEB/cakebox
+git clone https://github.com/Cakebox/Cakebox-light.git $REPWEB/cakebox
+cd $REPWEB/cakebox/
 git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))
 
-chown -R $userLinux:$userLinux $REPWB/cakebox/
+chown -R $userLinux:$userLinux $REPWEB/cakebox/
 
 # traitement cakebox composer bower  *****************************************
 
@@ -60,7 +59,7 @@ if [[ $nameDistrib == "Ubuntu" ]]; then
 	chown -R $userLinux:$userLinux /home/$userLinux/.composer
 fi
 
-# cd $REPWB/cakebox
+# cd $REPWEB/cakebox
 echo $userLinux | sudo -S -u $userLinux composer install
 echo $userLinux | sudo -S -u $userLinux bower install
 
@@ -70,11 +69,11 @@ if [[ $nameDistrib == "Debian" ]]; then
 fi
 
 # conbfiguration ***********************************************************
-cp $REPWB/cakebox/config/default.php.dist $REPWB/cakebox/config/default.php
+cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/default.php
 
-sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" $REPWB/cakebox/config/default.php
-sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWB/cakebox/config/default.php
-chown -R www-data:www-data $REPWB/cakebox/config
+sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" $REPWEB/cakebox/config/default.php
+sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/default.php
+chown -R www-data:www-data $REPWEB/cakebox/config
 
 # config apache et ajout de l'alias sur apache
 
@@ -83,13 +82,13 @@ a2enmod rewrite
 
 a2enconf javascript-common
 
-cp $REPWB/cakebox/webconf-example/apache2-alias.conf.example $REPAPA2/sites-available/cakebox.conf
+cp $REPWEB/cakebox/webconf-example/apache2-alias.conf.example $REPAPA2/sites-available/cakebox.conf
 
-sed -i -e 's|'\$ALIAS'|cakebox|g' -e 's|'\$CAKEBOXREP'|'$REPWB'/cakebox|g' -e 's|'\$VIDEOREP'|/home/'$userLinux'/downloads|g' $REPAPA2/sites-available/cakebox.conf
+sed -i -e 's|'\$ALIAS'|cakebox|g' -e 's|'\$CAKEBOXREP'|'$REPWEB'/cakebox|g' -e 's|'\$VIDEOREP'|/home/'$userLinux'/downloads|g' $REPAPA2/sites-available/cakebox.conf
 sed -i "/.*VirtualHost.*/d" $REPAPA2/sites-available/cakebox.conf
 
 a2ensite cakebox.conf
-serviceapache2restart
+__serviceapache2restart
 
 
 # install plugin cakebox sur rutorrent
@@ -100,15 +99,15 @@ echo "*******************************************************"
 sleep 2
 echo
 
-git clone https://github.com/Cakebox/linkcakebox.git $REPWB/rutorrent/plugins/linkcakebox
-chown -R www-data:www-data $REPWB/rutorrent/plugins/linkcakebox
+git clone https://github.com/Cakebox/linkcakebox.git $REPWEB/rutorrent/plugins/linkcakebox
+chown -R www-data:www-data $REPWEB/rutorrent/plugins/linkcakebox
 
-sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox';|; s|\(\$dirpath.*\)|\$dirpath = '\/home\/"$userLinux"\/downloads\/';|" $REPWB/rutorrent/plugins/linkcakebox/conf.php
+sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox';|; s|\(\$dirpath.*\)|\$dirpath = '\/home\/"$userLinux"\/downloads\/';|" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
 
-echo -e "[linkcakebox]\nenabled = yes" >> $REPWB/rutorrent/plugins/plugins.ini
+echo -e "    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/plugins/conf/plugins.ini
 
-chown www-data:www-data $REPWB/cakebox/
-chown -R www-data:www-data $REPWB/cakebox/public
+chown www-data:www-data $REPWEB/cakebox/
+chown -R www-data:www-data $REPWEB/cakebox/public
 
 #  sécuriser cakebox
 echo
@@ -120,14 +119,14 @@ echo
 
 a2enmod auth_basic
 
-echo -e 'AuthName "Entrer votre identifiant et mot de passe"\nAuthType Basic\nAuthUserFile "/var/www/html/cakebox/public/.htpasswd"\nRequire valid-user' > $REPWB/cakebox/public/.htaccess
-chown www-data:www-data $REPWB/cakebox/public/.htaccess
+echo -e 'AuthName "Entrer votre identifiant et mot de passe Cakebox"\nAuthType Basic\nAuthUserFile "/var/www/html/cakebox/public/.htpasswd"\nRequire valid-user' > $REPWEB/cakebox/public/.htaccess
+chown www-data:www-data $REPWEB/cakebox/public/.htaccess
 
-htpasswd -bc $REPWB/cakebox/public/.htpasswd $userCake $pwCake
-chown www-data:www-data $REPWB/cakebox/public/.htpasswd
+htpasswd -bc $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
+chown www-data:www-data $REPWEB/cakebox/public/.htpasswd
 
-serviceapache2restart
-chmod 755 $REPWB
+__serviceapache2restart
+chmod 755 $REPWEB
 
 headTest=`curl -Is http://$IP/cakebox/| head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
@@ -141,6 +140,6 @@ else
 	echo; echo "Consulter le wiki"
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 	echo; echo "puis continuer/arrêter l'installation"
-	ouinon
+	__ouinon
 fi
 sleep 2
