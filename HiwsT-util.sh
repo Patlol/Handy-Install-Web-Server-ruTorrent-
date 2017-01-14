@@ -143,16 +143,16 @@ if [[ $? -eq 1 ]]; then
 fi
 
 pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' $pwRuto)
-useradd -m -G adm,dip,plugdev,www-data,sudo,cdrom,sftp -p $pass $userRuto
-erreur=$?
-echo "bash" >> /home/$userRuto/.profile
-
-if [[ $erreur -ne 0 ]]; then
+useradd -m -G sftp -p $pass $userRuto   # adm,dip,plugdev,www-data,sudo,cdrom,sftp -p $pass $userRuto
+if [[ $? -ne 0 ]]; then
 	echo "Impossible de créer l'utilisateur ruTorrent $userRuto"
 	echo "Erreur $erreur sur 'useradd'"
 	__messageErreur
 	exit 1
 fi
+
+echo "bash" >> /home/$userRuto/.profile
+
 echo "Utilisateur linux $userRuto créé"
 echo
 
@@ -187,9 +187,10 @@ cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
 chmod u+rwx,g+rwx,o+rx  /etc/init/$userRuto-rtorrent.conf
 sed -i 's/<username>/'$userRuto'/g' /etc/init/$userRuto-rtorrent.conf
 
-#  rtorrentd.sh modifié
-sed -i '23 i\          su --command="screen -dmS <username>-rtd rtorrent" "<username>"' /etc/init.d/rtorrentd.sh
-sed -i 's/<username>/'$userRuto'/g' /etc/init.d/rtorrentd.sh
+#  rtorrentd.sh modifié   il faut redonner aux users bash
+sed -i '/## bash/ a\          usermod -s \/bin\/bash '$userRuto'' /etc/init.d/rtorrentd.sh
+sed -i '/## screen/ a\          su --command="screen -dmS '$userRuto'-rtd rtorrent" "'$userRuto'"' /etc/init.d/rtorrentd.sh
+sed -i '/## false/ a\          usermod -s /bin/false '$userRuto'' /etc/init.d/rtorrentd.sh
 systemctl daemon-reload
 service rtorrentd restart
 if [[ $? -eq 0 ]]; then
@@ -210,6 +211,10 @@ mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
 cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
 cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
 sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
+
+# plugins
+echo -e "    [linkcakebox]\n    enabled = no" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
+
 echo "Dossier users/$userRuto sur ruTorrent crée"
 echo
 

@@ -34,6 +34,7 @@ debWebMinU="webmin-current.deb"
 REPWEB="/var/www/html"
 REPAPA2="/etc/apache2"
 REPLANCE=$(echo `pwd`)
+PORT_SCGI=5000
 
 #############################
 #       Fonctions
@@ -995,8 +996,8 @@ cp $REPLANCE/fichiers-conf/ruto_plugins.ini $REPWEB/rutorrent/plugins/conf/plugi
 mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
-port=5000
-sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
+
+sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
 chown -R www-data:www-data $REPWEB/rutorrent/conf
 
@@ -1008,6 +1009,7 @@ tar -zxf logoff-1.3.tar.gz
 
 sed -i "s|\(\$logoffURL.*\)|\$logoffURL = \"https://www.qwant.com/\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
 sed -i "s|\(\$allowSwitch.*\)|\$allowSwitch = \"$userRuto\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
+echo -e "        [logoff]\n        enabled = yes" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
 
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/logoff
 headTest=`curl -Is http://$IP/rutorrent/| head -n 1`
