@@ -340,7 +340,6 @@ if [ ! -e $REPLANCE"/pass1" ]; then   # évite de tourner en rond si 2éme passa
 	echo "'sudo ./`basename $0`'"
 	chmod u+rwx,g+rx,o+rx $0
 	exit 0
-	fi
 else   # si 2ème passage
 	userLinux=$(cat pass1)
 	if [[ 10 -eq 20 ]]; then # $userLinux != $loguser ]]; then
@@ -351,7 +350,7 @@ else   # si 2ème passage
 		echo "'cd $REPLANCE'"
 		echo "'sudo ./`basename $0`'"
 		exit 1
-	fi
+	fi  # fin code commenté
 fi   # fin de évite ce passage si 2éme passe
 
 # Rutorrent user
@@ -508,6 +507,8 @@ done  # tmp
 # port ssh
 
 echo
+echo
+echo "Sécuriser SSH et SFTP"
 echo
 echo "Dans le but de sécuriser SSH et SFTP il est proposé"
 echo "de changer le port standard (22) et d'interdire root"
@@ -742,8 +743,7 @@ a2enmod rewrite
 
 cp $REPAPA2/apache2.conf $REPAPA2/apache2.conf.old
 sed -i 's/^Timeout[ 0-9]*/Timeout 30/' $REPAPA2/apache2.conf
-echo "ServerTokens Prod" >> $REPAPA2/apache2.conf
-echo "ServerSignature Off" >> $REPAPA2/apache2.conf
+echo -e "\nServerTokens Prod\nServerSignature Off" >> $REPAPA2/apache2.conf
 __serviceapache2restart
 
 echo "***********************************************"
@@ -906,12 +906,6 @@ sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
 __serviceapache2restart
 
 echo
-echo "************************************************************"
-echo "|  Configuration sur Apache du site par défaut terminée   |"
-echo "************************************************************"
-sleep 1
-echo
-echo
 echo "*************************************************"
 echo "|   Installation et configuration de ruTorrent  |"
 echo "*************************************************"
@@ -935,6 +929,9 @@ cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
 
 chown -R www-data:www-data $REPWEB/rutorrent
 chmod -R 755 $REPWEB/rutorrent
+
+# modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
+echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
 
 # modif du thème de rutorrent
 
@@ -1007,9 +1004,10 @@ cd $REPWEB/rutorrent/plugins
 wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz
 tar -zxf logoff-1.3.tar.gz
 
+# action pro qWant
 sed -i "s|\(\$logoffURL.*\)|\$logoffURL = \"https://www.qwant.com/\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
 sed -i "s|\(\$allowSwitch.*\)|\$allowSwitch = \"$userRuto\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
-echo -e "        [logoff]\n        enabled = yes" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
+echo -e "\n;;\n        [logoff]\n        enabled = yes" >> $REPWEB/rutorrent/plugins/conf/plugins.ini
 
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/logoff
 headTest=`curl -Is http://$IP/rutorrent/| head -n 1`

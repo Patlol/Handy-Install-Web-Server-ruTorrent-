@@ -9,7 +9,7 @@
 #############################
 #       Fonctions
 #############################
-
+REPWEB="/var/www/html"
 
 __verifSaisie() {
 if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
@@ -213,7 +213,7 @@ cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/us
 sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
 
 # plugins
-echo -e "    [linkcakebox]\n    enabled = no" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
+# echo -e "\n    [linkcakebox]\n    enabled = no" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
 
 echo "Dossier users/$userRuto sur ruTorrent crée"
 echo

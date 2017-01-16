@@ -104,7 +104,7 @@ chown -R www-data:www-data $REPWEB/rutorrent/plugins/linkcakebox
 
 sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox';|; s|\(\$dirpath.*\)|\$dirpath = '\/home\/"$userLinux"\/downloads\/';|" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
 
-echo -e "    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
+echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
 
 chown www-data:www-data $REPWEB/cakebox/
 chown -R www-data:www-data $REPWEB/cakebox/public
