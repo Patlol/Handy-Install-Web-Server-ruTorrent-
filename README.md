@@ -1,4 +1,4 @@
-# HwsT
+# HiwsT
 Handy Install a Web Server with ruTorrent and Cakebox --HwsT--  
 _rutorrent multiuser now !_
 
