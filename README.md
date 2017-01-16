@@ -1,5 +1,6 @@
 # HwsT
-Handy Install a Web Server with ruTorrent and Cakebox --HwsT--
+Handy Install a Web Server with ruTorrent and Cakebox --HwsT--  
+_rutorrent multiuser now !_
 
 Install on Debian 8 or Ubuntu 16 server
 - apache
@@ -7,7 +8,7 @@ Install on Debian 8 or Ubuntu 16 server
 - rtorrent
 - librtorrent
 - xmlrpc
-- <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a>
+- <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> multiuser
 - mediainfo
 - ffmpeg
 - <a href="https://github.com/cakebox/cakebox">Cakebox</a>
