@@ -164,7 +164,6 @@ fi
 
 __creaUserRuto () {
 
-clear
 echo
 echo "**************************************"
 echo "|  Création d'un nouvel utilisateur  |"
@@ -217,7 +216,7 @@ let "port += 1"
 echo $port > /var/www/html/rutorrent/conf/scgi_port
 
 # rtorrent.rc
-cp $repLance/fichiers-conf/rto_rtorrent.rc /home/$userRuto/.rtorrent.rc
+cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/$userRuto/.rtorrent.rc
 sed -i 's/<username>/'$userRuto'/g' /home/$userRuto/.rtorrent.rc
 sed -i 's/scgi_port.*/scgi_port = 127.0.0.1:'$port'/' /home/$userRuto/.rtorrent.rc
 
@@ -226,7 +225,7 @@ echo
 
 #  fichiers daemon rtorrent
 #  créé rtorrent.conf
-cp $repLance/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
+cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
 chmod u+rwx,g+rwx,o+rx  /etc/init/$userRuto-rtorrent.conf
 sed -i 's/<username>/'$userRuto'/g' /etc/init/$userRuto-rtorrent.conf
 
@@ -252,7 +251,7 @@ fi
 # dossier conf/users/userRuto
 mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
 cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
-cp $repLance/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
+cp $REPLANCE/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
 sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
 
 # plugins
@@ -326,10 +325,10 @@ htpasswd -b $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
 
 
 __menu() {
-
- local tmp=""; choixMenu=""
+clear
+local tmp=""; choixMenu=""
 until [[ $tmp == "ok" ]]; do
-	clear
+	echo
 	echo "******************************************"
 	echo "|                                        |"
 	echo "|    Hiwst-util Utilitaires seedbox      |"
@@ -346,7 +345,8 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t3)  Ajouter un utilisateur ruTorrent et Cakebox"
 	# echo -e "\t3)  Supprimer un utilisateur ruTorrent"
 	# echo -e "\t4)  Supprimer un utilisateur Cakebox"
-	# echo -e "\t5)  Lister les utilisateurs existants"
+	echo -e "\t4)  Lister les utilisateurs existants"            # cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'
+	# cat /etc/apache2/.htpasswd | awk -F":" '{ print $1 }'         cat /var/www/html/cakebox/public/.htpasswd | awk -F":" '{ print $1 }'
 	# echo -e "\t6)  Relancer rtorrent manuellement"
 	# echo -e "\t4)  Espace disque restant"
 	# echo -e "\t4)  Diagnostique"
@@ -356,7 +356,7 @@ until [[ $tmp == "ok" ]]; do
 
 	local tmp2=""
 	until [[ $tmp2 == "ok" ]]; do
-		echo -n "Votre choix (0 1 2 3) "
+		echo -n "Votre choix (0 1 2 3 4) "
 		read choixMenu
 		echo
 		case $choixMenu in
@@ -364,7 +364,6 @@ until [[ $tmp == "ok" ]]; do
 				exit 0
 			;;
 			[1])  # + user ruTorrent
-				clear
 				echo
 				echo "****************************************"
 				echo "|   Ajout d'un utilisateur ruTorrent   |"
@@ -390,7 +389,6 @@ until [[ $tmp == "ok" ]]; do
 				tmp2="ok"
 			;;
 			[2])  # + user cakebox
-				clear
 				echo
 				echo "****************************************"
 				echo "|    Ajout d'un utilisateur Cakebox    |"
@@ -402,7 +400,6 @@ until [[ $tmp == "ok" ]]; do
 				echo "  que son répertoire de téléchargement."
 				echo
 				__IDuser Cakebox
-				clear
 				__creaUserCake
 				echo
 				echo "Traitement terminé"
@@ -412,7 +409,6 @@ until [[ $tmp == "ok" ]]; do
 				tmp2="ok"
 			;;
 			[3])  # + user rutorrent et cakebox
-				clear
 				echo
 				echo "****************************************"
 				echo "|   Ajout d'un utilisateur ruTorrent   |"
@@ -447,12 +443,16 @@ until [[ $tmp == "ok" ]]; do
 				tmp2="ok"
 			;;
 			[4])
-				echo "En construction ..."
-				sleep 3
+				echo
+				echo "****************************"
+				echo "|  Liste des utilisateurs  |"
+				echo "****************************"
+				echo
+				. $REPLANCE/insert/listeusers.sh
+				__ouinon
 				tmp2="ok"
 			;;
 			[5])
-				clear
 				echo
 				echo "*************************"
 				echo "|   Relancer rtorrent   |"
@@ -489,7 +489,7 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 
-repLance=$(echo `pwd`)
+REPLANCE=$(echo `pwd`)
 
 #############################
 #          MENU
