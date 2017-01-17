@@ -14,6 +14,12 @@ Install on Debian 8 or Ubuntu 16 server
 - <a href="https://github.com/cakebox/cakebox">Cakebox</a>
 - <a href="http://www.webmin.com/">WebMin</a>
 
+# HiwsT-util
+With this utility you can create other ruTorrent users and thus share your server.
+- Creating a linux user and a rutorrent user
+- Security ruTorrent
+- Block the new user has his /home from sftp
+- Prohibits new user access via ssh
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki">Wiki</a> in french
 
