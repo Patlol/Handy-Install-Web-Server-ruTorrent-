@@ -1,6 +1,6 @@
 # HiwsT
 Handy Install a Web Server with ruTorrent and Cakebox --HwsT--  
-_rutorrent multiuser now !_
+_ruTorrent and Cakebox multiuser now !_
 
 Install on Debian 8 or Ubuntu 16 server
 - apache
@@ -16,8 +16,9 @@ Install on Debian 8 or Ubuntu 16 server
 
 # HiwsT-util
 With this utility you can create other ruTorrent users and thus share your server.
-- Creating a linux user and a rutorrent user
-- Security ruTorrent
+- Creating a linux user and a rutorrent/cakebox user
+- Security ruTorrent/cakebox
+- Blok the new user has is /home/download from rutorrent/cakebox
 - Block the new user has his /home from sftp
 - Prohibits new user access via ssh
 
