@@ -12,6 +12,7 @@ if [[ $changePort == "oui" ]]; then
 else
 	sed -i -e 's/^Protocol.*/Protocol 2/' -e 's/^X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
 	echo -e "UseDNS no\nAllowUsers " >> /etc/ssh/sshd_config
+fi
 service ssh restart
 service ssh status
 if [[ $? -ne 0 ]]; then

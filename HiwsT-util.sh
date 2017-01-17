@@ -2,15 +2,14 @@
 
 # Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent et cakebox
 # L'ajout ou la suppression d'utilisateur rutorrent et cakebox
-# Version beta
-
-
+# Version 1.0
 
 #############################
 #       Fonctions
 #############################
 REPWEB="/var/www/html"
 REPAPA2="/etc/apache2"
+REPLANCE=$(echo `pwd`)
 
 __verifSaisie() {
 if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
@@ -20,7 +19,6 @@ else 	echo "Uniquement des caractères alphanumériques"
 	yno="n"
 fi
 }
-
 
 __ouinon() {
 local tmp=""; local yno=""
@@ -33,7 +31,7 @@ case $yno in
 		exit 1
 	;;
 	[Oo] | [Oo][Uu][Ii])
-		echo "On continu !"
+		echo "On continue !"
 		tmp="ok"
 		sleep 1
 	;;
@@ -45,14 +43,10 @@ esac
 done
 }    #  fin ouinon
 
-
-
 __messageErreur() {
 	echo; echo "Consulter le wiki"
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 }  # fin messageErreur
-
-
 
 __IDuser() {    # saisie ID et PW  ruto/cake
 
@@ -160,7 +154,6 @@ elif [[ $1 == "Cakebox" ]]; then
 	userCake=$user; pwCake=$pw
 fi
 }  # fin IDuser
-
 
 __creaUserRuto () {
 
@@ -272,7 +265,6 @@ else	service apache2 status
 	exit 1
 fi
 
-
 # modif pour sftp / sécu sftp -------------------------------------------------------
 
 # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
@@ -294,7 +286,6 @@ echo "Sécurisation SFTP faite : seulement accès a /home/$userRuto"
 
 
  __creaUserCake() {
-
 echo
 echo "**************************************"
 echo "|  Création d'un nouvel utilisateur  |"
@@ -324,7 +315,6 @@ htpasswd -b $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
 echo
 echo "Mot de passe $userCake créé"
 echo
-
  }  # fin __creaUserCake
 
 
@@ -362,7 +352,6 @@ echo
 
 
 __suppUserRuto() {
-
 # saisie nom
 local tmp=""
 until [[ $tmp == "ok" ]]; do
@@ -412,7 +401,7 @@ fi
 # Suppression du home et suppression user linux
 userdel -r $userRuto
 echo "Utilisateur linux et /home/$userRuto supprimé"
-}
+}  # fin __suppUserRuto
 
 __menu() {
 clear
@@ -438,15 +427,15 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t5)  Supprimer un utilisateur ruTorrent"
 	echo -e "\t6)  Lister les utilisateurs existants"
 	echo -e "\t    Linux, ruTorrent, Cakebox"
-	# echo -e "\t6)  Relancer rtorrent manuellement"
-	# echo -e "\t4)  Diagnostique"
-	# echo -e "\t7)  Rebooter le serveur"
+	echo -e "\t7)  Relancer rtorrent manuellement"
+	echo -e "\t8)  Diagnostique"
+	echo -e "\t9)  Rebooter le serveur"
 	echo -e "\t0)  Sortir"
 	echo
 
 	local tmp2=""
 	until [[ $tmp2 == "ok" ]]; do
-		echo -n "Votre choix (0 1 2 3 4 5 6) "
+		echo -n "Votre choix (0 1 2 3 4 5 6 7) "
 		read choixMenu
 		echo
 		case $choixMenu in
@@ -475,7 +464,7 @@ until [[ $tmp == "ok" ]]; do
 				echo "Traitement terminé"
 				echo "Utilisateur $userRuto crée"
 				echo "Mot de passe $pwRuto"
-				__ouinon
+				sleep 1
 				tmp2="ok"
 			;;
 			[2])  # + user cakebox
@@ -495,7 +484,7 @@ until [[ $tmp == "ok" ]]; do
 				echo "Traitement terminé"
 				echo "Utilisateur $userCake crée"
 				echo "Mot de passe $pwCake"
-				__ouinon
+				sleep 1
 				tmp2="ok"
 			;;
 			[3])  # + user rutorrent et cakebox
@@ -529,7 +518,7 @@ until [[ $tmp == "ok" ]]; do
 				echo "Traitement terminé"
 				echo "Utilisateur $userCake crée"
 				echo "Mot de passe $pwCake"
-				__ouinon
+				sleep 1
 				tmp2="ok"
 			;;
 			[6])
@@ -539,7 +528,7 @@ until [[ $tmp == "ok" ]]; do
 				echo "****************************"
 				echo
 				. $REPLANCE/insert/listeusers.sh
-				sleep 2
+				sleep 1
 				tmp2="ok"
 			;;
 			[4])
@@ -552,7 +541,7 @@ until [[ $tmp == "ok" ]]; do
 				echo
 				echo "Traitement terminé"
 				echo "Utilisateur $userCake supprimé"
-				__ouinon
+				sleep 1
 				tmp2="ok"
 			;;
 			[5])
@@ -568,8 +557,38 @@ until [[ $tmp == "ok" ]]; do
 				echo
 				echo "Traitement terminé"
 				echo "Utilisateur $userRuto supprimé"
-				__ouinon
+				sleep 1
 				tmp2="ok"
+			;;
+			[7])
+				echo
+				echo "***************************"
+				echo "|    rtorrent restart     |"
+				echo "***************************"
+				echo
+				service rtorrentd restart
+				service rtorrentd status
+				sleep 1
+				tmp2="ok"
+			;;
+			[8])
+				echo
+				echo "***************************"
+				echo "|      Diagnostique       |"
+				echo "***************************"
+				echo
+				. $REPLANCE/insert/diag.sh
+				sleep 1
+				tmp2="ok"
+			;;
+			[9])
+				echo
+				echo "*********************"
+				echo "|      Reboot       |"
+				echo "*********************"
+				echo
+				__ouinon
+				reboot
 			;;
 			*)
 				echo "Entrée invalide"
@@ -580,15 +599,11 @@ until [[ $tmp == "ok" ]]; do
 done
 }   # fin menu
 
-
-
 #############################
 #     Début du script
 #############################
 
-
 # root ?
-
 if [[ $(id -u) -ne 0 ]]; then
 	echo
 	echo "Ce script nécessite d'être exécuté avec sudo."
@@ -598,13 +613,9 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 
-REPLANCE=$(echo `pwd`)
-
 #############################
 #          MENU
 #############################
-
-
 	__menu
 
 	echo

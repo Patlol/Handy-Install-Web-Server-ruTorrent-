@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version bêta testée sur ubuntu et debian server vps Ovh
+# Version 1.0 testée sur ubuntu et debian server vps Ovh
 # à tester sur kimsufi et autres hébergeurs
 
 ##################################################
@@ -50,8 +50,6 @@ else 	echo "Uniquement des caractères alphanumériques"
 fi
 }
 
-
-
 __ouinon() {
 local tmp=""
 until [[ $tmp == "ok" ]]; do
@@ -65,7 +63,7 @@ case $yno in
 		exit 1
 	;;
 	[Oo] | [Oo][Uu][Ii])
-		echo "On continu !"
+		echo "On continue !"
 		tmp="ok"
 		sleep 1
 	;;
@@ -264,7 +262,6 @@ then
 	echo "Est-ce normal, avez-vous installé la bonne version de l'OS ?"
 fi
 echo "Votre IP : "$IP
-echo "Vous êtes logué en : "$loguser
 echo "Le script tourne sous : $user"
 echo
 echo "Durée du script : environ 10mn"
@@ -335,9 +332,9 @@ if [ ! -e $REPLANCE"/pass1" ]; then   # évite de tourner en rond si 2éme passa
 	echo
 	__creauser
 	echo "A bientôt !"
-	echo "su '$userLinux'"
-	echo "'cd $REPLANCE'"
-	echo "'sudo ./`basename $0`'"
+	echo "su $userLinux"
+	echo "cd $REPLANCE"
+	echo "sudo ./`basename $0`"
 	chmod u+rwx,g+rx,o+rx $0
 	exit 0
 else   # si 2ème passage
@@ -346,9 +343,9 @@ else   # si 2ème passage
 		echo
 		echo "Vous utiliser $user"
 		echo "Vous deviez lancer le script en étant logué avec $userLinux !"
-		echo "'su $userLinux'"
-		echo "'cd $REPLANCE'"
-		echo "'sudo ./`basename $0`'"
+		echo "su $userLinux"
+		echo "cd $REPLANCE"
+		echo "sudo ./`basename $0`"
 		exit 1
 	fi  # fin code commenté
 fi   # fin de évite ce passage si 2éme passe
@@ -415,7 +412,7 @@ until [[ $tmp3 == "ok" ]]; do
 	read yno
 	case $yno in
 		[nN] | [nN][oO][nN])
-			echo "Ok on continu"
+			echo "Ok on continue"
 			tmp3="ok"
 			installCake="non"
 		;;
@@ -486,7 +483,7 @@ until [[ $tmp == "ok" ]]; do
 	read yno
 	case $yno in
 		[nN] | [nN][oO][nN])
-			echo "Ok on continu"
+			echo "Ok on continue"
 			tmp="ok"
 			installWebMin="non"
 			sleep 1
