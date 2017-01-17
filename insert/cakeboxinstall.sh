@@ -41,7 +41,6 @@ npm install -g bower
 
 chmod o+r /var/www
 chmod u+rwx,g+rwx $REPWEB
-# git clone https://github.com/Micdu70/cakebox.git $REPWEB/cakebox
 git clone https://github.com/Cakebox/Cakebox-light.git $REPWEB/cakebox
 cd $REPWEB/cakebox/
 git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))
@@ -59,7 +58,6 @@ if [[ $nameDistrib == "Ubuntu" ]]; then
 	chown -R $userLinux:$userLinux /home/$userLinux/.composer
 fi
 
-# cd $REPWEB/cakebox
 echo $userLinux | sudo -S -u $userLinux composer install
 echo $userLinux | sudo -S -u $userLinux bower install
 
@@ -69,10 +67,10 @@ if [[ $nameDistrib == "Debian" ]]; then
 fi
 
 # conbfiguration ***********************************************************
-cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/default.php
+cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
 
-sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" $REPWEB/cakebox/config/default.php
-sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/default.php
+sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
+sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/$userCake.php
 chown -R www-data:www-data $REPWEB/cakebox/config
 
 # config apache et ajout de l'alias sur apache
