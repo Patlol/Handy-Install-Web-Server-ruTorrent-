@@ -193,7 +193,7 @@ if [[ $? -ne 0 ]]; then
 	exit 1
 fi
 
-echo "bash" >> /home/$userRuto/.profile
+# echo "bash" >> /home/$userRuto/.profile
 
 echo "Utilisateur linux $userRuto créé"
 echo
@@ -236,7 +236,7 @@ sed -i '/## false/ a\          usermod -s /bin/false '$userRuto'' /etc/init.d/rt
 systemctl daemon-reload
 service rtorrentd restart
 if [[ $? -eq 0 ]]; then
-	echo "rtorrent en daemon fonctionne."
+	echo "rtorrent en daemon modifié et fonctionne."
 	echo
 else	echo "Un problème est survenu."
 	ps aux | grep -e '.*torrernt$'
@@ -287,7 +287,7 @@ sed -i 's|^Subsystem sftp /usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_conf
 if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
 fi
-service ssh restart > /dev/null
+service sshd restart > /dev/null
 # service ssh status
 echo "Sécurisation SFTP faite : seulement accès a /home/$userRuto"
 }   #  fin creauserruto
@@ -301,8 +301,8 @@ echo "|  Création d'un nouvel utilisateur  |"
 echo "|             Cakebox                |"
 echo "**************************************"
 echo
-echo -e "\tNom utilisateur : $userRuto"
-echo -e "\tMot de passe    : $pwRuto"
+echo -e "\tNom utilisateur : $userCake"
+echo -e "\tMot de passe    : $pwCake"
 echo
 sleep 2
 
@@ -312,7 +312,8 @@ sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$u
 sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/$userCake.php
 chown -R www-data:www-data $REPWEB/cakebox/config
 echo
-echo "conf/$userCake.php créé"
+echo "cakebox/config/$userCake.php créé"
+echo
 # - ajout dans cakebox.conf apache
 sed -i '/ErrorLog.*/ i\\n    Alias /access /home/'$userCake'/downloads/\n    <Directory "/home/'$userCake'/downloads">\n        Options -Indexes\n\n        <IfVersion >= 2.4>\n            Require all granted\n        </IfVersion>\n        <IfVersion < 2.4>\n            Order allow,deny\n            Allow from all\n        </IfVersion>\n        Satisfy Any\n\n        Header set Content-Disposition "attachment"\n\n    </Directory>\n' $REPAPA2/sites-available/cakebox.conf
 echo
@@ -320,15 +321,102 @@ echo "cakebox.conf dans apache modifié"
 echo
 # mot de passe
 htpasswd -b $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
+echo
+echo "Mot de passe $userCake créé"
+echo
 
  }  # fin __creaUserCake
 
 
-__menu() {
-clear
-local tmp=""; choixMenu=""
+__suppUserCake() {
+# saisie nom
+local tmp=""
 until [[ $tmp == "ok" ]]; do
 	echo
+	echo -n "Nom de l'utilisateur Cakebox à supprimer "
+	read userCake
+	# user cakebox ?
+	egrep "^$userCake" /var/www/html/cakebox/public/.htpasswd > /dev/null
+	if [[ $? -ne 0 ]]; then
+		echo "$userCake n'est pas un utilisateur Cakebox"
+	else
+		tmp="ok"
+	fi
+done
+
+# mot de passe
+sed -i "s/^"$userCake".*//" $REPWEB/cakebox/public/.htpasswd
+echo "Mot de passe supprimé"
+# supprimer dans ckebox.conf
+# sed -i '/-Début/,/-Fin/d' mon_fichier.txt
+sed -i '/    Alias \/access \/home\/'$userCake'\/downloads\//,/    <\/Directory>/d' $REPAPA2/sites-available/cakebox.conf
+echo
+echo "cakebox.conf dans apache modifié"
+echo
+# supprimer le fichier conf/user.php
+rm $REPWEB/cakebox/config/$userCake.php
+echo
+echo "cakebox/config/$userCake.php supprimé"
+echo
+}  # fin __suppUserCake
+
+
+__suppUserRuto() {
+
+# saisie nom
+local tmp=""
+until [[ $tmp == "ok" ]]; do
+	echo
+	echo -n "Nom de l'utilisateur ruTorrent à supprimer "
+	read userRuto
+	# user ruto ?
+	egrep "^$userRuto:rutorrent" $REPAPA2/.htpasswd > /dev/null
+	if [[ $? -ne 0 ]]; then
+		echo "$userRuto n'est pas un utilisateur ruTorrent"
+	else
+		tmp="ok"
+	fi
+done
+
+# suppression du user allowed dans sshd_config
+sed -i '/'$userRuto'/d' /etc/ssh/sshd_config
+service sshd restart
+
+# mot de passe rutorrent
+sed -i "s/^"$userRuto".*//" $REPAPA2/.htpasswd
+echo "Mot de passe supprimé"
+echo
+
+# dossier rutorrent/conf/users/userRuto
+rm -r $REPWEB/rutorrent/conf/users/$userRuto
+echo "Dossier users/$userRuto sur ruTorrent supprimé"
+echo
+
+# modif de rtorrentd.sh
+sed -i '/.*'$userRuto.*'/d' /etc/init.d/rtorrentd.sh
+rm /etc/init/$userRuto-rtorrent.conf
+
+systemctl daemon-reload
+service rtorrentd restart
+if [[ $? -eq 0 ]]; then
+	echo "rtorrent en daemon modifié et fonctionne."
+	echo
+else	echo "Un problème est survenu."
+	ps aux | grep -e '.*torrernt$'
+	echo
+	service rtorrentd status
+	__messageErreur
+	exit 1
+fi
+
+# Suppression du home et suppression user linux
+userdel -r $userRuto
+echo "Utilisateur linux et /home/$userRuto supprimé"
+}
+
+__menu() {
+clear
+echo
 	echo "******************************************"
 	echo "|                                        |"
 	echo "|    Hiwst-util Utilitaires seedbox      |"
@@ -337,18 +425,20 @@ until [[ $tmp == "ok" ]]; do
 	echo "|   A utiliser après une installation    |"
 	echo "|         réalisée avec HiwsT            |"
 	echo "******************************************"
-	echo; echo; echo
+	echo; echo
+local tmp=""; choixMenu=""
+until [[ $tmp == "ok" ]]; do
+	echo
 	echo "Voulez-vous"
 	echo
 	echo -e "\t1)  Ajouter un utilisateur ruTorrent"
 	echo -e "\t2)  Ajouter un utilisateur Cakebox"
 	echo -e "\t3)  Ajouter un utilisateur ruTorrent et Cakebox"
-	# echo -e "\t3)  Supprimer un utilisateur ruTorrent"
-	# echo -e "\t4)  Supprimer un utilisateur Cakebox"
-	echo -e "\t4)  Lister les utilisateurs existants"            # cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'
-	# cat /etc/apache2/.htpasswd | awk -F":" '{ print $1 }'         cat /var/www/html/cakebox/public/.htpasswd | awk -F":" '{ print $1 }'
+	echo -e "\t4)  Supprimer un utilisateur Cakebox"
+	echo -e "\t5)  Supprimer un utilisateur ruTorrent"
+	echo -e "\t6)  Lister les utilisateurs existants"
+	echo -e "\t    Linux, ruTorrent, Cakebox"
 	# echo -e "\t6)  Relancer rtorrent manuellement"
-	# echo -e "\t4)  Espace disque restant"
 	# echo -e "\t4)  Diagnostique"
 	# echo -e "\t7)  Rebooter le serveur"
 	echo -e "\t0)  Sortir"
@@ -356,7 +446,7 @@ until [[ $tmp == "ok" ]]; do
 
 	local tmp2=""
 	until [[ $tmp2 == "ok" ]]; do
-		echo -n "Votre choix (0 1 2 3 4) "
+		echo -n "Votre choix (0 1 2 3 4 5 6) "
 		read choixMenu
 		echo
 		case $choixMenu in
@@ -442,24 +532,43 @@ until [[ $tmp == "ok" ]]; do
 				__ouinon
 				tmp2="ok"
 			;;
-			[4])
+			[6])
 				echo
 				echo "****************************"
 				echo "|  Liste des utilisateurs  |"
 				echo "****************************"
 				echo
 				. $REPLANCE/insert/listeusers.sh
+				sleep 2
+				tmp2="ok"
+			;;
+			[4])
+				echo
+				echo "*************************************"
+				echo "|   Supprimer utilisateur Cakebox   |"
+				echo "*************************************"
+				echo
+				__suppUserCake
+				echo
+				echo "Traitement terminé"
+				echo "Utilisateur $userCake supprimé"
 				__ouinon
 				tmp2="ok"
 			;;
 			[5])
 				echo
-				echo "*************************"
-				echo "|   Relancer rtorrent   |"
-				echo "*************************"
+				echo "*************************************"
+				echo "|  Supprimer utilisateur ruTorrent  |"
+				echo "*************************************"
 				echo
-				echo "En construction ..."
-				sleep 3
+				echo "ATTENTION le répertoire /home de l'utilisateur"
+				echo "va être supprimé !!!!!!!!!!"
+				__ouinon
+				__suppUserRuto
+				echo
+				echo "Traitement terminé"
+				echo "Utilisateur $userRuto supprimé"
+				__ouinon
 				tmp2="ok"
 			;;
 			*)

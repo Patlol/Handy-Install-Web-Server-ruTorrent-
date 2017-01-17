@@ -1040,11 +1040,8 @@ then
 fi   # Webmin
 
 
-# sécuriser ssh
-
-if [[ $changePort == "oui" ]]; then
+# sécuriser ssh des choses à faire de tte façon
 . $REPLANCE/insert/sshsecuinstall.sh
-fi  # changePort
 sleep 3
 
 
