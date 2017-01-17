@@ -11,7 +11,7 @@ Install on Debian 8 or Ubuntu 16 server
 - <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> multiuser
 - mediainfo
 - ffmpeg
-- <a href="https://github.com/cakebox/cakebox">Cakebox</a>
+- <a href="https://github.com/cakebox/cakebox">Cakebox</a> multiuser
 - <a href="http://www.webmin.com/">WebMin</a>
 
 # HiwsT-util
