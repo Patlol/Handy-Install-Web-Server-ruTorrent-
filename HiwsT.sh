@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# Version 1.0 testée sur ubuntu et debian server vps Ovh
+# Version 1.0
+# Installation apache2, php, rtorrent, rutorrent, cakebox, WebMin
+# testée sur ubuntu et debian server vps Ovh
 # à tester sur kimsufi et autres hébergeurs
+# https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
+
 
 ##################################################
 #     variables install paquets Ubuntu/Debian
 ##################################################
-
 #  Debian
 
 paquetsWebD="mc aptitude apache2 apache2-utils autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libapache2-mod-php5 libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
