@@ -18,10 +18,10 @@ REPLANCE=$(echo `pwd`)
 
 __verifSaisie() {
 if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
-	yno="o"
+	verifOk="o"
 else 	echo "Uniquement des caractères alphanumériques"
 	echo "Entre 2 et 15 caractères"
-	yno="n"
+	verifOk="n"
 fi
 }
 
@@ -63,67 +63,66 @@ until [[ $tmp == "ok" ]]; do
 		echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
 		read user
 		__verifSaisie $user
-		if [[ $yno == "o" ]]; then
+		if [[ $verifOk == "o" ]]; then
 			# user linux ?
 			egrep "^$user" /etc/passwd >/dev/null
-			if [[ $? -eq 0 ]]; then
-				echo "$user existe déjà, c'est un utilisateur linux"
+			userL=$?
+			# user ruTorrent ?
+			egrep "^$user:rutorrent" /etc/apache2/.htpasswd > /dev/null
+			userR=$?
+			if [[ $userL -eq 0 ]]; then
+				echo "Il existe déjà un utilisateur Linux $user "
+				echo "Vous ne pouvez pas en créer un deuxième"
 				yno="N"
-			else
-				# user ruTorrent ?
-				egrep "^$user:rutorrent" /etc/apache2/.htpasswd > /dev/null
-				if [[ $? -eq 0 ]]; then
-					echo "$user existe déjà, c'est un utilisateur ruTorrent"
+			elif [[ $userR -eq 0 ]]; then
+					echo "$user est déjà un utilisateur ruTorrent"
+					echo "Vous ne pouvez pas en créer un deuxième"
 					yno="N"
 				else
-					# user cakebox ?
-					egrep "^$user" /var/www/html/cakebox/public/.htpasswd > /dev/null
-					if [[ $? -eq 0 ]]; then
-						echo "$user existe déjà, c'est un utilisateur cakebox"
-						yno="N"
-					else
-						echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
-						read yno
-					fi
+					echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
+					read yno
 				fi
 			fi
 		fi
-	# traitement cakebox --------------------------------------------------
-	elif [[ $1 == "Cakebox" ]]; then
+	#     traitement cakebox ------------------------------------------------------
+	if [[ $1 == "Cakebox" ]]; then
 		echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
 		read user
 		__verifSaisie $user
-		if [[ $yno == "o" ]]; then
+		if [[ $verifOk == "o" ]]; then
 			# user cakebox ?
 			egrep "^$user" /var/www/html/cakebox/public/.htpasswd > /dev/null
-			if [[ $? -eq 0 ]]; then
-				echo "$user existe déjà, comme utilisateur cakebox"
+			userC=$?
+			#  déjà un user linux ?
+			egrep "^$user" /etc/passwd >/dev/null
+			userL=$?
+			#  déjà user rutorrent ?
+			egrep "^$user:rutorrent" /etc/apache2/.htpasswd > /dev/null
+			userR=$?
+			if [ $userL -ne 0 -o $userC -eq 0 ]; then
+				# pas de ul ou existe uc NON
+				echo "$user n'est pas un utilisateur Linux ou"
+				echo "$user est déjà un utilisateur Cakebox."
+				echo "Impossible de créer un utilisateur Cakebox sous ce nom."
 				yno="N"
-			else
-				#  déjà un user linux ?
-				egrep "^$user" /etc/passwd >/dev/null
-				userL=$?
-				#  déjà user rutorrent ?
-				egrep "^$user:rutorrent" /etc/apache2/.htpasswd > /dev/null
-				userR=$?
-				if [ $userL -eq 0 -a $userR -ne 0 ]; then
-					# pas de créa sur un user dlinux existant
-					echo "$user est un utilisateur linux"
+			elif [[ userR -ne 0 ]]; then
+					# existe ul  pas de ur  pas de uc NON
+					echo "$user est bien un utilisateur Linux, mais"
+					echo "$user n'est pas un utilisateur ruTorrent"
+					echo "Impossible de créer un utilisateur Cakebox sous ce nom."
 					yno="N"
-				elif [ $userL -ne 0 -a $userR -ne 0 ]; then
-					echo "$user n'est pas déjà un utilisateur linux ni ruTorrent"
-					echo "utiliser l'option 3) pour créer les 2"
-					exit 1
-				elif [[ $userR -eq 0 ]]; then
-					echo "$user est un utilisateur ruTorrent"
-					echo "Vous allez créer son utilisateur Cakebox"
-					yno="O"
+				else
+					# existe ul exite ur pas de uc OUI
+					echo
+					echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
+					read yno
 				fi
 			fi
 		fi
-	fi  # fin traitement différent -----------------------------------------
+ #    fin traitement différent -----------------------------------------
+
 	case $yno in
-		[Oo] | [Oo][Uu][Ii])   # saisie ID et PW d'un utilisateur
+		[Oo] | [Oo][Uu][Ii] )   # saisie ID et PW d'un utilisateur
 			until [[ $tmp2 == "ok" ]]; do
 				echo -n "Choisissez un mot de passe (ni espace ni \) : "
 				read pw
@@ -144,18 +143,20 @@ until [[ $tmp == "ok" ]]; do
 		;;
 		[nN] | [nN][oO][nN])
 			echo "Nom d'utilisateur invalidé. Reprendre la saisie"
+			echo
 			sleep 1
 		;;
-		*)
-			echo "Entrée invalide"
-			sleep 1
-			;;
-	esac
+		esac
+	if [[ $verifOk == "n" ]]; then
+		#statements
+		echo "Entrée invalide"
+		sleep 1
+	fi
 done
 
 if [[ $1 == "ruTorrent" ]]; then
 	userRuto=$user; pwRuto=$pw
-elif [[ $1 == "Cakebox" ]]; then
+else
 	userCake=$user; pwCake=$pw
 fi
 }  # fin IDuser
@@ -324,20 +325,24 @@ echo
 
 
 __suppUserCake() {
-# saisie nom
-local tmp=""
-until [[ $tmp == "ok" ]]; do
-	echo
-	echo -n "Nom de l'utilisateur Cakebox à supprimer "
-	read userCake
-	# user cakebox ?
-	egrep "^$userCake" /var/www/html/cakebox/public/.htpasswd > /dev/null
-	if [[ $? -ne 0 ]]; then
-		echo "$userCake n'est pas un utilisateur Cakebox"
-	else
-		tmp="ok"
-	fi
-done
+# saisie nom sauf si conjoint à la supp rutorrent alors $suppUserCake pas vide
+if [[ ! $suppUserCake ]]; then
+	local tmp=""
+	until [[ $tmp == "ok" ]]; do
+		echo
+		echo -n "Nom de l'utilisateur Cakebox à supprimer "
+		read userCake
+		# user cakebox ?
+		egrep "^$userCake" /var/www/html/cakebox/public/.htpasswd > /dev/null
+		if [[ $? -ne 0 ]]; then
+			echo "$userCake n'est pas un utilisateur Cakebox"
+		else
+			tmp="ok"
+		fi
+	done
+else
+	userCake=$suppUserCake
+fi
 
 # mot de passe
 sed -i "s/^"$userCake".*//" $REPWEB/cakebox/public/.htpasswd
@@ -408,7 +413,7 @@ echo "Utilisateur linux et /home/$userRuto supprimé"
 }  # fin __suppUserRuto
 
 
-__saisiePW() {
+__saisiePW() {   # pour __changePW
 local tmp2=""
 	until [[ $tmp2 == "ok" ]]; do
 				echo -n "Choisissez un mot de passe (ni espace ni \) : "
@@ -439,6 +444,7 @@ until [[ $tmp == "ok" ]]; do
 
 		case $typeUser in
 			[1] )
+				echo "!!! Mot de passe valable aussi pour ftp !!!"
 				echo -n "Nom de l'utilisateur linux : "
 				read user
 				# user linux ?
@@ -532,7 +538,7 @@ until [[ $tmp == "ok" ]]; do
 	echo
 	echo -e "\t4)  Modifier un mot de passe utilisateur"
 	echo -e "\t5)  Supprimer un utilisateur Cakebox"
-	echo -e "\t6)  Supprimer un utilisateur ruTorrent et Linux"
+	echo -e "\t6)  Supprimer un utilisateur ruTorrent (et Linux, Cakebox)"
 	echo -e "\t7)  Lister les utilisateurs existants"
 	echo
 	echo -e "\t8)  Relancer rtorrent manuellement"
@@ -542,19 +548,18 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t0)  Sortir"
 	echo
 
-	local tmp2=""
-	until [[ $tmp2 == "ok" ]]; do
 		echo -n "Votre choix (0 1 2 3 4 5 6 7 8 9 10) "
 		read choixMenu
 		echo
 		case $choixMenu in
 			0 )
-				echo
+				tmp2="ok"; tmp="ok"
 			;;
 			1 )  # + user ruTorrent
 				echo
 				echo "****************************************"
-				echo "|   Ajout d'un utilisateur ruTorrent   |"
+				echo "|     Ajout d'un utilisateur Linux     |"
+				echo "|            et ruTorrent              |"
 				echo "****************************************"
 				echo
 				echo "- Sur ruTorrent il n'aura accès qu'a son"
@@ -599,12 +604,12 @@ until [[ $tmp == "ok" ]]; do
 			3 )  # + user rutorrent et cakebox
 				echo
 				echo "****************************************"
-				echo "|   Ajout d'un utilisateur ruTorrent   |"
-				echo "|            et Cakebox                |"
+				echo "|    Ajout d'un utilisateur Linux,     |"
+				echo "|       ruTorrent  et Cakebox          |"
 				echo "****************************************"
 				echo
 				echo "- Le nouvel utilisateur aura le même nom et"
-				echo "  Mot de passe pour les 2"
+				echo "  Mot de passe pour les 3 accès"
 				echo
 				echo "- Le nouvel utilisateur aura un accès SFTP"
 				echo "  avec son ID et mot de passe, même port"
@@ -619,7 +624,7 @@ until [[ $tmp == "ok" ]]; do
 				echo
 				__IDuser ruTorrent
 				echo
-				__creaUserRuto
+				__creaUserRuto # + linux
 				userCake=$userRuto; pwCake=$pwRuto
 				echo
 				__creaUserCake
@@ -656,13 +661,16 @@ until [[ $tmp == "ok" ]]; do
 				echo
 				echo "*************************************"
 				echo "|  Supprimer utilisateur ruTorrent  |"
-				echo "|            et Linux               |"
+				echo "|        Cakebox et Linux           |"
 				echo "*************************************"
 				echo
 				echo "ATTENTION le répertoire /home de l'utilisateur"
 				echo "va être supprimé !!!!!!!!!!"
 				__ouinon
-				__suppUserRuto
+				__suppUserRuto  # + linux
+				suppUserCake=$userRuto  # éviter de redemander le nom
+				echo    # si plus de user ruto et linux forcément ...
+				__suppUserCake
 				echo
 				echo "Traitement terminé"
 				echo "Utilisateur $userRuto supprimé"
@@ -715,7 +723,7 @@ until [[ $tmp == "ok" ]]; do
 			;;
 		esac
 	done
-done
+
 }   # fin menu
 
 #############################
@@ -735,3 +743,4 @@ fi
 	__menu
 
 	echo "Au revoir"
+	echo
