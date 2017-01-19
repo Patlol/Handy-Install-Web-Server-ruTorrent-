@@ -407,8 +407,8 @@ else	echo "Un problème est survenu."
 	__messageErreur
 	exit 1
 fi
-# Suppression du home et suppression user linux
-userdel -r $userRuto
+# Suppression du home et suppression user linux -f le home est root:root
+userdel -fr $userRuto
 echo "Utilisateur linux et /home/$userRuto supprimé"
 }  # fin __suppUserRuto
 
@@ -518,15 +518,15 @@ done
 __menu() {
 clear
 echo
-	echo "******************************************"
-	echo "|                                        |"
-	echo "|    Hiwst-util Utilitaires seedbox      |"
-	echo "|         ruTorrent - Cakebox            |"
-	echo "|                                        |"
-	echo "|   A utiliser après une installation    |"
-	echo "|         réalisée avec HiwsT            |"
-	echo "******************************************"
-	echo; echo
+echo "******************************************"
+echo "|                                        |"
+echo "|    Hiwst-util Utilitaires seedbox      |"
+echo "|         ruTorrent - Cakebox            |"
+echo "|                                        |"
+echo "|   A utiliser après une installation    |"
+echo "|         réalisée avec HiwsT            |"
+echo "******************************************"
+echo; echo
 local tmp=""; choixMenu=""
 until [[ $tmp == "ok" ]]; do
 	echo
@@ -548,181 +548,181 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t0)  Sortir"
 	echo
 
-		echo -n "Votre choix (0 1 2 3 4 5 6 7 8 9 10) "
-		read choixMenu
-		echo
-		case $choixMenu in
-			0 )
-				tmp2="ok"; tmp="ok"
-			;;
-			1 )  # + user ruTorrent
-				echo
-				echo "****************************************"
-				echo "|     Ajout d'un utilisateur Linux     |"
-				echo "|            et ruTorrent              |"
-				echo "****************************************"
-				echo
-				echo "- Sur ruTorrent il n'aura accès qu'a son"
-				echo "  répertoire de téléchargement"
-				echo
-				echo "- Le nouvel utilisateur aura un accès SFTP"
-				echo "  avec son ID et mot de passe, même port"
-				echo "  que les autres utilisateurs."
-				echo "- Il sera limité à son répertoire"
-				echo "- Pas d'accès ssh"
-				echo
-				__IDuser ruTorrent
-				__creaUserRuto
+	echo -n "Votre choix (0 1 2 3 4 5 6 7 8 9 10) "
+	read choixMenu
+	echo
+	case $choixMenu in
+		0 )
+			tmp2="ok"; tmp="ok"
+		;;
+		1 )  # + user ruTorrent
+			echo
+			echo "****************************************"
+			echo "|     Ajout d'un utilisateur Linux     |"
+			echo "|            et ruTorrent              |"
+			echo "****************************************"
+			echo
+			echo "- Sur ruTorrent il n'aura accès qu'a son"
+			echo "  répertoire de téléchargement"
+			echo
+			echo "- Le nouvel utilisateur aura un accès SFTP"
+			echo "  avec son ID et mot de passe, même port"
+			echo "  que les autres utilisateurs."
+			echo "- Il sera limité à son répertoire"
+			echo "- Pas d'accès ssh"
+			echo
+			__IDuser ruTorrent
+			__creaUserRuto
 
-				echo
-				echo "Traitement terminé"
-				echo "Utilisateur $userRuto crée"
-				echo "Mot de passe $pwRuto"
-				sleep 1
-				tmp2="ok"
-			;;
-			2 )  # + user cakebox
-				echo
-				echo "****************************************"
-				echo "|    Ajout d'un utilisateur Cakebox    |"
-				echo "****************************************"
-				echo
-				echo "- L'utilisateur devra déjà exister en tant"
-				echo "  qu'utilisateur ruTorrent"
-				echo "- Le nouvel utilisateur ne pourra scanner"
-				echo "  que son répertoire de téléchargement."
-				echo
-				__IDuser Cakebox
-				__creaUserCake
-				echo
-				echo "Traitement terminé"
-				echo "Utilisateur $userCake crée"
-				echo "Mot de passe $pwCake"
-				sleep 1
-				tmp2="ok"
-			;;
-			3 )  # + user rutorrent et cakebox
-				echo
-				echo "****************************************"
-				echo "|    Ajout d'un utilisateur Linux,     |"
-				echo "|       ruTorrent  et Cakebox          |"
-				echo "****************************************"
-				echo
-				echo "- Le nouvel utilisateur aura le même nom et"
-				echo "  Mot de passe pour les 3 accès"
-				echo
-				echo "- Le nouvel utilisateur aura un accès SFTP"
-				echo "  avec son ID et mot de passe, même port"
-				echo "  que les autres utilisateurs."
-				echo "- Il sera limité à son répertoire"
-				echo "- Pas d'accès ssh"
-				echo
-				echo "- Sur ruTorrent il n'aura accès qu'a son"
-				echo "  répertoire de téléchargement"
-				echo "- Sur Cakebox il ne pourra scanner"
-				echo "  que son répertoire de téléchargement."
-				echo
-				__IDuser ruTorrent
-				echo
-				__creaUserRuto # + linux
-				userCake=$userRuto; pwCake=$pwRuto
-				echo
-				__creaUserCake
-				echo
-				echo "Traitement terminé"
-				echo "Utilisateur $userCake crée"
-				echo "Mot de passe $pwCake"
-				sleep 1
-				tmp2="ok"
-			;;
-			4 )
-				echo
-				echo "********************************"
-				echo "|   Changer un mot de passe    |"
-				echo "********************************"
-				__changePW
-				echo
-				tmp2="ok"
-			;;
-			5 )
-				echo
-				echo "*************************************"
-				echo "|   Supprimer utilisateur Cakebox   |"
-				echo "*************************************"
-				echo
-				__suppUserCake
-				echo
-				echo "Traitement terminé"
-				echo "Utilisateur $userCake supprimé"
-				sleep 1
-				tmp2="ok"
-			;;
-			6 )
-				echo
-				echo "*************************************"
-				echo "|  Supprimer utilisateur ruTorrent  |"
-				echo "|        Cakebox et Linux           |"
-				echo "*************************************"
-				echo
-				echo "ATTENTION le répertoire /home de l'utilisateur"
-				echo "va être supprimé !!!!!!!!!!"
-				__ouinon
-				__suppUserRuto  # + linux
-				suppUserCake=$userRuto  # éviter de redemander le nom
-				echo    # si plus de user ruto et linux forcément ...
-				__suppUserCake
-				echo
-				echo "Traitement terminé"
-				echo "Utilisateur $userRuto supprimé"
-				sleep 1
-				tmp2="ok"
-			;;
-			7 )
-				echo
-				echo "****************************"
-				echo "|  Liste des utilisateurs  |"
-				echo "****************************"
-				echo
-				. $REPLANCE/insert/listeusers.sh
-				sleep 1
-				tmp2="ok"
-			;;
-			8 )
-				echo
-				echo "***************************"
-				echo "|    rtorrent restart     |"
-				echo "***************************"
-				echo
-				service rtorrentd restart
-				service rtorrentd status
-				sleep 1
-				tmp2="ok"
-			;;
-			9 )
-				echo
-				echo "***************************"
-				echo "|      Diagnostique       |"
-				echo "***************************"
-				echo
-				. $REPLANCE/insert/diag.sh
-				sleep 1
-				tmp2="ok"
-			;;
-			10 )
-				echo
-				echo "*********************"
-				echo "|      Reboot       |"
-				echo "*********************"
-				echo
-				__ouinon
-				reboot
-			;;
-			* )
-				echo "Entrée invalide"
-				sleep 1
-			;;
-		esac
-	done
+			echo
+			echo "Traitement terminé"
+			echo "Utilisateur $userRuto crée"
+			echo "Mot de passe $pwRuto"
+			sleep 1
+			tmp2="ok"
+		;;
+		2 )  # + user cakebox
+			echo
+			echo "****************************************"
+			echo "|    Ajout d'un utilisateur Cakebox    |"
+			echo "****************************************"
+			echo
+			echo "- L'utilisateur devra déjà exister en tant"
+			echo "  qu'utilisateur ruTorrent"
+			echo "- Le nouvel utilisateur ne pourra scanner"
+			echo "  que son répertoire de téléchargement."
+			echo
+			__IDuser Cakebox
+			__creaUserCake
+			echo
+			echo "Traitement terminé"
+			echo "Utilisateur $userCake crée"
+			echo "Mot de passe $pwCake"
+			sleep 1
+			tmp2="ok"
+		;;
+		3 )  # + user rutorrent et cakebox
+			echo
+			echo "****************************************"
+			echo "|    Ajout d'un utilisateur Linux,     |"
+			echo "|       ruTorrent  et Cakebox          |"
+			echo "****************************************"
+			echo
+			echo "- Le nouvel utilisateur aura le même nom et"
+			echo "  Mot de passe pour les 3 accès"
+			echo
+			echo "- Le nouvel utilisateur aura un accès SFTP"
+			echo "  avec son ID et mot de passe, même port"
+			echo "  que les autres utilisateurs."
+			echo "- Il sera limité à son répertoire"
+			echo "- Pas d'accès ssh"
+			echo
+			echo "- Sur ruTorrent il n'aura accès qu'a son"
+			echo "  répertoire de téléchargement"
+			echo "- Sur Cakebox il ne pourra scanner"
+			echo "  que son répertoire de téléchargement."
+			echo
+			__IDuser ruTorrent
+			echo
+			__creaUserRuto # + linux
+			userCake=$userRuto; pwCake=$pwRuto
+			echo
+			__creaUserCake
+			echo
+			echo "Traitement terminé"
+			echo "Utilisateur $userCake crée"
+			echo "Mot de passe $pwCake"
+			sleep 1
+			tmp2="ok"
+		;;
+		4 )
+			echo
+			echo "********************************"
+			echo "|   Changer un mot de passe    |"
+			echo "********************************"
+			__changePW
+			echo
+			tmp2="ok"
+		;;
+		5 )
+			echo
+			echo "*************************************"
+			echo "|   Supprimer utilisateur Cakebox   |"
+			echo "*************************************"
+			echo
+			__suppUserCake
+			echo
+			echo "Traitement terminé"
+			echo "Utilisateur $userCake supprimé"
+			sleep 1
+			tmp2="ok"
+		;;
+		6 )
+			echo
+			echo "*************************************"
+			echo "|  Supprimer utilisateur ruTorrent  |"
+			echo "|        Cakebox et Linux           |"
+			echo "*************************************"
+			echo
+			echo "ATTENTION le répertoire /home de l'utilisateur"
+			echo "va être supprimé !!!!!!!!!!"
+			__ouinon
+			__suppUserRuto  # + linux
+			suppUserCake=$userRuto  # éviter de redemander le nom
+			echo    # si plus de user ruto et linux forcément ...
+			__suppUserCake
+			echo
+			echo "Traitement terminé"
+			echo "Utilisateur $userRuto supprimé"
+			sleep 1
+			tmp2="ok"
+		;;
+		7 )
+			echo
+			echo "****************************"
+			echo "|  Liste des utilisateurs  |"
+			echo "****************************"
+			echo
+			. $REPLANCE/insert/listeusers.sh
+			sleep 1
+			tmp2="ok"
+		;;
+		8 )
+			echo
+			echo "***************************"
+			echo "|    rtorrent restart     |"
+			echo "***************************"
+			echo
+			service rtorrentd restart
+			service rtorrentd status
+			sleep 1
+			tmp2="ok"
+		;;
+		9 )
+			echo
+			echo "***************************"
+			echo "|      Diagnostique       |"
+			echo "***************************"
+			echo
+			. $REPLANCE/insert/diag.sh
+			sleep 1
+			tmp2="ok"
+		;;
+		10 )
+			echo
+			echo "*********************"
+			echo "|      Reboot       |"
+			echo "*********************"
+			echo
+			__ouinon
+			reboot
+		;;
+		* )
+			echo "Entrée invalide"
+			sleep 1
+		;;
+	esac
+done
 
 }   # fin menu
 
@@ -740,7 +740,7 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 
-	__menu
+__menu
 
-	echo "Au revoir"
-	echo
+echo "Au revoir"
+echo
