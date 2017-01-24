@@ -55,7 +55,7 @@ if [[ $nameDistrib == "Debian"  ]]; then
 fi
 # sur ubuntu .composer est sur /home/user
 if [[ $nameDistrib == "Ubuntu" ]]; then
-	chown -R $userLinux:$userLinux /home/$userLinux/.composer
+	chown -R $userLinux:$userLinux $REPUL/.composer
 fi
 
 echo $userLinux | sudo -S -u $userLinux composer install
@@ -69,7 +69,7 @@ fi
 # conbfiguration ***********************************************************
 cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
 
-sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userLinux/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
+sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"$REPUL/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
 sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/$userCake.php
 chown -R www-data:www-data $REPWEB/cakebox/config
 
@@ -100,7 +100,7 @@ echo
 git clone https://github.com/Cakebox/linkcakebox.git $REPWEB/rutorrent/plugins/linkcakebox
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/linkcakebox
 
-sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox';|; s|\(\$dirpath.*\)|\$dirpath = '\/home\/"$userLinux"\/downloads\/';|" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
+sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox\/index.html';|; s|\(\$dirpath.*\)|\$dirpath = '\/home\/"$userLinux"\/downloads\/';|" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
 
 echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
 

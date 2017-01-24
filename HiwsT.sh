@@ -37,6 +37,7 @@ debWebMinU="webmin-current.deb"
 REPWEB="/var/www/html"
 REPAPA2="/etc/apache2"
 REPLANCE=$(echo `pwd`)
+REPUL=""    # voir ligne ~345 ->  # si 2ème passage
 PORT_SCGI=5000
 
 #############################
@@ -342,6 +343,7 @@ if [ ! -e $REPLANCE"/pass1" ]; then   # évite de tourner en rond si 2éme passa
 	exit 0
 else   # si 2ème passage
 	userLinux=$(cat pass1)
+	REPUL="/home/$userLinux"
 	if [[ 10 -eq 20 ]]; then # $userLinux != $loguser ]]; then
 		echo
 		echo "Vous utiliser $user"
@@ -516,46 +518,49 @@ echo "c'est une mesure de sécurité fortement recommandée."
 echo "L'utilisateur sera $userLinux et un port aléatoire"
 echo "ou désigné par vous."
 echo
-tmp=""; port=0
+tmp=""; port=""
 until [[ $tmp == "ok" ]]; do
-echo
-echo -n "Souhaitez-vous appliquer cette modification ? (o/n) "; read yno
-case $yno in
-	[nN] | [nN][oO][nN])
-		echo
-		echo "Le port reste 22 et l'utilisateur root"
-		sleep 2
-		changePort="non"
-		portSSH="22"
-		tmp="ok"
-		sleep 2
-	;;
-	[Oo] | [Oo][Uu][Ii])
-		echo
-		echo "L'utilisateur sera $userLinux"
-		echo "Le port aléatoire proposé est $portSSH"
-		echo "Souhaitez-vous un autre port (entre 20000 65535)"
-		echo -n "Si oui saisissez le ici "; read port
-		if [[ $port -eq 0 ]]; then
+	echo
+	echo -n "Souhaitez-vous appliquer cette modification ? (o/n) "; read yno
+	case $yno in
+		[nN] | [nN][oO][nN])
+			echo
+			echo "Le port reste 22 et l'utilisateur root"
+			sleep 2
+			changePort="non"
+			portSSH="22"
 			tmp="ok"
-			changePort="oui"
-			sleep 1
-		elif [ $port -gt 65535 -o $port -lt 20000 ]; then
-				echo "entrée invalide (entre 20000 et 65535)"
-				sleep 2
-			else
+			sleep 2
+		;;
+		[Oo] | [Oo][Uu][Ii])
+			echo
+			echo "L'utilisateur sera $userLinux"
+			echo "Le port aléatoire proposé est $portSSH"
+			echo "Souhaitez-vous un autre port (entre 20000 65535)"
+			echo -n "Si oui saisissez le ici "; read port
+			if [[ $port == "" ]]; then
+				tmp="ok"
 				changePort="oui"
+	  		sleep 1
+			elif ! [[ $port =~ ^[0-9]{5} ]]; then
+    		echo "entrée invalide (entre 20000 et 65535)"
+				sleep 1
+  		elif [ $port -lt 65535 -a $port -gt 20000 ]; then
+    		changePort="oui"
 				portSSH=$port
 				tmp="ok"
 				sleep 1
-		fi
-	;;
-	*)
-		echo
-		echo "Entrée invalide"
-		sleep 1
-	;;
-esac
+  		else
+    		echo "entrée invalide (entre 20000 et 65535)"
+				sleep 1
+			fi
+		;;
+		*)
+			echo
+			echo "Entrée invalide"
+			sleep 1
+		;;
+	esac
 done  #  fin port ssh
 
 
@@ -686,9 +691,9 @@ usermod -aG www-data $userLinux
 # config mc
 
 # config mc user
-mkdir -p /home/$userLinux/.config/mc/
-cp $REPLANCE/fichiers-conf/mc_panels.ini /home/$userLinux/.config/mc/panels.ini
-chown -R $userLinux:$userLinux /home/$userLinux/.config/
+mkdir -p $REPUL/.config/mc/
+cp $REPLANCE/fichiers-conf/mc_panels.ini $REPUL/.config/mc/panels.ini
+chown -R $userLinux:$userLinux $REPUL/.config/
 
 # config mc root
 mkdir -p /root/.config/mc/
@@ -806,18 +811,15 @@ echo "|    Configuration de .rtorrent.rc      |"
 echo "*****************************************"
 sleep 2
 #-----------------------------------------------------------------
-cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/$userLinux/.rtorrent.rc
+cp $REPLANCE/fichiers-conf/rto_rtorrent.rc $REPUL/.rtorrent.rc
 
-sed -i 's/<username>/'$userLinux'/g' /home/$userLinux/.rtorrent.rc
+sed -i 's/<username>/'$userLinux'/g' $REPUL/.rtorrent.rc
 
 #-----------------------------------------------------------------
 
-#echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads
-#echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/watch
-#echo $userLinux | sudo -S -u $userLinux mkdir /home/$userLinux/downloads/.session
-mkdir -p /home/$userLinux/downloads/watch
-mkdir -p /home/$userLinux/downloads/.session
-chown -R $userLinux:$userLinux /home/$userLinux/downloads
+mkdir -p $REPUL/downloads/watch
+mkdir -p $REPUL/downloads/.session
+chown -R $userLinux:$userLinux $REPUL/downloads
 
 # mettre rtorrent en deamon / screen
 echo
@@ -854,7 +856,7 @@ sortie=`pgrep rtorrent`
 if [ -n "$sortie" ]
 then
 	echo "*************************************************"
-	echo "|  rtorrent en daemon fonctionne correctement  |"
+	echo "|  rtorrent en daemon fonctionne correctement   |"
 	echo "*************************************************"
 	sleep 2
 else
@@ -1049,7 +1051,8 @@ sleep 3
 sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 
 # copie les script dans home
-cp -r  $REPLANCE /home/$userLinux/HiwsT
+cp -r  $REPLANCE $REPUL/HiwsT
+chown -R $userLinux:$userLinux $REPUL/HiwsT
 
 # générique de fin
 

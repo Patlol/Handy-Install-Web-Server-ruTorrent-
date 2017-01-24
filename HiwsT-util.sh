@@ -179,7 +179,7 @@ sleep 2
 # Ajout du group sftp si n'existe pas
 #  group sftp pour interdire de sortir de /home/user en sftp
 egrep "^sftp" /etc/group > /dev/null
-if [[ $? -eq 1 ]]; then
+if [[ $? -ne 0 ]]; then
 	addgroup sftp
 fi
 
@@ -187,7 +187,7 @@ pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' $pwRuto)
 useradd -m -G sftp -p $pass $userRuto
 if [[ $? -ne 0 ]]; then
 	echo "Impossible de créer l'utilisateur ruTorrent $userRuto"
-	echo "Erreur $erreur sur 'useradd'"
+	echo "Erreur sur 'useradd'"
 	__messageErreur
 	exit 1
 fi
@@ -223,7 +223,7 @@ echo "/home/$userRuto/rtorrent.rc créé"
 echo
 
 #  fichiers daemon rtorrent
-#  créé rtorrent.conf
+#  créer rtorrent.conf
 cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
 chmod u+rwx,g+rwx,o+rx  /etc/init/$userRuto-rtorrent.conf
 sed -i 's/<username>/'$userRuto'/g' /etc/init/$userRuto-rtorrent.conf
@@ -238,7 +238,7 @@ if [[ $? -eq 0 ]]; then
 	echo "rtorrent en daemon modifié et fonctionne."
 	echo
 else	echo "Un problème est survenu."
-	ps aux | grep -e '.*torrernt$'
+	ps aux | grep -e '.*torrent$'
 	echo
 	service rtorrentd status
 	__messageErreur
@@ -303,7 +303,7 @@ echo -e "\tMot de passe    : $pwCake"
 echo
 sleep 2
 
-# - copier conf/user.php modif rep scanner
+# - copier conf/user.php modif rep à scanner
 cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
 sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userCake/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
 sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/$userCake.php
@@ -348,7 +348,6 @@ fi
 sed -i "s/^"$userCake".*//" $REPWEB/cakebox/public/.htpasswd
 echo "Mot de passe supprimé"
 # supprimer dans ckebox.conf
-# sed -i '/-Début/,/-Fin/d' mon_fichier.txt
 sed -i '/    Alias \/access \/home\/'$userCake'\/downloads\//,/    <\/Directory>/d' $REPAPA2/sites-available/cakebox.conf
 echo
 echo "cakebox.conf dans apache modifié"
