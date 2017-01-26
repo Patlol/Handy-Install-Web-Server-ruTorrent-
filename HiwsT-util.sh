@@ -321,6 +321,8 @@ htpasswd -b $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
 echo
 echo "Mot de passe $userCake créé"
 echo
+# plugin linkcakebox dans rutorrent
+echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userCake/plugins.ini
  }  # fin __creaUserCake
 
 
@@ -499,7 +501,7 @@ until [[ $tmp == "ok" ]]; do
 				fi
 			;;
 			[4] )
-				. $REPLANCE/insert/listeusers.sh
+				. $REPLANCE/insert/util_listeusers.sh
 				sleep 1
 			;;
 			[0] )
@@ -682,7 +684,7 @@ until [[ $tmp == "ok" ]]; do
 			echo "|  Liste des utilisateurs  |"
 			echo "****************************"
 			echo
-			. $REPLANCE/insert/listeusers.sh
+			. $REPLANCE/insert/util_listeusers.sh
 			sleep 1
 			tmp2="ok"
 		;;
@@ -703,7 +705,7 @@ until [[ $tmp == "ok" ]]; do
 			echo "|      Diagnostique       |"
 			echo "***************************"
 			echo
-			. $REPLANCE/insert/diag.sh
+			. $REPLANCE/insert/util_diag.sh
 			sleep 1
 			tmp2="ok"
 		;;

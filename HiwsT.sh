@@ -85,8 +85,9 @@ if [ $? != 0 ]
 then
 	echo "Il y a un problème de configuration avec apache2"
 	service apache2 status
-	echo "Régler le problème et relancer le script"
-	echo "Google est votre ami  !"
+	echo; echo "Consulter le wiki"
+	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	echo; echo "puis continuer/arrêter l'installation"
 	__ouinon
 fi
 }   #  fin __serviceapache2restart()
@@ -170,8 +171,6 @@ __messageErreur() {
 if [[ $(id -u) -ne 0 ]]; then
 	echo
 	echo "Ce script nécessite d'être exécuté avec sudo."
-	echo
-	echo "id : "`id`
 	echo
 	exit 1
 fi
@@ -291,7 +290,7 @@ then
 		echo
 		echo "*************************************************************************************"
 		echo "|                                                                                   |"
-		echo "|    ATTENTION seulement "$rootDispo", pour stocker les fichiers téléchargés !      |"
+		echo "|    ATTENTION seulement "$rootDispo", pour stocker les fichiers téléchargés        |"
 		echo "|                                                                                   |"
 		echo "*************************************************************************************"
 	fi
@@ -305,7 +304,7 @@ else  # /home
  	then
 		echo "************************************************************************************"
 		echo "|                                                                                  |"
-		echo "|    ATTENTION seulement "$homeDispo", pour stocker les fichiers téléchargés !     |"
+		echo "|    ATTENTION seulement "$homeDispo", pour stocker les fichiers téléchargés       |"
 		echo "|                                                                                  |"
 		echo "************************************************************************************"
 	fi
@@ -936,7 +935,6 @@ chmod -R 755 $REPWEB/rutorrent
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
 
 # modif du thème de rutorrent
-
 mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
 mkdir $REPWEB/rutorrent/share/users/$userRuto/settings
 chown -R www-data:www-data $REPWEB/rutorrent/share/users/$userRuto
@@ -1090,8 +1088,7 @@ fi
 
 echo
 sleep 1
-echo "En cas de problème concernant strictement"
-echo "ce script, vous pouvez aller"
+echo "En cas de problème concernant strictement ce script, vous pouvez aller"
 echo "Consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki"
 echo "et poster sur https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues"
 echo

@@ -32,7 +32,7 @@ echo "rtorrentd :"
 echo "-----------"
 service rtorrentd status
 echo
-ps aux | grep rtorrent
+ps aux | grep '.torrent$'
 echo
 echo "-------------------------------------------------------------------------------"
 echo "Utilisateurs :"
