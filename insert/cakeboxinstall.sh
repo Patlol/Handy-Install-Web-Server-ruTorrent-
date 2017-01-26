@@ -80,13 +80,37 @@ a2enmod rewrite
 
 a2enconf javascript-common
 
-cp $REPWEB/cakebox/webconf-example/apache2-alias.conf.example $REPAPA2/sites-available/cakebox.conf
+# modification apache pour cakebox
+if [[ $serveurHttp == "apache2" ]]; then
+	echo
+	echo "*************************************************"
+	echo "|            Modifications apache2              |"
+	echo "*************************************************"
+	echo
+	cp $REPWEB/cakebox/webconf-example/apache2-alias.conf.example $REPAPA2/sites-available/cakebox.conf
 
-sed -i -e 's|'\$ALIAS'|cakebox|g' -e 's|'\$CAKEBOXREP'|'$REPWEB'/cakebox|g' -e 's|'\$VIDEOREP'|/home/'$userLinux'/downloads|g' $REPAPA2/sites-available/cakebox.conf
-sed -i "/.*VirtualHost.*/d" $REPAPA2/sites-available/cakebox.conf
+	sed -i -e 's|'\$ALIAS'|cakebox|g' -e 's|'\$CAKEBOXREP'|'$REPWEB'/cakebox|g' -e 's|'\$VIDEOREP'|/home/'$userLinux'/downloads|g' $REPAPA2/sites-available/cakebox.conf
+	sed -i "/.*VirtualHost.*/d" $REPAPA2/sites-available/cakebox.conf
 
-a2ensite cakebox.conf
-__serviceapache2restart
+	a2ensite cakebox.conf
+	__serviceapache2restart
+
+else   # modification nginx pour cakebox
+	echo
+	echo "*************************************************"
+	echo "|             Modifications nginx               |"
+	echo "*************************************************"
+	echo
+	# sur default : proxy
+	sed -i '/.*# Cakebox proxy/ r '$REPLANCE'/fichiers-conf/nginx_default_cakebox' $REPNGINX/sites-available/default
+	# conf site cakebox
+	cp $REPLANCE/fichiers-conf/nginx_cakebox $REPNGINX/sites-available/cakebox
+	sed -i 's|<php-sock>|'$phpSock'|' $REPNGINX/sites-available/cakebox
+	sed -i 's/<user-Cakebox>/'$userLinux'/' $REPNGINX/sites-available/cakebox
+	ln -s $REPNGINX/sites-available/cakebox  $REPNGINX/sites-enabled/cakebox
+	service nginx restart
+fi    # fin modif serveur http
+
 
 
 # install plugin cakebox sur rutorrent
@@ -115,20 +139,26 @@ echo "*************************"
 sleep 2
 echo
 
-a2enmod auth_basic
+if [[ $serveurHttp == "apache2" ]]; then
+	a2enmod auth_basic
+	echo -e 'AuthName "Entrer votre identifiant et mot de passe Cakebox"\nAuthType Basic\nAuthUserFile "/var/www/html/cakebox/public/.htpasswd"\nRequire valid-user' > $REPWEB/cakebox/public/.htaccess
+	chown www-data:www-data $REPWEB/cakebox/public/.htaccess
 
-echo -e 'AuthName "Entrer votre identifiant et mot de passe Cakebox"\nAuthType Basic\nAuthUserFile "/var/www/html/cakebox/public/.htpasswd"\nRequire valid-user' > $REPWEB/cakebox/public/.htaccess
-chown www-data:www-data $REPWEB/cakebox/public/.htaccess
+	htpasswd -bc $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
+	chown www-data:www-data $REPWEB/cakebox/public/.htpasswd
 
-htpasswd -bc $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
-chown www-data:www-data $REPWEB/cakebox/public/.htpasswd
-
-__serviceapache2restart
-chmod 755 $REPWEB
+	__serviceapache2restart
+	chmod 755 $REPWEB
+else
+	# mot de passe rutorrent  htpasswdR
+	htpasswd -bc $REPNGINX/.htpasswdC $userCake $pwCake
+  service nginx restrart
+fi
 
 headTest=`curl -Is http://$IP/cakebox/| head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ $headTest == Unauthorized* ]]
+# unautorized pour apache, moved pour nginx
+if [[ $headTest == Unauthorized* ]] || [[ $headTest == Moved* ]]
 then
 	echo "***************************"
 	echo "|   Cakebox fonctionne    |"
