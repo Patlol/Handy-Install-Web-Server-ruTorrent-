@@ -11,8 +11,8 @@
 #     variables install paquets Ubuntu/Debian
 ##################################################
 #  Debian
-
-paquetsWebD="mc aptitude apache2 apache2-utils autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libapache2-mod-php5 libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
+# liste sans serveur http
+paquetsWebD="mc aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
 
 paquetsRtoD="xmlrpc-api-utils libtorrent14 rtorrent"
 
@@ -24,8 +24,8 @@ paquetWebMinD="perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime
 debWebMinD="webmin_1.830_all.deb"
 
 # Ubuntu
-
-paquetsWebU="mc aptitude apache2 apache2-utils autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libapache2-mod-php7.0 libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-dev php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
+# liste sans serveur http
+paquetsWebU="mc aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-dev php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
 
 paquetsRtoU="xmlrpc-api-utils libtorrent19 rtorrent"
 
@@ -35,6 +35,7 @@ upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
 debWebMinU="webmin-current.deb"
 
 REPWEB="/var/www/html"
+REPNGINX="/etc/nginx"
 REPAPA2="/etc/apache2"
 REPLANCE=$(echo `pwd`)
 REPUL=""    # voir ligne ~345 ->  # si 2ème passage
@@ -343,16 +344,37 @@ if [ ! -e $REPLANCE"/pass1" ]; then   # évite de tourner en rond si 2éme passa
 else   # si 2ème passage
 	userLinux=$(cat pass1)
 	REPUL="/home/$userLinux"
-	if [[ 10 -eq 20 ]]; then # $userLinux != $loguser ]]; then
-		echo
-		echo "Vous utiliser $user"
-		echo "Vous deviez lancer le script en étant logué avec $userLinux !"
-		echo "su $userLinux"
-		echo "cd $REPLANCE"
-		echo "sudo ./`basename $0`"
-		exit 1
-	fi  # fin code commenté
-fi   # fin de évite ce passage si 2éme passe
+fi
+
+# Choix serveur hhtp
+tmp=""
+if [ -e /etc/apache2 -a ! -e /etc/nginx ]; then serveurHttp="apache2"; fi
+if [ -e /etc/nginx -a ! -e /etc/apache2 ] || [ ! -e /etc/nginx -a ! -e /etc/apache2 ]; then serveurHttp="nginx"; fi
+if [ -e /etc/nginx -a -e /etc/apache2 ]; then
+	echo "Vous avez apache2 ET nginx d'installés"
+	echo "Si vous continuez ce script la configuration existante va être remplacée par celle du script"
+	until [[ $tmp == "ok" ]]; do
+		echo "Que souhaitez-vous faire : 0-->sortir,"
+		echo "utiliser pour le script :  1-->nginx 2-->apache2"
+		echo -n "(0, 1, 2) "
+		read choix
+		case $choix in
+		0 )
+			exit 0
+		;;
+		1 )
+			serveurHttp="nginx"
+			tmp="ok"
+		;;
+		2 )
+			serveurHttp="apache2"
+			tmp="ok"
+		;;
+		* )
+			echo "Entrée invalide"
+		esac
+	done
+fi
 
 # Rutorrent user
 
@@ -705,76 +727,16 @@ echo "******************************"
 sleep 3
 echo
 
-# Installation paquets
 
-echo
-echo "***********************************************"
-echo "|          Installation des paquets           |"
-echo "|         necessaires au serveur web          |"
-echo "***********************************************"
-sleep 2
+### Installation du serveur http
 
-if [[ $nameDistrib == "Debian" ]]; then
-	paquets=$paquetsWebD
+if [[ $serveurHttp == "apache2" ]]; then
+	service nginx stop 2> /dev/null
+	. $REPLANCE/insert/apacheinstall.sh
 else
-	paquets=$paquetsWebU
+	service apache2 stop 2> /dev/null
+	. $REPLANCE/insert/nginxinstall.sh
 fi
-apt-get install -y $paquets
-if [[ $? -eq 0 ]]
-then
-	echo "****************************"
-	echo "|     Paquets installés    |"
-	echo "****************************"
-	sleep 2
-else
-	__erreurApt  # __erreurApt()
-fi
-
-echo
-echo "***********************************************"
-echo "|           Configuration apache2             |"
-echo "***********************************************"
-sleep 2
-
-# config apache
-echo
-echo
-a2enmod ssl
-a2enmod auth_digest
-a2enmod reqtimeout
-a2enmod authn_file
-a2enmod rewrite
-
-cp $REPAPA2/apache2.conf $REPAPA2/apache2.conf.old
-sed -i 's/^Timeout[ 0-9]*/Timeout 30/' $REPAPA2/apache2.conf
-echo -e "\nServerTokens Prod\nServerSignature Off" >> $REPAPA2/apache2.conf
-__serviceapache2restart
-
-echo "***********************************************"
-echo "|      Fin de configuration d'Apache          |"
-echo "***********************************************"
-sleep 2
-echo
-
-# vérif bon fonctionnement apache et php
-
-echo "<?php phpinfo(); ?>" >$REPWEB/info.php
-headTest1=`curl -Is http://$IP/info.php/| head -n 1`
-headTest2=`curl -Is http://$IP/| head -n 1`
-headTest1=$(echo $headTest1 | awk -F" " '{ print $3 }')
-headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
-if [[ $headTest1 == OK* ]] && [[ $headTest2 == OK* ]]
-then
-	echo "***********************************************"
-	echo "|        Apache et php fonctionne             |"
-	echo "***********************************************"
-	sleep 2
-else
-	echo; echo "Une erreur apache/php c'est produite"
-	__messageErreur    #  __messageErreur()
-fi
-rm $REPWEB/info.php
-echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess
 
 
 # téléchargement rtorrent libtorrent xmlrpc
@@ -866,45 +828,8 @@ fi
 
 # installation de rutorrent
 
-echo
-echo "**************************************************************"
-echo "|                        ruTorrent :                         |"
-echo "|  Création certificat auto signé et utilisateur ruTorrennt  |"
-echo "|            Modifications apache pour ruTorrent             |"
-echo "**************************************************************"
-sleep 2
-echo
-
-
-# certif ssl
-
-openssl req -new -x509 -days 365 -nodes -newkey rsa:2048 -out $REPAPA2/apache.pem -keyout $REPAPA2/apache.pem -subj "/C=FR/ST=Paris/L=Paris/O=Global Security/OU=RUTO Department/CN=$IP"
-
-chmod 600 $REPAPA2/apache.pem
-
-cp $REPAPA2/sites-available/default-ssl.conf $REPAPA2/sites-available/default-ssl.conf.old
-
-sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" $REPAPA2/sites-available/default-ssl.conf
-
-a2ensite default-ssl
-__serviceapache2restart
-
-
-# création de userRuto
-
-(echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) > $REPAPA2/.htpasswd
-sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
-
-
-# Modifier la configuration du site par défaut (pour rutorrent)
-
-cp $REPAPA2/sites-available/000-default.conf $REPAPA2/sites-available/000-default.conf.old
-#-----------------------------------------------------------------
-cp $REPLANCE/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
-#-------------------------------------------------------------------
-
-sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
-__serviceapache2restart
+# création de userRuto dans apacheinstall.sh / nginxinstall.sh
+# Modifier la configuration du site par défaut (pour rutorrent) dans apacheinstall.sh / nginxinstall.sh
 
 echo
 echo "*************************************************"
