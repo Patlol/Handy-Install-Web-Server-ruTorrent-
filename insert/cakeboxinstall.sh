@@ -149,10 +149,10 @@ if [[ $serveurHttp == "apache2" ]]; then
 else
 	# mot de passe rutorrent  htpasswdR
 	htpasswd -bc $REPNGINX/.htpasswdC $userCake $pwCake
-  service nginx restrart
+  service nginx restart
 fi
 
-headTest=`curl -Is http://$IP/cakebox/| head -n 1`
+headTest=`curl -Is http://$IP/cakebox/index.html | head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 # unautorized pour apache, moved pour nginx
 if [[ $headTest == Unauthorized* ]] || [[ $headTest == Moved* ]]

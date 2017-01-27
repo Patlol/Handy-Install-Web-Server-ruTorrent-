@@ -55,7 +55,7 @@ echo
 
 # vérif bon fonctionnement nginx et php
 echo "<?php phpinfo(); ?>" >$REPWEB/info.php
-headTest1=`curl -Is http://$IP/info.php/| head -n 1`
+headTest1=`curl -Is http://$IP/info.php | head -n 1`
 headTest2=`curl -Is http://$IP/| head -n 1`
 headTest1=$(echo $headTest1 | awk -F" " '{ print $3 }')
 headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
@@ -69,7 +69,7 @@ else
 	echo; echo "Une erreur nginx/php c'est produite"
 	__messageErreur    #  __messageErreur()
 fi
-rm $REPWEB/info.phprm $REPWEB/info.php
+rm $REPWEB/info.php
 
 echo
 echo "******************************************"

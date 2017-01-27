@@ -632,8 +632,11 @@ until [[ $tmp == "ok" ]]; do
 			__ouinon
 			__suppUserRuto  # + linux
 			suppUserCake=$userRuto  # éviter de redemander le nom
-			echo    # si plus de user ruto et linux forcément ...
-			__suppUserCake
+			echo    # si plus de user ruto et linux forcément ... suppression userCake
+			__userExist $suppUserCake
+			if [[ $userC -eq 0 ]]; then
+				__suppUserCake
+			fi
 			echo
 			echo "Traitement terminé"
 			echo "Utilisateur $userRuto supprimé"
