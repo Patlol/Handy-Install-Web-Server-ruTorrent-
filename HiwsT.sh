@@ -856,8 +856,10 @@ cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
 chown -R www-data:www-data $REPWEB/rutorrent
 chmod -R 755 $REPWEB/rutorrent
 
-# modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
-echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
+if [[ $serveurHttp == "apache2" ]]; then
+	# modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
+	echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
+fi
 
 # modif du thème de rutorrent
 mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents

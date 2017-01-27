@@ -9,11 +9,12 @@
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
 
 
-#############################
-#       Fonctions
-#############################
+########################################
+#       Fonctions utilitaires
+########################################
 REPWEB="/var/www/html"
 REPAPA2="/etc/apache2"
+REPNGINX="/etc/nginx"
 REPLANCE=$(echo `pwd`)
 
 __verifSaisie() {
@@ -53,72 +54,60 @@ __messageErreur() {
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 }  # fin messageErreur
 
-__IDuser() {    # saisie ID et PW  ruto/cake
+if [[ $serveurHttp == "apache2" ]]; then
+	. $REPLANCE/insert/util_apache.sh
+else
+	. $REPLANCE/insert/util_nginx.sh
+fi
 
+########################################
+#       Fonctions principales
+########################################
+
+__IDuser() {    # saisie ID et PW  ruto/cake   $1 "ruTorrent" ou "Cakebox"
 echo
 local tmp=""; local tmp2=""; local yno=""
 until [[ $tmp == "ok" ]]; do
-	# traitement rutorrent ----------------------------------------------------
-	if [[ $1 == "ruTorrent" ]]; then
-		echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
-		read user
-		__verifSaisie $user
-		if [[ $verifOk == "o" ]]; then
-			# user linux ?
-			egrep "^$user" /etc/passwd >/dev/null
-			userL=$?
-			# user ruTorrent ?
-			egrep "^$user:rutorrent" /etc/apache2/.htpasswd > /dev/null
-			userR=$?
-			if [[ $userL -eq 0 ]]; then
-				echo "Il existe déjà un utilisateur Linux $user "
-				echo "Vous ne pouvez pas en créer un deuxième"
-				yno="N"
-			elif [[ $userR -eq 0 ]]; then
-					echo "$user est déjà un utilisateur ruTorrent"
-					echo "Vous ne pouvez pas en créer un deuxième"
-					yno="N"
-				else
-					echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
-					read yno
-				fi
-			fi
+	echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
+	read user
+	__verifSaisie $user
+	__userExist $user    # insert/util_apache.sh renvoie userL userR userC
+		# traitement rutorrent ----------------------------------------------------
+	if [[ $verifOk == "o" ]] && [[ $1 == "ruTorrent" ]]; then
+		if [[ $userL -eq 0 ]]; then
+			echo "Il existe déjà un utilisateur Linux $user "
+			echo "Vous ne pouvez pas en créer un deuxième"
+			yno="N"
+		elif [[ $userR -eq 0 ]]; then
+			echo "$user est déjà un utilisateur ruTorrent"
+			echo "Vous ne pouvez pas en créer un deuxième"
+			yno="N"
+			else
+				echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
+				read yno
 		fi
+	fi
 	#     traitement cakebox ------------------------------------------------------
-	if [[ $1 == "Cakebox" ]]; then
-		echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
-		read user
-		__verifSaisie $user
-		if [[ $verifOk == "o" ]]; then
-			# user cakebox ?
-			egrep "^$user" /var/www/html/cakebox/public/.htpasswd > /dev/null
-			userC=$?
-			#  déjà un user linux ?
-			egrep "^$user" /etc/passwd >/dev/null
-			userL=$?
-			#  déjà user rutorrent ?
-			egrep "^$user:rutorrent" /etc/apache2/.htpasswd > /dev/null
-			userR=$?
-			if [ $userL -ne 0 -o $userC -eq 0 ]; then
-				# pas de ul ou existe uc NON
-				echo "$user n'est pas un utilisateur Linux ou"
-				echo "$user est déjà un utilisateur Cakebox."
+	if [[ $verifOk == "o" ]] && [[ $1 == "Cakebox" ]]; then
+		if [ $userL -ne 0 -o $userC -eq 0 ]; then
+			# pas de userlinux ou existe usercake NON
+			echo "$user n'est pas un utilisateur Linux ou"
+			echo "$user est déjà un utilisateur Cakebox."
+			echo "Impossible de créer un utilisateur Cakebox sous ce nom."
+			yno="N"
+		elif [[ userR -ne 0 ]]; then
+				# existe userl  pas de userrutorrent  pas de userc NON
+				echo "$user est bien un utilisateur Linux, mais"
+				echo "$user n'est pas un utilisateur ruTorrent"
 				echo "Impossible de créer un utilisateur Cakebox sous ce nom."
 				yno="N"
-			elif [[ userR -ne 0 ]]; then
-					# existe ul  pas de ur  pas de uc NON
-					echo "$user est bien un utilisateur Linux, mais"
-					echo "$user n'est pas un utilisateur ruTorrent"
-					echo "Impossible de créer un utilisateur Cakebox sous ce nom."
-					yno="N"
-				else
-					# existe ul exite ur pas de uc OUI
-					echo
-					echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
-					read yno
-				fi
-			fi
+			else
+				# existe userl exite userr pas de userc OUI
+				echo
+				echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
+				read yno
 		fi
+	fi
  #    fin traitement différent -----------------------------------------
 
 	case $yno in
@@ -146,7 +135,7 @@ until [[ $tmp == "ok" ]]; do
 			echo
 			sleep 1
 		;;
-		esac
+	esac
 	if [[ $verifOk == "n" ]]; then
 		#statements
 		echo "Entrée invalide"
@@ -192,8 +181,6 @@ if [[ $? -ne 0 ]]; then
 	exit 1
 fi
 
-# echo "bash" >> /home/$userRuto/.profile
-
 echo "Utilisateur linux $userRuto créé"
 echo
 
@@ -206,13 +193,13 @@ echo
 #  rtorrent ------------------------------------------------
 
 # incrémenter le port, écrir le fichier témoin
-if [ -e /var/www/html/rutorrent/conf/scgi_port ]; then
-	port=$(cat /var/www/html/rutorrent/conf/scgi_port)
+if [ -e $REPWEB/rutorrent/conf/scgi_port ]; then
+	port=$(cat $REPWEB/rutorrent/conf/scgi_port)
 else 	port=5000
 fi
 
 let "port += 1"
-echo $port > /var/www/html/rutorrent/conf/scgi_port
+echo $port > $REPWEB/rutorrent/conf/scgi_port
 
 # rtorrent.rc
 cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/$userRuto/.rtorrent.rc
@@ -235,7 +222,7 @@ sed -i '/## false/ a\          usermod -s /bin/false '$userRuto'' /etc/init.d/rt
 systemctl daemon-reload
 service rtorrentd restart
 if [[ $? -eq 0 ]]; then
-	echo "rtorrent en daemon modifié et fonctionne."
+	echo "Daemon rtorrent modifié et fonctionne."
 	echo
 else	echo "Un problème est survenu."
 	ps aux | grep -e '.*torrent$'
@@ -248,10 +235,10 @@ fi
 #  ruTorrent ------------------------------------------------------------------
 
 # dossier conf/users/userRuto
-mkdir -p /var/www/html/rutorrent/conf/users/$userRuto
-cp /var/www/html/rutorrent/conf/access.ini /var/www/html/rutorrent/conf/plugins.ini /var/www/html/rutorrent/conf/users/$userRuto
-cp $REPLANCE/fichiers-conf/ruto_multi_config.php /var/www/html/rutorrent/conf/users/$userRuto/config.php
-sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutorrent/conf/users/$userRuto/config.php
+mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
+cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
+cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
+sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
 # plugins
 # echo -e "\n    [linkcakebox]\n    enabled = no" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
@@ -259,17 +246,7 @@ sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' /var/www/html/rutor
 echo "Dossier users/$userRuto sur ruTorrent crée"
 echo
 
-# sécuriser ruTorrent
-(echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) >> /etc/apache2/.htpasswd
-sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
-service apache2 restart
-if [[ $? -eq o ]]; then
-	echo "Mot de passe de $userRuto créé"
-	echo
-else	service apache2 status
-	__messageErreur
-	exit 1
-fi
+__creaUserRutoPasswd $userRuto $pwRuto   # insert/util_apache.sh ne renvoie rien
 
 # modif pour sftp / sécu sftp -------------------------------------------------------
 
@@ -311,16 +288,9 @@ chown -R www-data:www-data $REPWEB/cakebox/config
 echo
 echo "cakebox/config/$userCake.php créé"
 echo
-# - ajout dans cakebox.conf apache
-sed -i '/ErrorLog.*/ i\\n    Alias /access /home/'$userCake'/downloads/\n    <Directory "/home/'$userCake'/downloads">\n        Options -Indexes\n\n        <IfVersion >= 2.4>\n            Require all granted\n        </IfVersion>\n        <IfVersion < 2.4>\n            Order allow,deny\n            Allow from all\n        </IfVersion>\n        Satisfy Any\n\n        Header set Content-Disposition "attachment"\n\n    </Directory>\n' $REPAPA2/sites-available/cakebox.conf
-echo
-echo "cakebox.conf dans apache modifié"
-echo
-# mot de passe
-htpasswd -b $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
-echo
-echo "Mot de passe $userCake créé"
-echo
+
+__creaUserCakeConfSite $userCake
+__creaUserCakePasswd $userCake $pwCake
 # plugin linkcakebox dans rutorrent
 echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userCake/plugins.ini
  }  # fin __creaUserCake
@@ -334,26 +304,21 @@ if [[ ! $suppUserCake ]]; then
 		echo
 		echo -n "Nom de l'utilisateur Cakebox à supprimer "
 		read userCake
-		# user cakebox ?
-		egrep "^$userCake" /var/www/html/cakebox/public/.htpasswd > /dev/null
-		if [[ $? -ne 0 ]]; then
+		# user cakebox existe ?
+		__userExist $userCake  # insert/util_apache.sh
+		if [[ $userC -ne 0 ]]; then
 			echo "$userCake n'est pas un utilisateur Cakebox"
 		else
 			tmp="ok"
 		fi
 	done
-else
+else  # conjoint à la supp rutorrent
 	userCake=$suppUserCake
 fi
 
-# mot de passe
-sed -i "s/^"$userCake".*//" $REPWEB/cakebox/public/.htpasswd
-echo "Mot de passe supprimé"
-# supprimer dans ckebox.conf
-sed -i '/    Alias \/access \/home\/'$userCake'\/downloads\//,/    <\/Directory>/d' $REPAPA2/sites-available/cakebox.conf
-echo
-echo "cakebox.conf dans apache modifié"
-echo
+__suppUserCakePasswd $userCake   # insert/util_apache.sh
+__suppUserCakeConfSite $userCake   # insert/util_apache.sh
+
 # supprimer le fichier conf/user.php
 rm $REPWEB/cakebox/config/$userCake.php
 echo
@@ -370,8 +335,8 @@ until [[ $tmp == "ok" ]]; do
 	echo -n "Nom de l'utilisateur ruTorrent à supprimer "
 	read userRuto
 	# user ruto ?
-	egrep "^$userRuto:rutorrent" $REPAPA2/.htpasswd > /dev/null
-	if [[ $? -ne 0 ]]; then
+	__userExist $userRuto  # insert/util_apache.sh renvoie userR
+	if [[ $userR -ne 0 ]]; then
 		echo "$userRuto n'est pas un utilisateur ruTorrent"
 	else
 		tmp="ok"
@@ -382,17 +347,14 @@ done
 sed -i '/'$userRuto'/d' /etc/ssh/sshd_config
 service sshd restart
 
-# mot de passe rutorrent
-sed -i "s/^"$userRuto".*//" $REPAPA2/.htpasswd
-echo "Mot de passe supprimé"
-echo
+__suppUserRutoPasswd $userRuto
 
 # dossier rutorrent/conf/users/userRuto
 rm -r $REPWEB/rutorrent/conf/users/$userRuto
 echo "Dossier users/$userRuto sur ruTorrent supprimé"
 echo
 
-# modif de rtorrentd.sh
+# modif de rtorrentd.sh (daemon)
 sed -i '/.*'$userRuto.*'/d' /etc/init.d/rtorrentd.sh
 rm /etc/init/$userRuto-rtorrent.conf
 
@@ -408,13 +370,13 @@ else	echo "Un problème est survenu."
 	__messageErreur
 	exit 1
 fi
-# Suppression du home et suppression user linux -f le home est root:root
+# Suppression du home et suppression user linux (-f le home est root:root)
 userdel -fr $userRuto
 echo "Utilisateur linux et /home/$userRuto supprimé"
 }  # fin __suppUserRuto
 
 
-__saisiePW() {   # pour __changePW
+__saisiePW() {   # appelée par __changePW
 local tmp2=""
 	until [[ $tmp2 == "ok" ]]; do
 				echo -n "Choisissez un mot de passe (ni espace ni \) : "
@@ -448,7 +410,7 @@ until [[ $tmp == "ok" ]]; do
 				echo "!!! Mot de passe valable aussi pour ftp !!!"
 				echo -n "Nom de l'utilisateur linux : "
 				read user
-				# user linux ?
+				# user linux ?   idem apache et nginx
 				egrep "^$user" /etc/passwd >/dev/null
 				if [[ $? -eq 0 ]]; then
 					passwd $user
@@ -466,16 +428,16 @@ until [[ $tmp == "ok" ]]; do
 				echo -n "Nom de l'utilisateur ruTorrent : "
 				read user
 				# user ruTorrent ?
-				egrep "^$user:rutorrent" $REPAPA2/.htpasswd > /dev/null
-				if [[ $? -eq 0 ]]; then
+				__userExist $user
+				if [[ $userL -eq 0 ]]; then
 					__saisiePW
-					sed -i "s/^"$user".*//" $REPAPA2/.htpasswd
-					(echo -n "$user:rutorrent:" && echo -n "$user:rutorrent:$pw" | md5sum) >> /etc/apache2/.htpasswd
-					sed -i 's/[ ]*-$//' /etc/apache2/.htpasswd
-					# service apache2 restart
+					__changePWRuto $user $pw  # insert/util_apache.sh
+					if [[ $sortie != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
+					else
 						echo; echo "Traitement terminé"
 						echo "Utilisateur $user"
 						echo "Nouveau mot de passe : $pw"
+					fi
 				else
 					echo
 					echo "$user n'est pas un utilisateur ruTorrent"
@@ -485,11 +447,11 @@ until [[ $tmp == "ok" ]]; do
 				echo -n "Nom de l'utilisateur Cakebox : "
 				read user
 				# user cakebox ?
-				egrep "^$user" /var/www/html/cakebox/public/.htpasswd > /dev/null
-				if [[ $? -eq 0 ]]; then
+				__userExist $user
+				if [[ $userC -eq 0 ]]; then
 					__saisiePW
-					htpasswd -b $REPWEB/cakebox/public/.htpasswd $user $pw
-					if [[ $? != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
+					__changePWCake $user $pw   # insert/util_apache.sh  renvoie $sortie
+					if [[ $sortie != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
 					else
 						echo; echo "Traitement terminé"
 						echo "Utilisateur $user"
@@ -740,6 +702,30 @@ if [[ $(id -u) -ne 0 ]]; then
 	echo
 	exit 1
 fi
+
+# apache vs nginx ?
+service nginx status > /dev/null
+sortieN=$?
+service apache2 status > /dev/null
+sortieA=$?
+if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
+	echo
+	echo "Votre configuration apache2/nginx est incompatible avec ce script"
+	exit 1
+fi
+if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
+	echo
+	echo "Ni apache ni nginx ne sont actifs"
+	exit 1
+fi
+
+if [[ $sortieA -eq 0 ]]; then
+	serveurHttp="apache2"
+else
+	serveurHttp="nginx"
+fi
+########
+
 
 __menu
 

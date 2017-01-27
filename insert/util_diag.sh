@@ -18,10 +18,17 @@ echo "-------"
 netstat -lntup
 echo
 echo "-------------------------------------------------------------------------------"
-echo "apache2 :"
-echo "---------"
-service apache2 status
-echo
+if [[ $serveurHttp == "apache2" ]]; then
+  echo "apache2 :"
+  echo "---------"
+  service apache2 status
+  echo
+else
+  echo "nginx :"
+  echo "-------"
+  service nginx status
+  echo
+fi
 echo "-------------------------------------------------------------------------------"
 echo "sshd :"
 echo "------"
@@ -37,4 +44,4 @@ echo
 echo "-------------------------------------------------------------------------------"
 echo "Utilisateurs :"
 echo "--------------"
-. $REPLANCE/insert/listeusers.sh
+. $REPLANCE/insert/util_listeusers.sh

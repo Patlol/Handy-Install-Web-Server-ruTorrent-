@@ -39,10 +39,11 @@ server {
             fastcgi_param APPLICATION_ENV production;
             ## fastcgi_param HTTPS on;
         }
-        location /access/ {
+        location /access/<user-Cakebox> {
             alias /home/<user-Cakebox>/downloads;
             allow all;
             satisfy any;
             add_header Content-Disposition "attachment";
         }
+## add user
 }

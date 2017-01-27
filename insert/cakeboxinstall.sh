@@ -73,13 +73,6 @@ sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"$REPUL/d
 sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/$userCake.php
 chown -R www-data:www-data $REPWEB/cakebox/config
 
-# config apache et ajout de l'alias sur apache
-
-a2enmod headers
-a2enmod rewrite
-
-a2enconf javascript-common
-
 # modification apache pour cakebox
 if [[ $serveurHttp == "apache2" ]]; then
 	echo
@@ -87,6 +80,10 @@ if [[ $serveurHttp == "apache2" ]]; then
 	echo "|            Modifications apache2              |"
 	echo "*************************************************"
 	echo
+	a2enmod headers
+	a2enmod rewrite
+	a2enconf javascript-common
+	# config apache et ajout de l'alias sur apache
 	cp $REPWEB/cakebox/webconf-example/apache2-alias.conf.example $REPAPA2/sites-available/cakebox.conf
 
 	sed -i -e 's|'\$ALIAS'|cakebox|g' -e 's|'\$CAKEBOXREP'|'$REPWEB'/cakebox|g' -e 's|'\$VIDEOREP'|/home/'$userLinux'/downloads|g' $REPAPA2/sites-available/cakebox.conf

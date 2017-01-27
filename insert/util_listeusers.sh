@@ -3,9 +3,13 @@
 
 # les tab
 listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
-listeR=(`cat /etc/apache2/.htpasswd | awk -F":" '{ print $1 }'`)
-listeC=(`cat /var/www/html/cakebox/public/.htpasswd | awk -F":" '{ print $1 }'`)
-
+if [[ $serveurHttp == "apache2" ]]; then
+  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
+  listeC=(`cat $REPWEB/cakebox/public/.htpasswd | awk -F":" '{ print $1 }'`)
+else
+  listeR=(`cat $REPNGINX/.htpasswdR | awk -F":" '{ print $1 }'`)
+  listeC=(`cat $REPNGINX/.htpasswdC | awk -F":" '{ print $1 }'`)
+fi
 
 # tab de la longueur de chaque tab ci-dessus
 tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeC[@]})
