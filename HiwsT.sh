@@ -347,34 +347,45 @@ else   # si 2ème passage
 fi
 
 # Choix serveur hhtp
-tmp=""
-if [ -e /etc/apache2 -a ! -e /etc/nginx ]; then serveurHttp="apache2"; fi
-if [ -e /etc/nginx -a ! -e /etc/apache2 ] || [ ! -e /etc/nginx -a ! -e /etc/apache2 ]; then serveurHttp="nginx"; fi
-if [ -e /etc/nginx -a -e /etc/apache2 ]; then
-	echo "Vous avez apache2 ET nginx d'installés"
+service apache2 status > /dev/null; serveurHttpA=$?
+service nginx status > /dev/null; serveurHttpN=$?
+echo
+if [ ! $serveurHttpN -a ! $serveurHttpA ]; then
+	echo "Vous avez apache2 ET nginx d'installés ?!"
 	echo "Si vous continuez ce script la configuration existante va être remplacée par celle du script"
-	until [[ $tmp == "ok" ]]; do
-		echo "Que souhaitez-vous faire : 0-->sortir,"
-		echo "utiliser pour le script :  1-->nginx 2-->apache2"
-		echo -n "(0, 1, 2) "
-		read choix
-		case $choix in
-		0 )
-			exit 0
-		;;
-		1 )
-			serveurHttp="nginx"
-			tmp="ok"
-		;;
-		2 )
-			serveurHttp="apache2"
-			tmp="ok"
-		;;
-		* )
-			echo "Entrée invalide"
-		esac
-	done
+elif [ $serveurHttpN -a $serveurHttpA ]; then
+	echo "Quel serveur http souhaitez-vous installer ?"
+elif [ ! $serveurHttpA ]; then
+	echo "Vous avez apache2 d'installer,"
+	echo "Si vous continuez ce script la configuration existante va être remplacée par celle du script"
+else
+	echo "Vous avez nginx d'installer,"
+	echo "Si vous continuez ce script la configuration existante va être remplacée par celle du script"
 fi
+tmp=""
+until [[ $tmp == "ok" ]]; do
+	echo "utiliser pour le script :  1-->nginx 2-->apache2"
+	echo "ou sortir                  0-->sortir"
+	echo -n "(0, 1, 2) "
+	read -n 1 choix
+	case $choix in
+	0 )
+		exit 0
+	;;
+	1 )
+		serveurHttp="nginx"
+		tmp="ok"
+	;;
+	2 )
+		serveurHttp="apache2"
+		tmp="ok"
+	;;
+	* )
+		echo "Entrée invalide"
+	esac
+done
+
+
 
 # Rutorrent user
 

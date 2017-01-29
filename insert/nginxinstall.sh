@@ -8,9 +8,9 @@ sleep 2
 
 if [[ $nameDistrib == "Debian" ]]; then
 	# nginx apache2-utils
-	paquetsWeb="nginx apache2-utils "$paquetsWebD
-	phpSock=""
-	repPhp=""
+	paquetsWeb="nginx-full apache2-utils "$paquetsWebD
+	phpSock="/run/php5-fpm.sock"
+	repPhp="/etc/php5"
 else
 	# "nginx apache2-utils"
 	paquetsWeb="nginx apache2-utils "$paquetsWebU
