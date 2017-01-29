@@ -71,7 +71,7 @@ until [[ $tmp == "ok" ]]; do
 	echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
 	read user
 	__verifSaisie $user
-	__userExist $user    # insert/util_apache.sh renvoie userL userR userC
+	__userExist $user    # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
 		# traitement rutorrent ----------------------------------------------------
 	if [[ $verifOk == "o" ]] && [[ $1 == "ruTorrent" ]]; then
 		if [[ $userL -eq 0 ]]; then
@@ -246,7 +246,7 @@ sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/c
 echo "Dossier users/$userRuto sur ruTorrent crée"
 echo
 
-__creaUserRutoPasswd $userRuto $pwRuto   # insert/util_apache.sh ne renvoie rien
+__creaUserRutoPasswd $userRuto $pwRuto   # insert/util_apache.sh et util_nginx ne renvoie rien
 
 # modif pour sftp / sécu sftp -------------------------------------------------------
 
@@ -305,7 +305,7 @@ if [[ ! $suppUserCake ]]; then
 		echo -n "Nom de l'utilisateur Cakebox à supprimer "
 		read userCake
 		# user cakebox existe ?
-		__userExist $userCake  # insert/util_apache.sh
+		__userExist $userCake  # insert/util_apache.sh et util_nginx
 		if [[ $userC -ne 0 ]]; then
 			echo "$userCake n'est pas un utilisateur Cakebox"
 		else
@@ -316,8 +316,8 @@ else  # conjoint à la supp rutorrent
 	userCake=$suppUserCake
 fi
 
-__suppUserCakePasswd $userCake   # insert/util_apache.sh
-__suppUserCakeConfSite $userCake   # insert/util_apache.sh
+__suppUserCakePasswd $userCake   # insert/util_apache.sh et util_nginx
+__suppUserCakeConfSite $userCake   # insert/util_apache.sh et util_nginx
 
 # supprimer le fichier conf/user.php
 rm $REPWEB/cakebox/config/$userCake.php
@@ -335,7 +335,7 @@ until [[ $tmp == "ok" ]]; do
 	echo -n "Nom de l'utilisateur ruTorrent à supprimer "
 	read userRuto
 	# user ruto ?
-	__userExist $userRuto  # insert/util_apache.sh renvoie userR
+	__userExist $userRuto  # insert/util_apache.sh et util_nginx renvoie userR
 	if [[ $userR -ne 0 ]]; then
 		echo "$userRuto n'est pas un utilisateur ruTorrent"
 	else
@@ -431,7 +431,7 @@ until [[ $tmp == "ok" ]]; do
 				__userExist $user
 				if [[ $userL -eq 0 ]]; then
 					__saisiePW
-					__changePWRuto $user $pw  # insert/util_apache.sh
+					__changePWRuto $user $pw  # insert/util_apache.sh et util_nginx
 					if [[ $sortie != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
 					else
 						echo; echo "Traitement terminé"
