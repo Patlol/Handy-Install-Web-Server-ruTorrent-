@@ -20,7 +20,7 @@ sourceMediaD="deb http://www.deb-multimedia.org jessie main non-free"
 paquetsMediaD="mediainfo ffmpeg"
 
 upDebWebMinD="http://prdownloads.sourceforge.net/webadmin/webmin_1.830_all.deb"
-paquetWebMinD="perl libnet-ssleay-perl openssl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
+paquetWebMinD="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
 debWebMinD="webmin_1.830_all.deb"
 
 # Ubuntu
@@ -95,6 +95,18 @@ then
 fi
 }   #  fin __serviceapache2restart()
 
+__servicenginxrestart() {
+service nginx restart
+if [ $? != 0 ];	then
+	echo "Il y a un problème de configuration avec nginx"
+	service nginx status
+	echo; echo "Consulter le wiki"
+	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	echo; echo "puis continuer/arrêter l'installation"
+	__ouinon
+fi
+}  #  fin de __servicenginxrestart
+
 __creauser() {
 echo
 local tmp=""; local tmp2=""
@@ -124,12 +136,13 @@ until [[ $tmp == "ok" ]]; do
 						#  créer l'utilisateur $userlinux
 						pass=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
 						useradd -m -G adm,dip,plugdev,www-data,sudo -p $pass $userLinux
-						echo "bash" >> /home/$userLinux/.profile
+						# echo "bash" >> /home/$userLinux/.profile
 						echo $userLinux > $REPLANCE/pass1
 						if [[ $? -ne 0 ]]; then
 							echo "Impossible de créer un utilisateur linux"
 							__ouinon
 						fi
+						echo $userLinux > $REPLANCE/pass1
 						tmp2="ok"; tmp="ok"
 					;;
 					*)
@@ -347,8 +360,10 @@ else   # si 2ème passage
 fi
 
 # Choix serveur hhtp
-service apache2 status > /dev/null; serveurHttpA=$?
-service nginx status > /dev/null; serveurHttpN=$?
+service apache2 restart &> dev/null
+service nginx restart &> /dev/null
+service apache2 status &> /dev/null; serveurHttpA=$?
+service nginx status &> /dev/null; serveurHttpN=$?
 echo
 if [ ! $serveurHttpN -a ! $serveurHttpA ]; then
 	echo "Vous avez apache2 ET nginx d'installés ?!"

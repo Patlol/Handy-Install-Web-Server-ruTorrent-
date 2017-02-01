@@ -346,7 +346,7 @@ until [[ $tmp == "ok" ]]; do
 done
 
 # suppression du user allowed dans sshd_config
-sed -i '/'$userRuto'/d' /etc/ssh/sshd_config
+sed -i 's/'$userRuto' //' /etc/ssh/sshd_config
 service sshd restart
 
 __suppUserRutoPasswd $userRuto

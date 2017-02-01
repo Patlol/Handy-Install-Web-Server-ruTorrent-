@@ -45,12 +45,12 @@ sed -i 's/.*;.*cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $repPhp/fpm/php.ini
 # mot de passe rutorrent  htpasswdR
 htpasswd -bc $REPNGINX/.htpasswdR $userRuto $pwRuto
 
-service nginx restart
+__servicenginxrestart
 
 echo "***********************************************"
 echo "|      Fin de configuration de nginx          |"
 echo "***********************************************"
-sleep 2
+sleep 1
 echo
 
 # vérif bon fonctionnement nginx et php

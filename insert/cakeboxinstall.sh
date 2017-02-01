@@ -105,7 +105,7 @@ else   # modification nginx pour cakebox
 	sed -i 's|<php-sock>|'$phpSock'|' $REPNGINX/sites-available/cakebox
 	sed -i 's/<user-Cakebox>/'$userLinux'/' $REPNGINX/sites-available/cakebox
 	ln -s $REPNGINX/sites-available/cakebox  $REPNGINX/sites-enabled/cakebox
-	service nginx restart
+	__servicenginxrestart
 fi    # fin modif serveur http
 
 
@@ -149,7 +149,7 @@ if [[ $serveurHttp == "apache2" ]]; then
 else
 	# mot de passe rutorrent  htpasswdR
 	htpasswd -bc $REPNGINX/.htpasswdC $userCake $pwCake
-  service nginx restart
+  __servicenginxrestart
 fi
 
 headTest=`curl -Is http://$IP/cakebox/index.html | head -n 1`
