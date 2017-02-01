@@ -1,9 +1,10 @@
 # HiwsT
 Handy Install a Web Server with ruTorrent and Cakebox --HwsT--  
-_ruTorrent and Cakebox multiuser now !_
+_ruTorrent and Cakebox multiuser_  
+_Apache2 or nginx_
 
 Install on Debian 8 or Ubuntu 16 server
-- apache
+- apache / nginx
 - php
 - rtorrent
 - librtorrent
