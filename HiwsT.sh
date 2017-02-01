@@ -136,8 +136,6 @@ until [[ $tmp == "ok" ]]; do
 						#  créer l'utilisateur $userlinux
 						pass=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
 						useradd -m -G adm,dip,plugdev,www-data,sudo -p $pass $userLinux
-						# echo "bash" >> /home/$userLinux/.profile
-						echo $userLinux > $REPLANCE/pass1
 						if [[ $? -ne 0 ]]; then
 							echo "Impossible de créer un utilisateur linux"
 							__ouinon

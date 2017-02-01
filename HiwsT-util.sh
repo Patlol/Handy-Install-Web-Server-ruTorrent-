@@ -241,8 +241,13 @@ cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/
 cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
 sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
-# plugins
-# echo -e "\n    [linkcakebox]\n    enabled = no" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
+# déactivation du plugin linkcakebox
+mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
+mkdir $REPWEB/rutorrent/share/users/$userRuto/settings
+chmod -R 777 $REPWEB/rutorrent/share/users/$userRuto
+echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > $REPWEB/rutorrent/share/users/$userRuto/settings/plugins.dat
+chmod 666 $REPWEB/rutorrent/share/users/$userRuto/settings/plugins.dat
+chown -R www-data:www-data $REPWEB/rutorrent/share/users/$userRuto
 
 echo "Dossier users/$userRuto sur ruTorrent crée"
 echo
@@ -292,8 +297,9 @@ echo
 
 __creaUserCakeConfSite $userCake
 __creaUserCakePasswd $userCake $pwCake
-# plugin linkcakebox dans rutorrent
-echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userCake/plugins.ini
+
+# Réactiver le plugin linkcakebox
+rm $REPWEB/rutorrent/share/users/$userCake/settings/plugins.dat
  }  # fin __creaUserCake
 
 
@@ -396,7 +402,7 @@ local tmp2=""
 					;;
 				esac
 	done
-}  #  fin __saisiePW {
+}  #  fin __saisiePW
 
 __changePW() {
 local typeUser=""; local user=""; local tmp=""
@@ -431,7 +437,7 @@ until [[ $tmp == "ok" ]]; do
 				read user
 				# user ruTorrent ?
 				__userExist $user
-				if [[ $userL -eq 0 ]]; then
+				if [[ $userR -eq 0 ]]; then
 					__saisiePW
 					__changePWRuto $user $pw  # insert/util_apache.sh et util_nginx
 					if [[ $sortie != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
@@ -714,6 +720,7 @@ sortieA=$?
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
 	echo
 	echo "Votre configuration apache2/nginx est incompatible avec ce script"
+	echo
 	exit 1
 fi
 if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
