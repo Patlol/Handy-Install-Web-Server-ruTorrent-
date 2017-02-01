@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-# les tab
+# les différents tableaux : utilisateurs linux, ruto et cake
 listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
 if [[ $serveurHttp == "apache2" ]]; then
   listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
@@ -11,10 +11,10 @@ else
   listeC=(`cat $REPNGINX/.htpasswdC | awk -F":" '{ print $1 }'`)
 fi
 
-# tab de la longueur de chaque tab ci-dessus
+# tableau contenant la longueur de chaque tableau ci-dessus
 tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeC[@]})
 
-# la + grande tab en nbre d'éléments
+# le + grand tableau en nbre d'éléments
 maxTab=${tabLong[0]}
 for (( i = 1; i < 3; i++ )); do
   if [[ $maxTab -lt ${tabLong[i]} ]]; then
@@ -33,7 +33,7 @@ for (( i = 1; i < ${#concaTab[*]}; i++ )); do
   fi
 done
 if [[ $maxElem -lt 11 ]]; then
-  maxElem=11
+  maxElem=11  # longueur minumum en f() du chapeau : users Linux
 fi
 
 __miseEnPage() {

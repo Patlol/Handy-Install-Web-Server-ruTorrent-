@@ -4,7 +4,7 @@ echo "***********************************************"
 echo "|          Installation des paquets           |"
 echo "|         necessaires au serveur web          |"
 echo "***********************************************"
-sleep 2
+sleep 1
 
 if [[ $nameDistrib == "Debian" ]]; then
 	# nginx apache2-utils
@@ -17,13 +17,13 @@ else
 	phpSock="/run/php/php7.0-fpm.sock"
 	repPhp="/etc/php/7.0"
 fi
-apt-get install -y $paquetsWeb
+apt-get install -yq $paquetsWeb
 if [[ $? -eq 0 ]]
 then
 	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
-	sleep 2
+	sleep 1
 else
 	__erreurApt  # __erreurApt()
 fi
@@ -32,7 +32,7 @@ echo
 echo "***********************************************"
 echo "|            Configuration nginx              |"
 echo "***********************************************"
-sleep 2
+sleep 1
 # config site default
 mv $REPNGINX/sites-available/default $REPNGINX/sites-available/default.old
 cp $REPLANCE/fichiers-conf/nginx_default $REPNGINX/sites-available/default
@@ -64,16 +64,17 @@ then
 	echo "***********************************************"
 	echo "|         nginx et php fonctionne             |"
 	echo "***********************************************"
-	sleep 2
+	sleep 1
 else
 	echo; echo "Une erreur nginx/php c'est produite"
 	__messageErreur    #  __messageErreur()
 fi
 rm $REPWEB/info.php
 
-echo
-echo "******************************************"
-echo "|    Création certificat auto signé      |"
-echo "******************************************"
-sleep 1
-echo
+# Utilise le certificat fourni avec nginx
+# echo
+# echo "******************************************"
+# echo "|    Création certificat auto signé      |"
+# echo "******************************************"
+# sleep 1
+# echo

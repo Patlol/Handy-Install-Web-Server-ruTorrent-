@@ -4,20 +4,20 @@ echo "***********************************************"
 echo "|          Installation des paquets           |"
 echo "|         necessaires au serveur web          |"
 echo "***********************************************"
-sleep 2
+sleep 1
 
 if [[ $nameDistrib == "Debian" ]]; then
 	$paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD
 else
 	$paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
 fi
-apt-get install -y $paquetsWeb
+apt-get install -yq $paquetsWeb
 if [[ $? -eq 0 ]]
 then
 	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
-	sleep 2
+	sleep 1
 else
 	__erreurApt  # __erreurApt()
 fi
@@ -26,7 +26,7 @@ echo
 echo "***********************************************"
 echo "|           Configuration apache2             |"
 echo "***********************************************"
-sleep 2
+sleep 1
 
 # config apache
 echo
@@ -44,7 +44,7 @@ echo -e "\nServerTokens Prod\nServerSignature Off" >> $REPAPA2/apache2.conf
 echo "***********************************************"
 echo "|      Fin de configuration d'Apache          |"
 echo "***********************************************"
-sleep 2
+sleep 1
 echo
 
 # mot de passe user rutorrent  htpasswd
@@ -69,7 +69,7 @@ then
 	echo "***********************************************"
 	echo "|        Apache et php fonctionne             |"
 	echo "***********************************************"
-	sleep 2
+	sleep 1
 else
 	echo; echo "Une erreur apache/php c'est produite"
 	__messageErreur    #  __messageErreur()

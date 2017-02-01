@@ -54,6 +54,7 @@ __messageErreur() {
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 }  # fin messageErreur
 
+
 if [[ $serveurHttp == "apache2" ]]; then
 	. $REPLANCE/insert/util_apache.sh
 else
@@ -120,7 +121,7 @@ until [[ $tmp == "ok" ]]; do
 				case $pw2 in
 					$pw)
 						tmp2="ok"; tmp="ok"
-						sleep 2
+						sleep 1
 					;;
 					*)
 						echo "Les deux saisies du mot de passe ne sont pas identiques. Recommencez"
@@ -148,7 +149,7 @@ if [[ $1 == "ruTorrent" ]]; then
 else
 	userCake=$user; pwCake=$pw
 fi
-}  # fin IDuser
+}  # fin IDuser   renvoie selon $userRuto $pwRuto ou $userCake $pwCake
 
 __creaUserRuto () {
 
@@ -161,7 +162,7 @@ echo
 echo -e "\tNom utilisateur : $userRuto"
 echo -e "\tMot de passe    : $pwRuto"
 echo
-sleep 2
+sleep 1
 
 #  créer l'utilisateur linux $userRuto  ---------------------------------
 
@@ -258,7 +259,7 @@ chmod 0755 /home/$userRuto
 
 # modif sshd.config
 sed -i 's/AllowUsers.*/& '$userRuto'/' /etc/ssh/sshd_config
-sed -i 's|^Subsystem sftp /usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_config
+sed -i 's|^Subsystem sftp /usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_config   # commente
 if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
 fi
@@ -278,7 +279,7 @@ echo
 echo -e "\tNom utilisateur : $userCake"
 echo -e "\tMot de passe    : $pwCake"
 echo
-sleep 2
+sleep 1
 
 # - copier conf/user.php modif rep à scanner
 cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
@@ -328,6 +329,7 @@ echo
 
 
 __suppUserRuto() {
+### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
 # saisie nom
 local tmp=""
 until [[ $tmp == "ok" ]]; do
@@ -650,7 +652,6 @@ until [[ $tmp == "ok" ]]; do
 			echo "****************************"
 			echo
 			. $REPLANCE/insert/util_listeusers.sh
-			sleep 1
 			tmp2="ok"
 		;;
 		8 )
@@ -671,7 +672,6 @@ until [[ $tmp == "ok" ]]; do
 			echo "***************************"
 			echo
 			. $REPLANCE/insert/util_diag.sh
-			sleep 1
 			tmp2="ok"
 		;;
 		10 )
@@ -719,6 +719,7 @@ fi
 if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	echo
 	echo "Ni apache ni nginx ne sont actifs"
+	echo
 	exit 1
 fi
 

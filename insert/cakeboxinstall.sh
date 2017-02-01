@@ -7,17 +7,17 @@ echo "|           Installation de CakeBox             |"
 echo "*************************************************"
 echo
 echo
-sleep 2
+sleep 1
 
 # install prérequis ****************************************
 
-apt-get install -y git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery
+apt-get install -yq git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery
 if [[ $? -eq 0 ]]
 then
 	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
-	sleep 2
+	sleep 1
 else
 	erreurApt
 fi
@@ -66,7 +66,7 @@ if [[ $nameDistrib == "Debian" ]]; then
 	chmod -R o-w /root/.composer; chmod o-x /root
 fi
 
-# conbfiguration ***********************************************************
+# configuration ***********************************************************
 cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
 
 sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"$REPUL/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
@@ -115,7 +115,7 @@ echo
 echo "*******************************************************"
 echo "|   Installation du plugin ruTorrent pour Cakebox     |"
 echo "*******************************************************"
-sleep 2
+sleep 1
 echo
 
 git clone https://github.com/Cakebox/linkcakebox.git $REPWEB/rutorrent/plugins/linkcakebox
@@ -133,7 +133,7 @@ echo
 echo "*************************"
 echo "|   Sécuriser Cakebox   |"
 echo "*************************"
-sleep 2
+sleep 1
 echo
 
 if [[ $serveurHttp == "apache2" ]]; then
@@ -167,4 +167,4 @@ else
 	echo; echo "puis continuer/arrêter l'installation"
 	__ouinon
 fi
-sleep 2
+sleep 1

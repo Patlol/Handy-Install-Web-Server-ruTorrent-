@@ -39,7 +39,9 @@ REPNGINX="/etc/nginx"
 REPAPA2="/etc/apache2"
 REPLANCE=$(echo `pwd`)
 REPUL=""    # voir ligne ~345 ->  # si 2ème passage
-PORT_SCGI=5000
+PORT_SCGI=5000  # port 1er Utilisateur
+miniDispoRoot=319   # minimum pour alerete place
+miniDispoHome=299   # disponible sur disque
 
 #############################
 #       Fonctions
@@ -180,7 +182,7 @@ fi
 
 lsb_release &> /dev/null
 if [ $? -ne 0 ]; then
-	apt-get install -y lsb-release
+	apt-get install -yq lsb-release
 	__erreurApt
 fi
 
@@ -284,8 +286,7 @@ then
 	len=${#rootDispo}
 	entier=${rootDispo:0:len-1}
 	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
-	miniDispo=319
- 	if [ "$entier" -lt "$miniDispo" ]
+ 	if [ "$entier" -lt "$miniDispoRoot" ]
  	then
 		echo
 		echo
@@ -300,8 +301,7 @@ else  # /home
 	len=${#homeDispo}
 	entier=${homeDispo:0:len-1}
 	entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
-	miniDispo=299
- 	if [ "$entier" -lt "$miniDispo" ]
+ 	if [ "$entier" -lt "$miniDispoHome" ]
  	then
 		echo "************************************************************************************"
 		echo "|                                                                                  |"
@@ -401,7 +401,7 @@ until [[ $tmp == "ok" ]]; do
 	__verifSaisie $userRuto
 	if [[ $yno == "o" ]]; then
 		echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
-		read yno
+		read -n 1 yno
 	fi
 	case $yno in
 		[Oo] | [Oo][Uu][Ii])
@@ -463,7 +463,7 @@ until [[ $tmp3 == "ok" ]]; do
 				yno1=$yno
 				if [[ $yno1 == "o" ]]; then
 					echo -n "Vous confirmez '$userCake' comme nom d'utilisateur ? (o/n) "
-					read yno1
+					read -n 1 yno1
 				fi
 				case $yno1 in
 					[Oo] | [Oo][Uu][Ii])
@@ -547,8 +547,8 @@ echo
 echo "Dans le but de sécuriser SSH et SFTP il est proposé"
 echo "de changer le port standard (22) et d'interdire root"
 echo "c'est une mesure de sécurité fortement recommandée."
-echo "L'utilisateur sera $userLinux et un port aléatoire"
-echo "ou désigné par vous."
+echo "L'utilisateur sera $userLinux et le port aléatoire $portSSH"
+echo "ou un port désigné par vous."
 echo
 tmp=""; port=""
 until [[ $tmp == "ok" ]]; do
@@ -562,7 +562,6 @@ until [[ $tmp == "ok" ]]; do
 			changePort="non"
 			portSSH="22"
 			tmp="ok"
-			sleep 2
 		;;
 		[Oo] | [Oo][Uu][Ii])
 			echo
@@ -659,7 +658,7 @@ tmp=""
 until [[ $tmp == "ok" ]]; do
 echo
 echo -n "Voulez-vous continuer l'installation ? (o/n) "
-read yno
+read -n 1 yno
 case $yno in
 	[nN] | [nN][oO][nN])
 		echo "Au revoir, a bientôt."
@@ -700,7 +699,7 @@ echo "|              Update système                 |"
 echo "|       Création de l'utilisateur linux       |"
 echo "|          Installation des paquets           |"
 echo "***********************************************"
-sleep 2
+sleep 1
 echo
 # upgrade
 apt-get update -yq
@@ -711,7 +710,7 @@ then
 	echo "****************************"
 	echo "|  Mise à jour effectuée   |"
 	echo "****************************"
-	sleep 2
+	sleep 1
 else
 	__erreurApt  # __erreurApt()
 fi
@@ -735,21 +734,24 @@ echo
 echo "******************************"
 echo "|    Utilisateur linux ok    |"
 echo "******************************"
-sleep 3
+sleep 1
 echo
 
-
-### Installation du serveur http
+############################################
+#      Installation du serveur http
+############################################
 
 if [[ $serveurHttp == "apache2" ]]; then
-	service nginx stop 2> /dev/null
+	service nginx stop &> /dev/null
 	. $REPLANCE/insert/apacheinstall.sh
 else
-	service apache2 stop 2> /dev/null
+	service apache2 stop &> /dev/null
 	. $REPLANCE/insert/nginxinstall.sh
 fi
 
-
+############################################
+#           installation rtorrent
+############################################
 # téléchargement rtorrent libtorrent xmlrpc
 
 echo
@@ -758,20 +760,20 @@ echo "|  Début de l'installation de rtorrent et libtorrent  |"
 echo "|                    et xmlrpc                        |"
 echo "*******************************************************"
 echo
-sleep 3
+sleep 1
 
 if [[ $nameDistrib == "Debian" ]]; then
 	paquets=$paquetsRtoD
 else
 	paquets=$paquetsRtoU
 fi
-apt-get install -y $paquets
+apt-get install -yq $paquets
 if [[ $? -eq 0 ]]
 then
 	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
-	sleep 2
+	sleep 1
 else
 	__erreurApt
 fi
@@ -781,7 +783,7 @@ echo
 echo "*****************************************"
 echo "|    Configuration de .rtorrent.rc      |"
 echo "*****************************************"
-sleep 2
+sleep 1
 #-----------------------------------------------------------------
 cp $REPLANCE/fichiers-conf/rto_rtorrent.rc $REPUL/.rtorrent.rc
 
@@ -798,7 +800,7 @@ echo
 echo "******************************************************"
 echo "|  Configuration de rtorrent sous screen en daemon   |"
 echo "******************************************************"
-sleep 2
+sleep 1
 echo
 
 #-----------------------------------------------------------------
@@ -822,7 +824,7 @@ service rtorrentd start
 
 #-----------------------------------------------------------------
 
-sleep 2
+sleep 1
 sortie=`pgrep rtorrent`
 
 if [ -n "$sortie" ]
@@ -830,14 +832,16 @@ then
 	echo "*************************************************"
 	echo "|  rtorrent en daemon fonctionne correctement   |"
 	echo "*************************************************"
-	sleep 2
+	sleep 1
 else
 	echo; echo "Il y a un problème avec rtorrent !!!"
 	__messageErreur
 fi
 
 
-# installation de rutorrent
+############################################
+#        installation de rutorrent
+############################################
 
 # création de userRuto dans apacheinstall.sh / nginxinstall.sh
 # Modifier la configuration du site par défaut (pour rutorrent) dans apacheinstall.sh / nginxinstall.sh
@@ -846,7 +850,7 @@ echo
 echo "*************************************************"
 echo "|   Installation et configuration de ruTorrent  |"
 echo "*************************************************"
-sleep 2
+sleep 1
 
 # téléchargement
 
@@ -889,7 +893,7 @@ echo
 echo "**********************************************"
 echo "|    Installation de mediainfo et ffmpeg     |"
 echo "**********************************************"
-sleep 2
+sleep 1
 echo
 
 if [[ $nameDistrib == "Debian" ]]; then
@@ -897,12 +901,12 @@ if [[ $nameDistrib == "Debian" ]]; then
 	echo $sourceMediaD >> /etc/apt/sources.list
 	chmod 644 /etc/apt/sources.list
 	apt-get update -yq
-	apt-get install -y deb-multimedia-keyring
+	apt-get install -yq deb-multimedia-keyring
 	apt-get update -yq
 	apt-get install -y --force-yes $paquetsMediaD
 	sortie=$?
 else
-	apt-get install -y $paquetsMediaU
+	apt-get install -yq $paquetsMediaU
 	sortie=$?
 fi
 if [[ $sortie -eq 0 ]]
@@ -910,7 +914,7 @@ then
 	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
-	sleep 2
+	sleep 1
 else
 	__erreurApt
 fi
@@ -921,7 +925,7 @@ echo
 echo "*************************************************"
 echo "|      Installation des plugins ruTorrent       |"
 echo "*************************************************"
-sleep 2
+sleep 1
 
 mkdir $REPWEB/rutorrent/plugins/conf
 
@@ -959,28 +963,33 @@ else
 	echo; echo "Une erreur c'est produite sur ruTorrent"
 	__messageErreur
 fi
-sleep 2
+sleep 1
 
+#######################################################
+#   install cakebox and Coinstall cakebox and Co
+#######################################################
 
-# install cakebox and Co
 
 if [[ $installCake == "oui" ]]
 then
 . $REPLANCE/insert/cakeboxinstall.sh
 fi  # cakebox
 
-
-# install webmin
+#######################################################
+#             installation de WebMin
+#######################################################
 
 if [[ $installWebMin == "oui" ]]
 then
 . $REPLANCE/insert/webmininstall.sh
 fi   # Webmin
 
-
-# sécuriser ssh des choses à faire de tte façon
+########################################
+#            sécuriser ssh
+########################################
+#  des choses à faire de tte façon
 . $REPLANCE/insert/sshsecuinstall.sh
-sleep 3
+
 
 
 # remettre sudoers en ordre
@@ -990,7 +999,10 @@ sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/
 cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
 
-# générique de fin
+
+########################################
+#            générique de fin
+########################################
 
 hostName=$(hostname -f)
 clear
@@ -1085,7 +1097,7 @@ until [[ $tmp == "ok" ]]; do
 			exit 0
 		;;
 		[Oo] | [Oo][Uu][Ii])
-			sleep 2
+			sleep 1
 			reboot
 		;;
 		*)
