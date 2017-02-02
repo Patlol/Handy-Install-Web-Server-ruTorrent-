@@ -63,8 +63,8 @@ __IDuser() {    # saisie ID et PW  ruto/cake   $1 "ruTorrent" ou "Cakebox"
 echo
 local tmp=""; local tmp2=""; local yno=""
 until [[ $tmp == "ok" ]]; do
-	echo -n "Choisir un nom d'utilisateur $1 (ni espace ni \) : "
-	read user
+	echo -n "Choisir un nom d'utilisateur (ni espace ni \) : "
+	read -a user   # coupe si espace, 1er élément du tableau, "aa dd" donne "aa"
 	__verifSaisie $user
 	__userExist $user    # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
 		# traitement rutorrent ----------------------------------------------------
@@ -76,6 +76,10 @@ until [[ $tmp == "ok" ]]; do
 		elif [[ $userR -eq 0 ]]; then
 			echo "$user est déjà un utilisateur ruTorrent"
 			echo "Vous ne pouvez pas en créer un deuxième"
+			yno="N"
+		elif [[ $userC -eq 0 ]]; then
+			echo "$user est déjà un utilisateur Cakebox"
+			echo "Vous ne pouvez pas utiliser ce nom"
 			yno="N"
 			else
 				echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
@@ -304,11 +308,12 @@ if [[ ! $suppUserCake ]]; then
 	until [[ $tmp == "ok" ]]; do
 		echo
 		echo -n "Nom de l'utilisateur Cakebox à supprimer "
-		read userCake
-		# user cakebox existe ?
+		read -a userCake
+		# user cakebox existe ? Si pas d'user L cela veut dire que userCake est l'utilisateur principal
 		__userExist $userCake  # insert/util_apache.sh et util_nginx
-		if [[ $userC -ne 0 ]]; then
-			echo "$userCake n'est pas un utilisateur Cakebox"
+		if [[ $userC -ne 0 ]] || [[ $userL -ne 0 ]]; then
+			echo "$userCake n'est pas un utilisateur Cakebox ou"
+			echo "$userCake correspond à l'utilisateur principal"
 		else
 			tmp="ok"
 		fi
@@ -335,11 +340,15 @@ local tmp=""
 until [[ $tmp == "ok" ]]; do
 	echo
 	echo -n "Nom de l'utilisateur ruTorrent à supprimer "
-	read userRuto
+	read -a userRuto
 	# user ruto ?
 	__userExist $userRuto  # insert/util_apache.sh et util_nginx renvoie userR
-	if [[ $userR -ne 0 ]]; then
+	if [[ $userR -ne 0 ]] || [[ $userL -ne 0 ]]; then
 		echo "$userRuto n'est pas un utilisateur ruTorrent"
+		echo "ou n'est pas un utilisateur Linux"
+	elif [[ $userRuto == $firstUserLinux ]]; then
+		echo "$userRuto correspond à l'utilisateur principal et ne peut être supprimé"
+		echo "étant l'utilisateur principal"
 	else
 		tmp="ok"
 	fi
@@ -411,9 +420,9 @@ until [[ $tmp == "ok" ]]; do
 			[1] )
 				echo "!!! Mot de passe valable aussi pour ftp !!!"
 				echo -n "Nom de l'utilisateur linux : "
-				read user
+				read -a user
 				# user linux ?   idem apache et nginx
-				egrep "^$user" /etc/passwd >/dev/null
+				egrep "^$user:" /etc/passwd >/dev/null
 				if [[ $? -eq 0 ]]; then
 					passwd $user
 					if [[ $? != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
@@ -428,7 +437,7 @@ until [[ $tmp == "ok" ]]; do
 			;;
 			[2] )
 				echo -n "Nom de l'utilisateur ruTorrent : "
-				read user
+				read -a user
 				# user ruTorrent ?
 				__userExist $user
 				if [[ $userR -eq 0 ]]; then
@@ -447,7 +456,7 @@ until [[ $tmp == "ok" ]]; do
 			;;
 			[3] )
 				echo -n "Nom de l'utilisateur Cakebox : "
-				read user
+				read -a user
 				# user cakebox ?
 				__userExist $user
 				if [[ $userC -eq 0 ]]; then
@@ -705,7 +714,7 @@ if [[ $(id -u) -ne 0 ]]; then
 	echo
 	exit 1
 fi
-
+#########################################################################
 # apache vs nginx ?
 service nginx status > /dev/null
 sortieN=$?
@@ -729,8 +738,16 @@ if [[ $sortieA -eq 0 ]]; then
 else
 	serveurHttp="nginx"
 fi
-########
 
+if [[ $serveurHttp == "apache2" ]]; then
+	. $REPLANCE/insert/util_apache.sh
+else
+	. $REPLANCE/insert/util_nginx.sh
+fi
+###########################################################################
+# utilisateur linux principal dans pass1
+firstUserLinux=$(cat pass1)
+###########################################################################
 
 __menu
 

@@ -411,11 +411,12 @@ until [[ $tmp == "ok" ]]; do
 	echo
 	echo "Il est préférable de choisir un nom différent de celui de l'utilisateur Linux"
 	echo -n "Choisir un nom d'utilisateur ruTorrent (ni espace ni \) : "
-	read userRuto
+	read -a userRuto
 	__verifSaisie $userRuto
 	if [[ $yno == "o" ]]; then
 		echo -n "Vous confirmez '$userRuto' comme nom d'utilisateur ? (o/n) "
 		read -n 1 yno
+		echo
 	fi
 	case $yno in
 		[Oo] | [Oo][Uu][Ii])
@@ -472,12 +473,13 @@ until [[ $tmp3 == "ok" ]]; do
 				echo
 				echo "Choisir un nom d'utilisateur Cakebox"
 				echo -n "(peut-être le même que pour rutorrent) (ni espace ni \) : "
-				read userCake
+				read -a userCake    # coupe si espace, 1er élément du tableau, "aa dd" donne "aa"
 				__verifSaisie $userCake
 				yno1=$yno
 				if [[ $yno1 == "o" ]]; then
 					echo -n "Vous confirmez '$userCake' comme nom d'utilisateur ? (o/n) "
 					read -n 1 yno1
+					echo
 				fi
 				case $yno1 in
 					[Oo] | [Oo][Uu][Ii])
@@ -582,7 +584,7 @@ until [[ $tmp == "ok" ]]; do
 			echo "L'utilisateur sera $userLinux"
 			echo "Le port aléatoire proposé est $portSSH"
 			echo "Souhaitez-vous un autre port (entre 20000 65535)"
-			echo -n "Si oui saisissez le ici "; read port
+			echo -n "Si oui saisissez le ici "; read -a port
 			if [[ $port == "" ]]; then
 				tmp="ok"
 				changePort="oui"
