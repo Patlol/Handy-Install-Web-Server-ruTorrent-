@@ -56,7 +56,7 @@ __suppUserCakePasswd() {  # appelée par __suppUserCake  $1 $userCake
 
 __suppUserCakeConfSite() {   # appelée par __suppUserCake  $1 $userCake
 # supprimer dans cakebox.conf
-  sed -i '/        location \/access\/'$1'/ {/,/         }/d' $REPNGINX/sites-available/cakebox
+  sed -i '/        location \/access\/'$1' {/,/         }/d' $REPNGINX/sites-available/cakebox
   service nginx restart
   if [[ $? -eq o ]]; then
     echo

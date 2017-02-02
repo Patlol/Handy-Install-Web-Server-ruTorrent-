@@ -121,7 +121,7 @@ echo
 git clone https://github.com/Cakebox/linkcakebox.git $REPWEB/rutorrent/plugins/linkcakebox
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/linkcakebox
 
-sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox\/index.html';" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
+sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox\/index.html';|" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
 
 echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users/$userRuto/plugins.ini
 

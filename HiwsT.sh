@@ -377,8 +377,9 @@ else
 fi
 tmp=""
 until [[ $tmp == "ok" ]]; do
-	echo "utiliser pour le script :  1-->nginx 2-->apache2"
-	echo "ou sortir                  0-->sortir"
+	echo "1) utiliser nginx"
+	echo "2) utiliser Apache2"
+	echo "0) sortir"
 	echo -n "(0, 1, 2) "
 	read -n 1 choix
 	case $choix in

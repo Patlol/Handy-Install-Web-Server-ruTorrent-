@@ -7,9 +7,9 @@ echo "***********************************************"
 sleep 1
 
 if [[ $nameDistrib == "Debian" ]]; then
-	$paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD
+	paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD
 else
-	$paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
+	paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
 fi
 apt-get install -yq $paquetsWeb
 if [[ $? -eq 0 ]]

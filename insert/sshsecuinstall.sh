@@ -16,7 +16,6 @@ else
 	# éviter 2 x UseDNS ce qui bloque
 		sed -i 's/UseDNS.*//' /etc/ssh/sshd_config
 		echo -e "UseDNS no\nAllowUsers root" >> /etc/ssh/sshd_config
-	fi
 fi
 service ssh restart
 service ssh status
