@@ -55,12 +55,6 @@ __messageErreur() {
 }  # fin messageErreur
 
 
-if [[ $serveurHttp == "apache2" ]]; then
-	. $REPLANCE/insert/util_apache.sh
-else
-	. $REPLANCE/insert/util_nginx.sh
-fi
-
 ########################################
 #       Fonctions principales
 ########################################

@@ -112,10 +112,10 @@ echo
 local tmp=""; local tmp2=""
 until [[ $tmp == "ok" ]]; do
 	echo -n "Choisir un nom d'utilisateur linux (ni espace ni \) : "
-	read userLinux
+	read -a userLinux
 	__verifSaisie $userLinux
 	if [[ $yno == "o" ]]; then
-		egrep "^$userLinux" /etc/passwd >/dev/null
+		egrep "^$userLinux:" /etc/passwd >/dev/null
 		if [[ $? -eq 0 ]]; then
 			echo "$userLinux existe déjà, choisir un autre nom"
 			yno="N"
@@ -358,7 +358,7 @@ else   # si 2ème passage
 fi
 
 # Choix serveur hhtp
-service apache2 restart &> dev/null
+service apache2 restart &> /dev/null
 service nginx restart &> /dev/null
 service apache2 status &> /dev/null; serveurHttpA=$?
 service nginx status &> /dev/null; serveurHttpN=$?
@@ -673,6 +673,7 @@ until [[ $tmp == "ok" ]]; do
 echo
 echo -n "Voulez-vous continuer l'installation ? (o/n) "
 read -n 1 yno
+echo
 case $yno in
 	[nN] | [nN][oO][nN])
 		echo "Au revoir, a bientôt."

@@ -1,13 +1,13 @@
 
 __userExist() {   #  appelée par __IDuser  et autres f()  $user = $1
 	# user linux ?
-	egrep "^$1" /etc/passwd >/dev/null
+	egrep "^$1:" /etc/passwd >/dev/null
 	userL=$?
 	# user ruTorrent ?
-	egrep "^$1" $REPNGINX/.htpasswdR > /dev/null
+	egrep "^$1:" $REPNGINX/.htpasswdR > /dev/null
 	userR=$?
 	# user cakebox ?
-	egrep "^$1" $REPNGINX/.htpasswdC > /dev/null
+	egrep "^$1:" $REPNGINX/.htpasswdC > /dev/null
 	userC=$?
 # renvoie $userC $userR $userL = 0 existe = 1 n'existe pas
 }
