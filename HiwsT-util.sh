@@ -9,13 +9,18 @@
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
 
 
-########################################
-#       Fonctions utilitaires
-########################################
 REPWEB="/var/www/html"
 REPAPA2="/etc/apache2"
 REPNGINX="/etc/nginx"
 REPLANCE=$(echo `pwd`)
+serveurHttp=""
+# utilisateur linux principal dans pass1
+firstUserLinux=$(cat pass1)
+
+
+########################################
+#       Fonctions utilitaires
+########################################
 
 __verifSaisie() {
 if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
@@ -54,14 +59,21 @@ __messageErreur() {
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 }  # fin messageErreur
 
+__listeUtilisateurs() {
+	. $REPLANCE/insert/util_listeusers.sh
+}
 
-########################################
+################################################################################
 #       Fonctions principales
 ########################################
 
-__IDuser() {    # saisie ID et PW  ruto/cake   $1 "ruTorrent" ou "Cakebox"
+##############################################################
+## saisie ID et PW  ruto/cake   $1 "ruTorrent" ou "Cakebox"
+##############################################################
+__IDuser() {
 echo
-local tmp=""; local tmp2=""; local yno=""
+local tmp=""; local tmp2=""; local yno=""; local user=""
+#  saisie nom de l'utilisateur -------------------------------------------------
 until [[ $tmp == "ok" ]]; do
 	echo -n "Choisir un nom d'utilisateur (ni espace ni \) : "
 	read -a user   # coupe si espace, 1er élément du tableau, "aa dd" donne "aa"
@@ -86,7 +98,7 @@ until [[ $tmp == "ok" ]]; do
 				read yno
 		fi
 	fi
-	#     traitement cakebox ------------------------------------------------------
+	#    traitement cakebox ------------------------------------------------------
 	if [[ $verifOk == "o" ]] && [[ $1 == "Cakebox" ]]; then
 		if [ $userL -ne 0 -o $userC -eq 0 ]; then
 			# pas de userlinux ou existe usercake NON
@@ -107,10 +119,12 @@ until [[ $tmp == "ok" ]]; do
 				read yno
 		fi
 	fi
- #    fin traitement différent -----------------------------------------
+#  fin traitement différent ----------------------------------------------------
+#  fin saisie nom utilisateur  -------------------------------------------------
 
+#  saisie PW d'un utilisateur  -------------------------------------------------
 	case $yno in
-		[Oo] | [Oo][Uu][Ii] )   # saisie ID et PW d'un utilisateur
+		[Oo] | [Oo][Uu][Ii] )   # saisie PW d'un utilisateur
 			until [[ $tmp2 == "ok" ]]; do
 				echo -n "Choisissez un mot de passe (ni espace ni \) : "
 				read pw
@@ -127,7 +141,7 @@ until [[ $tmp == "ok" ]]; do
 						sleep 1
 					;;
 				esac
-			done  # fin saisie d'un utilisateur
+			done
 		;;
 		[nN] | [nN][oO][nN])
 			echo "Nom d'utilisateur invalidé. Reprendre la saisie"
@@ -135,8 +149,8 @@ until [[ $tmp == "ok" ]]; do
 			sleep 1
 		;;
 	esac
+	# fin saisie PW d'un utilisateur ---------------------------------------------
 	if [[ $verifOk == "n" ]]; then
-		#statements
 		echo "Entrée invalide"
 		sleep 1
 	fi
@@ -149,6 +163,11 @@ else
 fi
 }  # fin IDuser   renvoie selon $userRuto $pwRuto ou $userCake $pwCake
 
+
+
+####################################
+##  création utilisateur ruTorrent
+####################################
 __creaUserRuto () {
 
 echo
@@ -238,6 +257,7 @@ mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
 sed -i -e 's/<port>/'$port'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
+chown -R www-data:www-data $REPWEB/rutorrent/conf/users/$userRuto
 
 # déactivation du plugin linkcakebox
 mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
@@ -272,6 +292,9 @@ echo "Sécurisation SFTP faite : seulement accès a /home/$userRuto"
 }   #  fin creauserruto
 
 
+####################################
+##  Création utilisateur Cakebox
+####################################
  __creaUserCake() {
 echo
 echo "**************************************"
@@ -298,9 +321,12 @@ __creaUserCakePasswd $userCake $pwCake
 
 # Réactiver le plugin linkcakebox
 rm $REPWEB/rutorrent/share/users/$userCake/settings/plugins.dat
- }  # fin __creaUserCake
+}  # fin __creaUserCake
 
 
+############################################
+##  Suppression d'un utilisateur Cakebox
+############################################
 __suppUserCake() {
 # saisie nom sauf si conjoint à la supp rutorrent alors $suppUserCake pas vide
 if [[ ! $suppUserCake ]]; then
@@ -333,6 +359,9 @@ echo
 }  # fin __suppUserCake
 
 
+#####################################################
+##  Suppression d'un utilisateur linux et rutorrent
+#####################################################
 __suppUserRuto() {
 ### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
 # saisie nom
@@ -348,7 +377,6 @@ until [[ $tmp == "ok" ]]; do
 		echo "ou n'est pas un utilisateur Linux"
 	elif [[ $userRuto == $firstUserLinux ]]; then
 		echo "$userRuto correspond à l'utilisateur principal et ne peut être supprimé"
-		echo "étant l'utilisateur principal"
 	else
 		tmp="ok"
 	fi
@@ -360,9 +388,12 @@ service sshd restart
 
 __suppUserRutoPasswd $userRuto
 
-# dossier rutorrent/conf/users/userRuto
+# dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
 rm -r $REPWEB/rutorrent/conf/users/$userRuto
-echo "Dossier users/$userRuto sur ruTorrent supprimé"
+echo "Dossier conf/users/$userRuto sur ruTorrent supprimé"
+echo
+rm -r $REPWEB/rutorrent/share/users/$userRuto
+echo "Dossier share/users/$userRuto sur ruTorrent supprimé"
 echo
 
 # modif de rtorrentd.sh (daemon)
@@ -387,6 +418,9 @@ echo "Utilisateur linux et /home/$userRuto supprimé"
 }  # fin __suppUserRuto
 
 
+####################
+##  Changement pw
+####################
 __saisiePW() {   # appelée par __changePW
 local tmp2=""
 	until [[ $tmp2 == "ok" ]]; do
@@ -474,7 +508,7 @@ until [[ $tmp == "ok" ]]; do
 				fi
 			;;
 			[4] )
-				. $REPLANCE/insert/util_listeusers.sh
+				__listeUtilisateurs
 				sleep 1
 			;;
 			[0] )
@@ -489,47 +523,26 @@ done
 }  #  fin __changePW
 
 
-__menu() {
-clear
-echo
-echo "******************************************"
-echo "|                                        |"
-echo "|    Hiwst-util Utilitaires seedbox      |"
-echo "|         ruTorrent - Cakebox            |"
-echo "|                                        |"
-echo "|   A utiliser après une installation    |"
-echo "|         réalisée avec HiwsT            |"
-echo "******************************************"
-echo; echo
-local tmp=""; choixMenu=""
+#################################################
+##  ajout utilisateur sous menu et traitements
+#################################################
+__ssmenuAjoutUtilisateur() {
+local typeUser=""; local tmp=""
+
 until [[ $tmp == "ok" ]]; do
 	echo
-	echo "Voulez-vous"
+	echo "Type d'utilisateur à ajouter : "
+	echo -e "\t1) Linux - ruTorrent"
+	echo -e "\t2) Linux - ruTorrent - Cakebox"
+	echo -e "\t3) Cakebox"
+	echo -e "\t4) Liste des utilisateurs"
+	echo -e "\t0) sortir"
 	echo
-	echo -e "\t1)  Ajouter un utilisateur Linux et ruTorrent"
-	echo -e "\t2)  Ajouter un utilisateur Cakebox"
-	echo -e "\t3)  Ajouter un utilisateur Linux, ruTorrent et Cakebox"
-	echo
-	echo -e "\t4)  Modifier un mot de passe utilisateur"
-	echo -e "\t5)  Supprimer un utilisateur Cakebox"
-	echo -e "\t6)  Supprimer un utilisateur ruTorrent (et Linux, Cakebox)"
-	echo -e "\t7)  Lister les utilisateurs existants"
-	echo
-	echo -e "\t8)  Relancer rtorrent manuellement"
-	echo -e "\t9)  Diagnostique"
-	echo -e "\t10) Rebooter le serveur"
-	echo
-	echo -e "\t0)  Sortir"
-	echo
+	echo -n "(0, 1, 2, 3, 4) "
+	read typeUser
 
-	echo -n "Votre choix (0 1 2 3 4 5 6 7 8 9 10) "
-	read choixMenu
-	echo
-	case $choixMenu in
-		0 )
-			tmp2="ok"; tmp="ok"
-		;;
-		1 )  # + user ruTorrent
+	case $typeUser in
+		1 )
 			echo
 			echo "****************************************"
 			echo "|     Ajout d'un utilisateur Linux     |"
@@ -552,30 +565,10 @@ until [[ $tmp == "ok" ]]; do
 			echo "Traitement terminé"
 			echo "Utilisateur $userRuto crée"
 			echo "Mot de passe $pwRuto"
+			userRuto=""; pwRuto=""
 			sleep 1
-			tmp2="ok"
 		;;
-		2 )  # + user cakebox
-			echo
-			echo "****************************************"
-			echo "|    Ajout d'un utilisateur Cakebox    |"
-			echo "****************************************"
-			echo
-			echo "- L'utilisateur devra déjà exister en tant"
-			echo "  qu'utilisateur ruTorrent"
-			echo "- Le nouvel utilisateur ne pourra scanner"
-			echo "  que son répertoire de téléchargement."
-			echo
-			__IDuser Cakebox
-			__creaUserCake
-			echo
-			echo "Traitement terminé"
-			echo "Utilisateur $userCake crée"
-			echo "Mot de passe $pwCake"
-			sleep 1
-			tmp2="ok"
-		;;
-		3 )  # + user rutorrent et cakebox
+		2 )
 			echo
 			echo "****************************************"
 			echo "|    Ajout d'un utilisateur Linux,     |"
@@ -600,42 +593,74 @@ until [[ $tmp == "ok" ]]; do
 			echo
 			__creaUserRuto # + linux
 			userCake=$userRuto; pwCake=$pwRuto
+			userRuto=""; pwRuto=""
 			echo
 			__creaUserCake
 			echo
 			echo "Traitement terminé"
 			echo "Utilisateur $userCake crée"
 			echo "Mot de passe $pwCake"
+			userCake=""; pwCake=""
 			sleep 1
-			tmp2="ok"
 		;;
-		4 )
+		3 )
 			echo
-			echo "********************************"
-			echo "|   Changer un mot de passe    |"
-			echo "********************************"
-			__changePW
+			echo "****************************************"
+			echo "|    Ajout d'un utilisateur Cakebox    |"
+			echo "****************************************"
 			echo
-			tmp2="ok"
-		;;
-		5 )
+			echo "- L'utilisateur devra déjà exister en tant"
+			echo "  qu'utilisateur ruTorrent"
+			echo "- Le nouvel utilisateur ne pourra scanner"
+			echo "  que son répertoire de téléchargement."
 			echo
-			echo "*************************************"
-			echo "|   Supprimer utilisateur Cakebox   |"
-			echo "*************************************"
-			echo
-			__suppUserCake
+			__IDuser Cakebox
+			__creaUserCake
 			echo
 			echo "Traitement terminé"
-			echo "Utilisateur $userCake supprimé"
+			echo "Utilisateur $userCake crée"
+			echo "Mot de passe $pwCake"
+			userCake=""; pwCake=""
 			sleep 1
-			tmp2="ok"
 		;;
-		6 )
+		[4] )
+			__listeUtilisateurs
+		;;
+		[0] )
+			tmp="ok"
+		;;
+		* )
+			echo "Entrée invalide"
+			sleep 1
+		;;
+	esac
+done
+}   #  fin __ssmenuAjoutUtilisateur()
+
+
+######################################################
+##  supprimer utilisateur sous menu et traitements
+######################################################
+__ssmenuSuppUtilisateur() {
+local typeUser=""; local tmp=""
+
+until [[ $tmp == "ok" ]]; do
+	echo
+	echo "Type d'utilisateur à supprimer : "
+	echo -e "\t1) Linux - ruTorrent - Cakebox"
+	echo -e "\t2) Cakebox"
+	echo -e "\t3) Liste des utilisateurs"
+	echo -e "\t0) sortir"
+	echo
+	echo -n "(0, 1, 2, 3) "
+	read typeUser
+
+	case $typeUser in
+		1 )
 			echo
 			echo "*************************************"
-			echo "|  Supprimer utilisateur ruTorrent  |"
-			echo "|        Cakebox et Linux           |"
+			echo "|    Supprimer utilisateur Linux    |"
+			echo "|       ruTorrent et Cakebox        |"
 			echo "*************************************"
 			echo
 			echo "ATTENTION le répertoire /home de l'utilisateur"
@@ -651,19 +676,102 @@ until [[ $tmp == "ok" ]]; do
 			echo
 			echo "Traitement terminé"
 			echo "Utilisateur $userRuto supprimé"
+			suppUserCake=""; userRuto=""; userCake=""; pwRuto=""; pwCake=""
 			sleep 1
+		;;
+		2 )
+			echo
+			echo "*************************************"
+			echo "|   Supprimer utilisateur Cakebox   |"
+			echo "*************************************"
+			echo
+			__suppUserCake
+			echo
+			echo "Traitement terminé"
+			echo "Utilisateur $userCake supprimé"
+			userCake=""; pwCake=""
+			sleep 1
+		;;
+		3 )
+			__listeUtilisateurs
+		;;
+		0 )
+			tmp="ok"
+		;;
+		* )
+			echo "Entrée invalide"
+			sleep 1
+		;;
+	esac
+done
+}  #  fin __ssmenuSuppUtilisateur()
+
+
+############################
+##  Menu principal
+############################
+__menu() {
+clear
+echo
+echo "******************************************"
+echo "|         Hiwst-util : Utilitaires       |"
+echo "|      rtorrent - ruTorrent - Cakebox    |"
+echo "|                                        |"
+echo "|     A utiliser après une installation  |"
+echo "|           réalisée avec HiwsT          |"
+echo "******************************************"
+echo; echo
+local tmp=""; choixMenu=""
+until [[ $tmp == "ok" ]]; do
+	echo
+	echo "Voulez-vous"
+	echo
+	echo -e "\t1) Ajouter un utilisateur"
+	echo -e "\t2) Modifier un mot de passe utilisateur"
+	echo -e "\t3) Supprimer un utilisateur"
+	echo -e "\t4) Lister les utilisateurs existants"
+	echo
+	echo -e "\t5) Relancer rtorrent manuellement"
+	echo -e "\t6) Diagnostique"
+	echo -e "\t7) Rebooter le serveur"
+	echo
+	echo -e "\t0) Sortir"
+	echo
+
+	echo -n "Votre choix (0 1 2 3 4 5 6 7) "
+	read choixMenu
+	echo
+	case $choixMenu in
+		0 )
+			tmp2="ok"; tmp="ok"
+		;;
+		1 )  # ajout user
+			__ssmenuAjoutUtilisateur
 			tmp2="ok"
 		;;
-		7 )
+		2 )
+			echo
+			echo "********************************"
+			echo "|   Changer un mot de passe    |"
+			echo "********************************"
+			__changePW
+			echo
+			tmp2="ok"
+		;;
+		3 )  # supp utilisateur
+			__ssmenuSuppUtilisateur
+			tmp2="ok"
+		;;
+		4 )
 			echo
 			echo "****************************"
 			echo "|  Liste des utilisateurs  |"
 			echo "****************************"
 			echo
-			. $REPLANCE/insert/util_listeusers.sh
+			__listeUtilisateurs
 			tmp2="ok"
 		;;
-		8 )
+		5 )
 			echo
 			echo "***************************"
 			echo "|    rtorrent restart     |"
@@ -674,7 +782,7 @@ until [[ $tmp == "ok" ]]; do
 			sleep 1
 			tmp2="ok"
 		;;
-		9 )
+		6 )
 			echo
 			echo "***************************"
 			echo "|      Diagnostique       |"
@@ -683,7 +791,7 @@ until [[ $tmp == "ok" ]]; do
 			. $REPLANCE/insert/util_diag.sh
 			tmp2="ok"
 		;;
-		10 )
+		7 )
 			echo
 			echo "*********************"
 			echo "|      Reboot       |"
@@ -701,9 +809,9 @@ done
 
 }   # fin menu
 
-#############################
-#     Début du script
-#############################
+################################################################################
+# #                             Début du script
+################################################################################
 
 # root ?
 if [[ $(id -u) -ne 0 ]]; then
@@ -745,9 +853,7 @@ else
 	. $REPLANCE/insert/util_nginx.sh
 fi
 ###########################################################################
-# utilisateur linux principal dans pass1
-firstUserLinux=$(cat pass1)
-###########################################################################
+
 
 __menu
 
