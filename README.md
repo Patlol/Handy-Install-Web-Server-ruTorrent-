@@ -20,7 +20,7 @@ With this utility you can
 - Create other ruTorrent/Cakebox users and thus share your server.  
  - Creating a linux user and a rutorrent/cakebox user  
  - Security ruTorrent/cakebox with password
- - Block the new user has is /home/download from rutorrent/cakebox  
+ - Block the new user has his /home/download from rutorrent/cakebox  
  - Block the new user has his /home from sftp  
  - Prohibits new user access via ssh  
 - Change passwords
