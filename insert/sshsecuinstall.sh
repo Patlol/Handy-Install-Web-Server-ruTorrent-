@@ -12,7 +12,7 @@ if [[ $changePort == "oui" ]]; then
 	sed -i 's/UseDNS.*//' /etc/ssh/sshd_config
 	echo -e "UseDNS no\nAllowUsers $userLinux" >> /etc/ssh/sshd_config
 else
-	sed -i -e 's/^Protocol.*/Protocol 2/' -e 's/^X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
+	sed -i -e 's/^Port.*/Port 22/' -e 's/^Protocol.*/Protocol 2/' -e 's/^X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
 	# éviter 2 x UseDNS ce qui bloque
 		sed -i 's/UseDNS.*//' /etc/ssh/sshd_config
 		echo -e "UseDNS no\nAllowUsers root" >> /etc/ssh/sshd_config

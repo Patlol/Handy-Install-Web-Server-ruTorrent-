@@ -731,14 +731,15 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t3) Supprimer un utilisateur"
 	echo -e "\t4) Lister les utilisateurs existants"
 	echo
-	echo -e "\t5) Relancer rtorrent manuellement"
-	echo -e "\t6) Diagnostique"
-	echo -e "\t7) Rebooter le serveur"
+	echo -e "\t5) Firewall"
+	echo -e "\t6) Relancer rtorrent manuellement"
+	echo -e "\t7) Diagnostique"
+	echo -e "\t8) Rebooter le serveur"
 	echo
 	echo -e "\t0) Sortir"
 	echo
 
-	echo -n "Votre choix (0 1 2 3 4 5 6 7) "
+	echo -n "Votre choix (0 1 2 3 4 5 6 7 8) "
 	read choixMenu
 	echo
 	case $choixMenu in
@@ -773,6 +774,18 @@ until [[ $tmp == "ok" ]]; do
 		;;
 		5 )
 			echo
+			echo "****************************"
+			echo "|      Firewall / ufw      |"
+			echo "****************************"
+			echo
+			echo "Attention !!! le paramétrage suivant ne tient"
+			echo "compte que des installations effectuées avec HiwsT"
+			. $REPLANCE/insert/util_firewall.sh
+			tmp2="ok"
+			sleep 1
+		;;
+		6 )
+			echo
 			echo "***************************"
 			echo "|    rtorrent restart     |"
 			echo "***************************"
@@ -782,7 +795,7 @@ until [[ $tmp == "ok" ]]; do
 			sleep 1
 			tmp2="ok"
 		;;
-		6 )
+		7 )
 			echo
 			echo "***************************"
 			echo "|      Diagnostique       |"
@@ -791,7 +804,7 @@ until [[ $tmp == "ok" ]]; do
 			. $REPLANCE/insert/util_diag.sh
 			tmp2="ok"
 		;;
-		7 )
+		8 )
 			echo
 			echo "*********************"
 			echo "|      Reboot       |"
