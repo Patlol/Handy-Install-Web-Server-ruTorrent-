@@ -31,6 +31,6 @@ With this utility you can
 
 ![copie d'écran](http://img15.hostingpics.net/pics/932329util.png)
 
-Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki">Wiki</a> in french
+Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/1)-Home">Wiki</a> in french
 
 Feedback is welcome. Issues and pull requests can be submitted via GitHub. Fork unrestrained
