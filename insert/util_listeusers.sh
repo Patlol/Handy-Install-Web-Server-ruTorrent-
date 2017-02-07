@@ -41,9 +41,9 @@ espace=$(($maxElem+1-${#1}))
 local tab=""
 
 for (( i = 0; i < $espace; i++ )); do
-  tab=$tab"."
+  tab=$tab" "
 done
-echo -n "|."${1}$tab"|"
+echo -n "| ${1}$tab|"
 }
 
 __traitH() {

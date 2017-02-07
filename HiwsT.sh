@@ -453,6 +453,7 @@ done
 echo
 echo
 echo "Cakebox"
+echo
 echo "Cakebox vous permettra, sur une interface graphique"
 echo "web, de streamer, naviguer et partager vos films"
 echo "depuis la seedbox, sans les télécharger sur votre PC."

@@ -15,6 +15,8 @@ Install on Debian 8 or Ubuntu 16 server
 - <a href="https://github.com/cakebox/cakebox">Cakebox</a> multiuser
 - <a href="http://www.webmin.com/">WebMin</a>
 
+![copie d'écran](http://img15.hostingpics.net/pics/491787install.png)
+
 # HiwsT-util
 With this utility you can  
 - Create other ruTorrent/Cakebox users and thus share your server.  
@@ -26,6 +28,8 @@ With this utility you can
 - Change passwords
 - Add a firewall
 - Perform a system diagnosis  
+
+![copie d'écran](http://img15.hostingpics.net/pics/932329util.png)
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki">Wiki</a> in french
 
