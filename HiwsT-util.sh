@@ -130,8 +130,12 @@ until [[ $tmp == "ok" ]]; do
 				read pw
 				echo -n "Resaisissez ce mot de passe : "
 				read pw2
-				case $pw2 in
-					$pw)
+				case $pw in
+					"" )
+						echo "Le mot de passe ne peut pas être vide"
+						sleep 1
+					;;
+					$pw2)
 						tmp2="ok"; tmp="ok"
 						sleep 1
 					;;
@@ -428,8 +432,12 @@ local tmp2=""
 				read pw
 				echo -n "Resaisissez ce mot de passe : "
 				read pw2
-				case $pw2 in
-					$pw)
+				case $pw in
+					"" )
+						echo "Le mot de passe ne peut pas être vide"
+						sleep 1
+					;;
+					$pw2)
 						tmp2="ok"
 					;;
 					*)

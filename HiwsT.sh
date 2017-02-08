@@ -131,8 +131,12 @@ until [[ $tmp == "ok" ]]; do
 				read pwLinux
 				echo -n "Resaisissez ce mot de passe : "
 				read pwLinux2
-				case $pwLinux2 in
-					$pwLinux)
+				case $pwLinux in
+					"" )
+						echo "Le mot de passe ne peut pas être vide"
+						echo
+						sleep 1
+					$pwLinux2)
 						#  créer l'utilisateur $userlinux
 						pass=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
 						useradd -m -G adm,dip,plugdev,www-data,sudo -p $pass $userLinux
@@ -346,7 +350,7 @@ if [ ! -e $REPLANCE"/pass1" ]; then   # évite de tourner en rond si 2éme passa
 	echo "Vous allez créer un utilisateur spécifique"
 	echo
 	__creauser
-	echo "A bientôt !"
+	echo "Relancer le script :"
 	echo "su $userLinux"
 	echo "cd $REPLANCE"
 	echo "sudo ./`basename $0`"
@@ -425,8 +429,12 @@ until [[ $tmp == "ok" ]]; do
 				read pwRuto
 				echo -n "Resaisissez ce mot de passe : "
 				read pwRuto2
-				case $pwRuto2 in
-					$pwRuto)
+				case $pwRuto in
+					"" )
+						echo "Le mot de passe ne peut pas être vide"
+						sleep 1
+					;;
+					$pwRuto2)
 						tmp="ok"; tmp2="ok"
 					;;
 					*)
@@ -489,16 +497,20 @@ until [[ $tmp3 == "ok" ]]; do
 							read pwCake
 							echo -n "Resaisissez ce mot de passe : "
 							read pwCake2
-							case $pwCake2 in
-								$pwCake)
-									installCake="oui"
-									tmp="ok"; tmp2="ok"; tmp3="ok"
-								;;
-								*)
-									echo "Les deux saisies du mot de passe ne sont pas identiques. Recommencez"
-									echo
-									sleep 1
-								;;
+							case $pwCake in
+							"" )
+								echo "Le mot de passe ne peut pas être vide"
+								sleep 1
+							;;
+							$pwCake2)
+								installCake="oui"
+								tmp="ok"; tmp2="ok"; tmp3="ok"
+							;;
+							*)
+								echo "Les deux saisies du mot de passe ne sont pas identiques. Recommencez"
+								echo
+								sleep 1
+							;;
 							esac # pwCake
 						done # tmp2
 					;;
