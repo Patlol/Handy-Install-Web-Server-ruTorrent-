@@ -72,7 +72,7 @@ __listeUtilisateurs() {
 ##############################################################
 __IDuser() {
 echo
-local tmp=""; local tmp2=""; local yno=""; local user=""
+local tmp=""; local tmp2=""; local yno=""; local user=""; local pw=""
 #  saisie nom de l'utilisateur -------------------------------------------------
 until [[ $tmp == "ok" ]]; do
 	echo -n "Choisir un nom d'utilisateur (ni espace ni \) : "
@@ -707,6 +707,17 @@ done
 }  #  fin __ssmenuSuppUtilisateur()
 
 
+######################################################
+##  ajout vpn téléchargement du script
+######################################################
+__vpn() {
+	wget -o $REPLANCE/openvpn-install.sh https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
+	chmod +x $REPLANCE/openvpn-install.sh
+
+. $REPLANCE/openvpn-install.sh
+}
+
+
 ############################
 ##  Menu principal
 ############################
@@ -731,10 +742,13 @@ until [[ $tmp == "ok" ]]; do
 	echo -e "\t3) Supprimer un utilisateur"
 	echo -e "\t4) Lister les utilisateurs existants"
 	echo
-	echo -e "\t5) Firewall"
-	echo -e "\t6) Relancer rtorrent manuellement"
-	echo -e "\t7) Diagnostique"
-	echo -e "\t8) Rebooter le serveur"
+	echo -e "\t5) Installer/déinstaller OpenVPN"
+	echo -e "\t   ajouter/supprimer un certificat pour un utilisateur"
+	echo
+	echo -e "\t6) Firewall"
+	echo -e "\t7) Relancer rtorrent manuellement"
+	echo -e "\t8) Diagnostique"
+	echo -e "\t9) Rebooter le serveur"
 	echo
 	echo -e "\t0) Sortir"
 	echo
@@ -744,11 +758,10 @@ until [[ $tmp == "ok" ]]; do
 	echo
 	case $choixMenu in
 		0 )
-			tmp2="ok"; tmp="ok"
+			tmp="ok"
 		;;
 		1 )  # ajout user
 			__ssmenuAjoutUtilisateur
-			tmp2="ok"
 		;;
 		2 )
 			echo
@@ -757,11 +770,9 @@ until [[ $tmp == "ok" ]]; do
 			echo "********************************"
 			__changePW
 			echo
-			tmp2="ok"
 		;;
 		3 )  # supp utilisateur
 			__ssmenuSuppUtilisateur
-			tmp2="ok"
 		;;
 		4 )
 			echo
@@ -770,9 +781,30 @@ until [[ $tmp == "ok" ]]; do
 			echo "****************************"
 			echo
 			__listeUtilisateurs
-			tmp2="ok"
 		;;
 		5 )
+			echo
+			echo "*************************"
+			echo "|          VPN          |"
+			echo "*************************"
+			echo
+			echo "VPN installé avec le script de Angristan (MIT  License),"
+			echo "avec son aimable autorisation. Merci à lui"
+			echo
+			echo "Dépôt github : https://github.com/Angristan/OpenVPN-install"
+			echo "Blog de Angristan : https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/"
+			echo
+			echo "Excellent script mettant l'accent sur la sécurité, permettant une installation sans histoire"
+			echo "sur des serveurs Debian, Ubuntu, CentOS et Arch Linux. Bravo !!!"
+			echo "Ne pas réinventer la roue (en moins bien), c'est ça l'Open Source"
+			echo
+			echo "Activer le firewall avant d'installer le VPN"
+			echo "A la question 'Tell me a name for the client cert'"
+			echo "donner le nom de l'utilisateur linux au quel est destiné le vpn"
+			__ouinon
+			__vpn
+		;;
+		6 )
 			echo
 			echo "****************************"
 			echo "|      Firewall / ufw      |"
@@ -781,10 +813,9 @@ until [[ $tmp == "ok" ]]; do
 			echo "Attention !!! le paramétrage suivant ne tient"
 			echo "compte que des installations effectuées avec HiwsT"
 			. $REPLANCE/insert/util_firewall.sh
-			tmp2="ok"
 			sleep 1
 		;;
-		6 )
+		7 )
 			echo
 			echo "***************************"
 			echo "|    rtorrent restart     |"
@@ -793,18 +824,16 @@ until [[ $tmp == "ok" ]]; do
 			service rtorrentd restart
 			service rtorrentd status
 			sleep 1
-			tmp2="ok"
 		;;
-		7 )
+		8 )
 			echo
 			echo "***************************"
 			echo "|      Diagnostique       |"
 			echo "***************************"
 			echo
 			. $REPLANCE/insert/util_diag.sh
-			tmp2="ok"
 		;;
-		8 )
+		9 )
 			echo
 			echo "*********************"
 			echo "|      Reboot       |"
