@@ -45,7 +45,7 @@ until [[ $tmp == "ok" ]]; do
   echo -e "\t1) Supprimer les règles en place si elles existent"
   echo -e "\t2) Ajouter les nouvelles règles"
   echo -e "\t3) Desactiver le firewall sans effacer les règles"
-  echo -e "\t4) Activer le firewall sans changer les règles"
+  echo -e "\t4) Activer le firewall sans changer les règles (port ssh ouvert)"
   echo -e "\t5) Voir les règles IPTABLES ;)"
   echo -e "\t0) Sortir"
   echo
@@ -68,6 +68,7 @@ until [[ $tmp == "ok" ]]; do
       tmp="ok"; sortir="ok"
     ;;
     4 )
+      ufw allow $portSSH
       ufw --force enable
       tmp="ok"; sortir="ok"
     ;;
