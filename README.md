@@ -27,6 +27,7 @@ With this utility you can
  - Prohibits new user access via ssh  
 - Change passwords
 - Add a firewall
+- Add a VPN (openVPN)
 - Perform a system diagnosis  
 
 ![copie d'écran](http://img15.hostingpics.net/pics/932329util.png)
