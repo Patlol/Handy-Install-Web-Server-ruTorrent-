@@ -144,6 +144,7 @@ until [[ $tmp == "ok" ]]; do
 							echo "Impossible de créer un utilisateur linux"
 							__ouinon
 						fi
+						sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu, debian ?
 						echo $userLinux > $REPLANCE/pass1
 						tmp2="ok"; tmp="ok"
 					;;
