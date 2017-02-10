@@ -1083,7 +1083,6 @@ if [[ $changePort == "oui" ]]; then   # ssh sécurisé
 	echo "Pour accéder à votre serveur en ssh :"
 	echo "Depuis linux, sur une console :"
 	echo -e "\tssh -p$portSSH  $userLinux@$IP"
-	echo -e "\tsur la console du serveur 'su $userLinux'"
 	echo "Depuis windows utiliser PuTTY"
 	echo
 	sleep 1
@@ -1104,13 +1103,14 @@ else   # ssh n'est pas sécurisé
 	echo "Pour accéder à votre serveur en ssh :"
 	echo "Depuis linux, sur une console :"
 	echo -e "\tssh root@$IP"
+	echo -e "\tSur la console du serveur 'su $userLinux'"
 	echo "Depuis windows utiliser PuTTY"
 	echo
 	sleep 1
 	echo "Pour accéder aux fichiers via SFTP :"
 	echo -en "\tHôte : $IP"
 	echo -e "\tPort : 22"
-	echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
+	echo -e "\tProtocole : SFTP-SSH File Transfer Protocol"
 	echo -e "\tAuthentification : normale"
 	echo -e "\tIdentifiant : root"
 fi   # ssh pas sécurisé/ sécurisé
