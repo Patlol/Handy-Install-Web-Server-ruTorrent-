@@ -136,6 +136,7 @@ until [[ $tmp == "ok" ]]; do
 						echo "Le mot de passe ne peut pas être vide"
 						echo
 						sleep 1
+					;;
 					$pwLinux2)
 						#  créer l'utilisateur $userlinux
 						pass=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
@@ -447,7 +448,7 @@ until [[ $tmp == "ok" ]]; do
 			done
 		;;
 		[nN] | [nN][oO][nN])
-			echo "Nom d'utilisateur invalidé. Reprendre la saisie"
+			echo "Nom d'utilisateur invalide. Reprendre la saisie"
 			sleep 1
 		;;
 		*)
@@ -470,7 +471,7 @@ echo "Pour plus d'infos https://github.com/cakebox/cakebox"
 tmp=""; tmp2=""; tmp3=""
 until [[ $tmp3 == "ok" ]]; do
 	echo
-	echo -n "Souhaitez-vous insaller Cakebox ? (o/n) "
+	echo -n "Souhaitez-vous installer Cakebox ? (o/n) "
 	read yno
 	case $yno in
 		[nN] | [nN][oO][nN])
@@ -733,9 +734,9 @@ echo "***********************************************"
 sleep 1
 echo
 # upgrade
-apt-get update -yq
+apt-get update -yq --force-yes
 sortie=$?
-apt-get upgrade -yq
+apt-get upgrade -yq --force-yes
 if [[ $? -eq 0 && $sortie -eq 0 ]]
 then
 	echo "****************************"
@@ -991,7 +992,7 @@ then
 	echo "|  ruTorrent fonctionne    |"
 	echo "****************************"
 else
-	echo; echo "Une erreur c'est produite sur ruTorrent"
+	echo; echo "Une erreur s'est produite sur ruTorrent"
 	__messageErreur
 fi
 sleep 1
@@ -1044,7 +1045,7 @@ echo "Pour accéder à ruTorrent :"
 echo -en "\thttp(s)://$IP/rutorrent"
 echo "   ID : $userRuto  PW : $pwRuto"
 echo -e "\tou http(s)://$hostName/rutorrent"
-echo -e "\tEn https accépter la connexion non sécurisée et"
+echo -e "\tEn https accepter la connexion non sécurisée et"
 echo -e "\tl'exception pour ce certificat !"
 
 if [[ $installCake == "oui" ]]; then
@@ -1063,7 +1064,7 @@ if [[ $installWebMin == "oui" ]]; then
 	echo -e "\thttps://$IP:10000"
 	echo -e "\tou https://$hostName:10000"
 	echo -e "\tID : root  PW : votre mot de passe root"
-	echo -e "\tAccépter la connexion non sécurisée et"
+	echo -e "\tAccepter la connexion non sécurisée et"
 	echo -e "\tl'exception pour ce certificat !"
 fi
 
