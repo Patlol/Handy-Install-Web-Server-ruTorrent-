@@ -202,7 +202,7 @@ if [[ $? -ne 0 ]]; then
 	__messageErreur
 	exit 1
 fi
-sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu, debian ?
+sed -i "1 a\bash" /home/$userRuto/.profile  #ubuntu, debian ?
 
 echo "Utilisateur linux $userRuto créé"
 echo
