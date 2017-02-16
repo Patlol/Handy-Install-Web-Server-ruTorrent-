@@ -406,87 +406,186 @@ done
 ##  Suppression d'un utilisateur Cakebox
 ############################################
 
-__suppUserCake() {
-local tmp=""; local codeSortie=1
-# saisie nom sauf si conjoint à la supp rutorrent alors $suppUserCake pas vide
-if [[ ! $suppUserCake ]]; then
-	until [[ $tmp == "ok" ]]; do
-		until [[ $codeSortie -eq 0 ]]; do
-			#  boucle après affichage de la liste des users
-			__saisieTexteBox "Suppression d'un utilisateur Cakebox" "
-			Saisissez le nom de l'utilisateur :"
-			codeSortie=$?
-		done  # fin boucle sur __saisieTexteBox
-		codeSortie=1
-		# user cakebox existe ? Si pas d'user L cela veut dire que __saisieTexteBox est l'utilisateur principal
-		__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
-		if [[ $userC -ne 0 ]] || [ $__saisieTexteBox == $LOGUSER ]; then
-			__infoBox "Suppression d'un utilisateur Cakebox" 3 "
-			$__saisieTexteBox n'est pas un utilisateur Cakebox ou
-			$__saisieTexteBox est l'utilisateur principal"
-		else
-			tmp="ok"
-		fi
-	done
-else  # conjoint à la supp rutorrent
-	__saisieTexteBox=$suppUserCake
-fi
-clear
-__suppUserCakePasswd $__saisieTexteBox   # insert/util_apache.sh et util_nginx
-__suppUserCakeConfSite $__saisieTexteBox   # insert/util_apache.sh et util_nginx
-
-# supprimer le fichier conf/user.php
-rm $REPWEB/cakebox/config/$__saisieTexteBox.php
-echo
-echo "cakebox/config/$__saisieTexteBox.php supprimé"
-echo
-}  # fin __suppUserCake
+# __suppUserCake() {
+# local tmp=""; local codeSortie=1
+#  saisie nom sauf si conjoint à la supp rutorrent alors $suppUserCake pas vide
+# if [[ ! $suppUserCake ]]; then
+# 	until [[ $tmp == "ok" ]]; do
+# 		until [[ $codeSortie -eq 0 ]]; do
+# 			#  boucle après affichage de la liste des users
+# 			__saisieTexteBox "Suppression d'un utilisateur Cakebox" "
+# 			Saisissez le nom de l'utilisateur :"
+# 			codeSortie=$?
+# 		done  # fin boucle sur __saisieTexteBox
+# 		codeSortie=1
+# 		# user cakebox existe ? Si pas d'user L cela veut dire que __saisieTexteBox est l'utilisateur principal
+# 		__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
+# 		if [[ $userC -ne 0 ]] || [ $__saisieTexteBox == $LOGUSER ]; then
+# 			__infoBox "Suppression d'un utilisateur Cakebox" 3 "
+# 			$__saisieTexteBox n'est pas un utilisateur Cakebox ou
+# 			$__saisieTexteBox est l'utilisateur principal"
+# 		else
+# 			tmp="ok"
+# 		fi
+# 	done
+# else  # conjoint à la supp rutorrent
+# 	__saisieTexteBox=$suppUserCake
+# fi
+# clear
+# __suppUserCakePasswd $__saisieTexteBox   # insert/util_apache.sh et util_nginx
+# __suppUserCakeConfSite $__saisieTexteBox   # insert/util_apache.sh et util_nginx
+#
+# # supprimer le fichier conf/user.php
+# rm $REPWEB/cakebox/config/$__saisieTexteBox.php
+# echo
+# echo "cakebox/config/$__saisieTexteBox.php supprimé"
+# echo
+# }  # fin __suppUserCake
 
 
 #####################################################
 ##  Suppression d'un utilisateur linux et rutorrent
 #####################################################
-__suppUserRuto() {
-### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
-# saisie nom
-local tmp=""; local codeSortie=1
-until [[ $tmp == "ok" ]]; do
-	until [[ $codeSortie -eq 0 ]]; do
-		#  boucle après affichage de la liste des users
-		__saisieTexteBox "Suppression d'un utilisateur ruTorrent/Linux" "
-		Saisissez le nom de l'utilisateur :"
-		codeSortie=$?
-	done  # fin boucle sur __saisieTexteBox $userRuto
-	codeSortie=1
-	# user ruto ?
-	__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx renvoie userR
-	if [[ $userR -ne 0 ]] || [[ $userL -ne 0 ]] || [ $LOGUSER == $__saisieTexteBox]; then
-		__infoBox "Suppression d'un utilisateur ruTorrent/Linux" 3 "
-			$__saisieTexteBox n'est pas un utilisateur ruTorrent/Linux ou
-			$__saisieTexteBox est l'utilisateur principal"
-	else
-		tmp="ok"
-	fi
-done
+# __suppUserRuto() {
+# ### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
+# # saisie nom
+# local tmp=""; local codeSortie=1
+# # until [[ $tmp == "ok" ]]; do
+# 	# until [[ $codeSortie -eq 0 ]]; do
+# 	# 	#  boucle après affichage de la liste des users
+# 	# 	__saisieTexteBox "Suppression d'un utilisateur ruTorrent/Linux" "
+# 	# 	Saisissez le nom de l'utilisateur :"
+# 	# 	codeSortie=$?
+# 	# done  # fin boucle sur __saisieTexteBox $userRuto
+# 	# codeSortie=1
+# 	# user ruto ?
+# # 	__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx renvoie userR
+# # 	if [[ $userR -ne 0 ]] || [[ $userL -ne 0 ]] || [ $LOGUSER == $__saisieTexteBox]; then
+# # 		__infoBox "Suppression d'un utilisateur ruTorrent/Linux" 3 "
+# # 			$__saisieTexteBox n'est pas un utilisateur ruTorrent/Linux ou
+# # 			$__saisieTexteBox est l'utilisateur principal"
+# # 	else
+# # 		tmp="ok"
+# # 	fi
+# # done
+#
+# clear
+# # suppression du user allowed dans sshd_config
+# sed -i 's/'$__saisieTexteBox' //' /etc/ssh/sshd_config
+# service sshd restart
+#
+# __suppUserRutoPasswd $__saisieTexteBox
+#
+# # dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
+# rm -r $REPWEB/rutorrent/conf/users/$__saisieTexteBox
+# echo "Dossier conf/users/$__saisieTexteBox sur ruTorrent supprimé"
+# echo
+# rm -r $REPWEB/rutorrent/share/users/$__saisieTexteBox
+# echo "Dossier share/users/$__saisieTexteBox sur ruTorrent supprimé"
+# echo
+#
+# # modif de rtorrentd.sh (daemon)
+# sed -i '/.*'$__saisieTexteBox.*'/d' /etc/init.d/rtorrentd.sh
+# rm /etc/init/$__saisieTexteBox-rtorrent.conf
+#
+# systemctl daemon-reload
+# service rtorrentd restart
+# if [[ $? -eq 0 ]]; then
+# 	echo "rtorrent en daemon modifié et fonctionne."
+# 	echo
+# else
+# 	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : ps aux | grep -e '^utilisateur.*rtorrent$'
+# Consulter le wiki
+# https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^$__saisieTexteBox.*rtorrent$'" 8 98
+# 	__msgErreurBox
+# fi
+# # Suppression du home et suppression user linux (-f le home est root:root)
+# userdel -fr $__saisieTexteBox
+# echo "Utilisateur linux et /home/$__saisieTexteBox supprimé"
+# # pour faire la liaison avec __suppUserCake
+# suppUserCake=$__saisieTexteBox
+# }  # fin __suppUserRuto
 
-clear
+
+######################################################
+##  supprimer utilisateur sous menu et traitements
+######################################################
+# __ssmenuSuppUtilisateur() {
+# local typeUser=""; local tmp=""
+#
+# until [[ $tmp == "ok" ]]; do
+# 	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
+#
+# - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
+# le sera aussi.
+# - Si un utilisateur Cakebox est supprimé, ses homonymes Linux et ruTorrent seront conservés
+#
+#  Supprimer un utilisateur :" 22 70 3 \
+# 	1 "Linux + ruTorrent + Cakebox"
+# 	2 "Cakebox"
+# 	3 "Liste des utilisateurs")
+#
+# 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
+# 	if [[ $? -eq 0 ]]; then
+#
+# 		case $typeUser in
+# 			1 )   #   suppression utilisateur Linux/ruto/cake ---------------------------------------
+# 				__ouinonBox "suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
+#   de l'utilisateur va être supprimé"
+# 				if [[ $__ouinonBox -eq 0 ]]; then
+# 					__suppUserRuto  # + linux
+# 					# __suppUserRuto renvoie $suppUserCake  # éviter de redemander le nom
+# 					# si plus de user ruto et linux forcément ... suppression userCake
+# 					__userExist $suppUserCake
+# 					if [[ $userC -eq 0 ]]; then
+# 						__suppUserCake
+# 					fi
+# 					__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
+# Utilisateur $userRuto pour Linux/ruTorrent/Cakebox supprimé"
+# 					suppUserCake=""; userRuto=""; userCake=""; pwRuto=""; pwCake=""
+# 				fi
+# 			;;
+# 			2 )  #  suppression utilisateur Cakebox  ---------------------------------------------
+# 				__suppUserCake
+# 				__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
+# Utilisateur $userCake supprimé"
+# 				userCake=""; pwCake=""
+# 			;;
+# 			3 )
+# 				__listeUtilisateurs
+# 			;;
+# 		esac
+# 	else
+# 		tmp="ok"
+# 	fi
+# done
+# }  #  fin __ssmenuSuppUtilisateur()
+
+
+#####################################################
+##  Suppression d'un utilisateur linux et rutorrent
+#####################################################
+ __suppUserRuto() {
+ ### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
+ # ${1} == $__saisieTexteBox
+ clear
 # suppression du user allowed dans sshd_config
-sed -i 's/'$__saisieTexteBox' //' /etc/ssh/sshd_config
+sed -i 's/'${1}' //' /etc/ssh/sshd_config
 service sshd restart
 
-__suppUserRutoPasswd $__saisieTexteBox
+__suppUserRutoPasswd ${1}
 
 # dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
-rm -r $REPWEB/rutorrent/conf/users/$__saisieTexteBox
-echo "Dossier conf/users/$__saisieTexteBox sur ruTorrent supprimé"
+rm -r $REPWEB/rutorrent/conf/users/${1}
+echo "Dossier conf/users/${1} sur ruTorrent supprimé"
 echo
-rm -r $REPWEB/rutorrent/share/users/$__saisieTexteBox
-echo "Dossier share/users/$__saisieTexteBox sur ruTorrent supprimé"
+rm -r $REPWEB/rutorrent/share/users/${1}
+echo "Dossier share/users/${1} sur ruTorrent supprimé"
 echo
 
 # modif de rtorrentd.sh (daemon)
-sed -i '/.*'$__saisieTexteBox.*'/d' /etc/init.d/rtorrentd.sh
-rm /etc/init/$__saisieTexteBox-rtorrent.conf
+sed -i '/.*'${1}.*'/d' /etc/init.d/rtorrentd.sh
+rm /etc/init/${1}-rtorrent.conf
 
 systemctl daemon-reload
 service rtorrentd restart
@@ -496,24 +595,37 @@ if [[ $? -eq 0 ]]; then
 else
 	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : ps aux | grep -e '^utilisateur.*rtorrent$'
 Consulter le wiki
-https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^$__saisieTexteBox.*rtorrent$'" 8 98
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	__msgErreurBox
 fi
 # Suppression du home et suppression user linux (-f le home est root:root)
-userdel -fr $__saisieTexteBox
-echo "Utilisateur linux et /home/$__saisieTexteBox supprimé"
-# pour faire la liaison avec __suppUserCake
-suppUserCake=$__saisieTexteBox
+userdel -fr ${1}
+echo "Utilisateur linux et /home/${1} supprimé"
 }  # fin __suppUserRuto
 
+############################################
+##  Suppression d'un utilisateur Cakebox
+############################################
+__suppUserCake() {
+	# ${1} == $__saisieTexteBox
+clear
+__suppUserCakePasswd ${1}   # insert/util_apache.sh et util_nginx
+__suppUserCakeConfSite ${1}   # insert/util_apache.sh et util_nginx
+
+# supprimer le fichier conf/user.php
+rm $REPWEB/cakebox/config/${1}.php
+echo
+echo "cakebox/config/${1}.php supprimé"
+echo
+}  # fin __suppUserCake
 
 ######################################################
 ##  supprimer utilisateur sous menu et traitements
 ######################################################
 __ssmenuSuppUtilisateur() {
-local typeUser=""; local tmp=""
+local typeUser=""; local codeSortie=1
 
-until [[ $tmp == "ok" ]]; do
+until [[ 1 -eq 2 ]]; do
 	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
 
 - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
@@ -527,44 +639,61 @@ le sera aussi.
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
+		#	----------------------------------------------------------$ type
+		if [ $typeUser -ne 3 ]; then
+			until [[ $codeSortie -eq 0 ]]; do
+				#  boucle après affichage de la liste des users
+				__saisieTexteBox "Suppression d'un utilisateur" "
+Saisissez le nom de l'utilisateur :"
+				codeSortie=$?
+			done  # fin boucle sur __saisieTexteBox
+			codeSortie=1
+			__userExist $__saisieTexteBox
+			echo "$userL $userR $userC"
+		fi
+		# ---------------------------------------------------- $type $userL R C $__saisieTexteBox
 		case $typeUser in
-			1 )
+			1 ) #   suppression utilisateur Linux/ruto/cake ----------------
 				__ouinonBox "suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
-  de l'utilisateur va être supprimé"
+de l'utilisateur va être supprimé"
 				if [[ $__ouinonBox -eq 0 ]]; then
-					__suppUserRuto  # + linux
-				# __suppUserRuto renvoie $suppUserCake  # éviter de redemander le nom
-					echo    # si plus de user ruto et linux forcément ... suppression userCake
-					__userExist $suppUserCake
-					if [[ $userC -eq 0 ]]; then
-						__suppUserCake
-					fi
-					__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
+					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ $LOGUSER != $__saisieTexteBox ] && [[ $userC -eq 0 ]]; then
+			    	#  --------------------------------------------------------$ __saisieTexteBox
+						__suppUserRuto $__saisieTexteBox; sleep 1
+						__suppUserCake $__saisieTexteBox; sleep 1
+						__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
 Utilisateur $userRuto pour Linux/ruTorrent/Cakebox supprimé"
-					suppUserCake=""; userRuto=""; userCake=""; pwRuto=""; pwCake=""
+					else
+						__infoBox "Suppression d'un utilisateur ruTorrent/Linux" 3 "
+$__saisieTexteBox n'est pas un utilisateur Linux/ruTorrent/Cakebox
+$__saisieTexteBox est l'utilisateur principal"
+						#sortie case $typeUser et if  retour ss menu
+					fi
+				fi
+	      #  -----------------------------------------------------------fin
+			;;
+			2)
+				if [[ $userC -eq 0 ]] && [ $__saisieTexteBox != $LOGUSER ]; then
+					__suppUserCake __saisieTexteBox; sleep 1
+					__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
+Utilisateur $userCake supprimé"
+				else
+					__infoBox "Suppression d'un utilisateur Cakebox" 3 "
+$__saisieTexteBox n'est pas un utilisateur Cakebox ou
+$__saisieTexteBox est l'utilisateur principal"
+					# sortie case $typeUser et if
 				fi
 			;;
-			2 )
-				echo
-				echo "*************************************"
-				echo "|   Supprimer utilisateur Cakebox   |"
-				echo "*************************************"
-				echo
-				__suppUserCake
-				__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
-Utilisateur $userCake supprimé"
-				userCake=""; pwCake=""
-			;;
-			3 )
+			3)
 				__listeUtilisateurs
 			;;
+			#-----------------------------------------------fin---$ __saisieTexteBox
 		esac
 	else
-		tmp="ok"
+		break
 	fi
 done
-}  #  fin __ssmenuSuppUtilisateur()
-
+}
 
 ####################
 ##  Changement pw
