@@ -165,6 +165,6 @@ else
 	echo; echo "Consulter le wiki"
 	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 	echo; echo "puis continuer/arrêter l'installation"
-	__ouinon
+	__ouinonBox
 fi
 sleep 1

@@ -30,7 +30,7 @@ sed -i '/## add user/ a\        location \/access\/'$1'/ {\n                alia
     echo
   else
     service nginx status
-  	__messageErreur
+  	__msgErreurBox
   	exit 1
   fi
 # ne renvoie rien
@@ -64,7 +64,7 @@ __suppUserCakeConfSite() {   # appelée par __suppUserCake  $1 $userCake
     echo
   else
     service nginx status
-  	__messageErreur
+  	__msgErreurBox
   	exit 1
   fi
 }

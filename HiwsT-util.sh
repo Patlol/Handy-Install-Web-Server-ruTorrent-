@@ -16,51 +16,98 @@ REPLANCE=$(echo `pwd`)
 serveurHttp=""
 # utilisateur linux principal dans pass1
 firstUserLinux=$(cat pass1)
+LOGUSER=$(logname)
 
 
 ########################################
 #       Fonctions utilitaires
 ########################################
 
-__verifSaisie() {
-if [[ $1 =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
-	verifOk="o"
-else 	echo "Uniquement des caractères alphanumériques"
-	echo "Entre 2 et 15 caractères"
-	verifOk="n"
-fi
-}
-
-__ouinon() {
-local tmp=""; local yno=""
-until [[ $tmp == "ok" ]]; do
-echo
-echo -n "Voulez-vous continuer ? (o/n) "; read yno
-case $yno in
-	[nN] | [nN][oO][nN])
-		echo "A bientôt !"
-		exit 1
-	;;
-	[Oo] | [Oo][Uu][Ii])
-		echo
-		tmp="ok"
-		sleep 1
-	;;
-	*)
-		echo "Entrée invalide"
-		sleep 1
-	;;
-esac
-done
+__ouinonBox() {    # param : titre, texte  sortie $__ouinonBox 0 ou 1
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}"  --yesno "
+${2}" 0 0 )
+	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+	__ouinonBox=$?
 }    #  fin ouinon
 
-__messageErreur() {
-	echo; echo "Consulter le wiki"
-	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+__entInvalBox() {    # param : titre
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep 2 --infobox "
+Votre entrée n'est pas valide" 0 0)
+	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+}
+
+# __listeUtilisateurs() {
+# 	. $REPLANCE/insert/util_listeusers.sh
+# }
+
+__messageBox() {   # param : titre texte
+			CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --msgbox "${2}" 0 0)
+			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+}
+
+__infoBox() {   # param : titre sleep texte
+			CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
+			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+}
+
+__msgErreurBox() {
+	__messageBox "Message d'erreur" "
+
+	Consulter le wiki
+
+  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+	exit 1
 }  # fin messageErreur
 
-__listeUtilisateurs() {
-	. $REPLANCE/insert/util_listeusers.sh
+__saisieTexteBox() {   # param : titre, texte
+	local tmp=""
+	until [[ $tmp == "ok" ]]; do
+		CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --nocancel --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
+		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
+
+		if [ $? == 2 ]; then  # bouton "liste" (help) renvoie code sortie 2
+			__listeUtilisateurs
+			# dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Liste utilisateurs" --textbox $REPLANCE/liste 0 0
+			return 1 ; break  # l'appelle de la f() boucle jusqu'à code sortie == 0
+		fi
+		if [[ $__saisieTexteBox =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+			tmp="ok"
+		else
+			__infoBox "Vérification saisie" 3 "
+Uniquement des caractères alphanumériques
+Entre 2 et 15 caractères"
+		fi
+	done
+}
+
+__saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
+  local tmp=""; local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
+	until [[ $tmp == "ok" ]]; do
+		CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+
+	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
+	    pw2=$(echo $reponse | awk -F" " '{ print $2 }')
+
+			case $pw1 in
+				"" )
+					__infoBox ${1} 2 "
+Le mot de passe ne peut pas être vide."
+				;;
+				$pw2 )
+					__saisiePwBox=$pw1
+					tmp="ok"
+				;;
+				* )
+					__infoBox ${1} 2 "
+Les 2 saisies ne sont pas identiques." 0 0
+				;;
+			esac
+			if [[ `echo $pw1 | grep -E "[ \\]"` -ne 0 ]]; then
+				__infoBox "${1}" 2 "
+Le mot de passe ne peut pas contenir d'espace ou de \\."
+			fi
+	done
 }
 
 ################################################################################
@@ -70,125 +117,82 @@ __listeUtilisateurs() {
 ##############################################################
 ## saisie ID et PW  ruto/cake   $1 "ruTorrent" ou "Cakebox"
 ##############################################################
-__IDuser() {
+__IDuser() {    #  appelée pour la création utilisateur
 echo
-local tmp=""; local tmp2=""; local yno=""; local user=""; local pw=""
+local tmp=""; local user=""; local pw=""; local codeSortie=1
 #  saisie nom de l'utilisateur -------------------------------------------------
 until [[ $tmp == "ok" ]]; do
-	echo -n "Choisir un nom d'utilisateur (ni espace ni \) : "
-	read -a user   # coupe si espace, 1er élément du tableau, "aa dd" donne "aa"
-	__verifSaisie $user
-	__userExist $user    # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
-		# traitement rutorrent ----------------------------------------------------
-	if [[ $verifOk == "o" ]] && [[ $1 == "ruTorrent" ]]; then
-		if [[ $userL -eq 0 ]]; then
-			echo "Il existe déjà un utilisateur Linux $user "
-			echo "Vous ne pouvez pas en créer un deuxième"
-			yno="N"
-		elif [[ $userR -eq 0 ]]; then
-			echo "$user est déjà un utilisateur ruTorrent"
-			echo "Vous ne pouvez pas en créer un deuxième"
-			yno="N"
-		elif [[ $userC -eq 0 ]]; then
-			echo "$user est déjà un utilisateur Cakebox"
-			echo "Vous ne pouvez pas utiliser ce nom"
-			yno="N"
-			else
-				echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
-				read yno
+	until [[ $codeSortie -eq 0 ]]; do
+		#  boucle après affichage de la liste des users
+		__saisieTexteBox "Création d'un utilisateur ${1}" "
+Saisissez le nom du nouvel utilisateur ${1}
+15 caractères maximum, ni espace, ni \\"
+		codeSortie=$?
+	done  # fin boucle sur __saisieTexteBox
+	codeSortie=1
+	__userExist $__saisieTexteBox    # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
+
+	# traitement rutorrent __IDuser --------------------------------------
+	if [ ${1} == "ruTorrent" ]; then
+		if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]] || [[ $userC -eq 0 ]]; then
+			__infoBox "Création d'un utilisateur ${1}" 2 "
+Il existe déjà un utilisateur $__saisieTexteBox"
+		else
+			__ouinonBox "Création d'un utilisateur ${1}" "
+Vous confirmez '$__saisieTexteBox' comme nouvel utilisateur ?"
+			if [[ $__ouinonBox -eq 0 ]]; then
+				__saisiePwBox "Création d'un utilisateur ${1}" "
+Saisissez d'un mot de passe utilisateur" 0 0
+				tmp="ok"
+				userRuto=$__saisieTexteBox; pwRuto=$__saisiePwBox
+			fi
 		fi
 	fi
-	#    traitement cakebox ------------------------------------------------------
-	if [[ $verifOk == "o" ]] && [[ $1 == "Cakebox" ]]; then
-		if [ $userL -ne 0 -o $userC -eq 0 ]; then
+
+		#    traitement cakebox __IDuser  ------------------------------
+	if [ ${1} == "Cakebox" ]; then
+		if [ $userL -ne 0 -o $userR -ne 0 ]; then
 			# pas de userlinux ou existe usercake NON
-			echo "$user n'est pas un utilisateur Linux ou"
-			echo "$user est déjà un utilisateur Cakebox."
-			echo "Impossible de créer un utilisateur Cakebox sous ce nom."
-			yno="N"
-		elif [[ userR -ne 0 ]]; then
-				# existe userl  pas de userrutorrent  pas de userc NON
-				echo "$user est bien un utilisateur Linux, mais"
-				echo "$user n'est pas un utilisateur ruTorrent"
-				echo "Impossible de créer un utilisateur Cakebox sous ce nom."
-				yno="N"
-			else
-				# existe userl exite userr pas de userc OUI
-				echo
-				echo -n "Vous confirmez '$user' comme nom d'utilisateur ? (o/n) "
-				read yno
+			__infoBox "Création d'un utilisateur ${1}" 2 "
+$__saisieTexteBox n'est pas un utilisateur Linux ou
+$__saisieTexteBox n'est pas un utilisatreur ruTorrent." 0 0
+		elif [[ $userC -eq 0 ]]; then
+			# existe userl  pas de userrutorrent  pas de userc NON
+			__infoBox "Création d'un utilisateur ${1}" 2 "
+$__saisieTexteBox est un utilisateur Cakebox" 0 0
+		else
+			# existe userl exite userr pas de userc OUI
+			__ouinonBox "Création d'un utilisateur ${1}" "
+Vous confirmez '$__saisieTexteBox' comme nouvel utilisateur ?"
+			if [[ $__ouinonBox -eq 0 ]]; then
+				# saisie PW d'un utilisateur
+				__saisiePwBox "Création d'un utilisateur ${1}" "
+Saisissez d'un mot de passe utilisateur" 0 0
+				tmp="ok"
+				userCake=$__saisieTexteBox; pwCake=$__saisiePwBox
+			fi
 		fi
 	fi
-#  fin traitement différent ----------------------------------------------------
-#  fin saisie nom utilisateur  -------------------------------------------------
-
-#  saisie PW d'un utilisateur  -------------------------------------------------
-	case $yno in
-		[Oo] | [Oo][Uu][Ii] )   # saisie PW d'un utilisateur
-			until [[ $tmp2 == "ok" ]]; do
-				echo -n "Choisissez un mot de passe (ni espace ni \) : "
-				read pw
-				echo -n "Resaisissez ce mot de passe : "
-				read pw2
-				case $pw in
-					"" )
-						echo "Le mot de passe ne peut pas être vide"
-						sleep 1
-					;;
-					$pw2)
-						tmp2="ok"; tmp="ok"
-						sleep 1
-					;;
-					*)
-						echo "Les deux saisies du mot de passe ne sont pas identiques. Recommencez"
-						echo
-						sleep 1
-					;;
-				esac
-			done
-		;;
-		[nN] | [nN][oO][nN])
-			echo "Nom d'utilisateur invalidé. Reprendre la saisie"
-			echo
-			sleep 1
-		;;
-	esac
-	# fin saisie PW d'un utilisateur ---------------------------------------------
-	if [[ $verifOk == "n" ]]; then
-		echo "Entrée invalide"
-		sleep 1
-	fi
+	#  fin traitement différent __IDuser ----------------------
+	#  fin saisie nom et pw utilisateur  ----------------------------
 done
-
-if [[ $1 == "ruTorrent" ]]; then
-	userRuto=$user; pwRuto=$pw
-else
-	userCake=$user; pwCake=$pw
-fi
-}  # fin IDuser   renvoie selon $userRuto $pwRuto ou $userCake $pwCake
+}  # fin __IDuser   renvoie selon $userRuto $pwRuto ou $userCake $pwCake
 
 
 
-####################################
-##  création utilisateur ruTorrent
-####################################
+############################################
+##  création utilisateur ruTorrent Linux
+############################################
 __creaUserRuto () {
+	__infoBox "Création utilisateur Linuyx et ruTorrent" 3 "
+	Nom utilisateur : $userRuto
+	Mot de passe    : $pwRuto"
 
-echo
-echo "**************************************"
-echo "|  Création d'un nouvel utilisateur  |"
-echo "|            ruTorrent               |"
-echo "**************************************"
-echo
-echo -e "\tNom utilisateur : $userRuto"
-echo -e "\tMot de passe    : $pwRuto"
-echo
-sleep 1
-
-#  créer l'utilisateur linux $userRuto  ---------------------------------
+	#  créer l'utilisateur linux $userRuto  ---------------------------------
 
 # Ajout du group sftp si n'existe pas
 #  group sftp pour interdire de sortir de /home/user en sftp
+clear
 egrep "^sftp" /etc/group > /dev/null
 if [[ $? -ne 0 ]]; then
 	addgroup sftp
@@ -197,12 +201,12 @@ fi
 pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' $pwRuto)
 useradd -m -G sftp -p $pass $userRuto
 if [[ $? -ne 0 ]]; then
-	echo "Impossible de créer l'utilisateur ruTorrent $userRuto"
-	echo "Erreur sur 'useradd'"
-	__messageErreur
-	exit 1
+	__infoBox "Création utilisateur ruTorrent" 3 "
+Impossible de créer l'utilisateur ruTorrent $userRuto
+Erreur sur 'useradd'"
+	__msgErreurBox
 fi
-sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu, debian ?
+sed -i "1 a\bash" /home/$userRuto/.profile  #ubuntu, debian ?
 
 echo "Utilisateur linux $userRuto créé"
 echo
@@ -213,7 +217,7 @@ chown -R $userRuto:$userRuto /home/$userRuto/
 
 echo "Répertoire/sous-répertoires /home/$userRuto créé"
 echo
-#  rtorrent ------------------------------------------------
+#  partie rtorrent __creaUserRuto------------------------------------------------
 
 # incrémenter le port, écrir le fichier témoin
 if [ -e $REPWEB/rutorrent/conf/scgi_port ]; then
@@ -247,16 +251,15 @@ service rtorrentd restart
 if [[ $? -eq 0 ]]; then
 	echo "Daemon rtorrent modifié et fonctionne."
 	echo
-else	echo "Un problème est survenu."
-	ps aux | grep -e '.*torrent$'
-	echo
-	service rtorrentd status
-	__messageErreur
-	exit 1
+else
+	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : ps aux | grep -e '^utilisateur.*rtorrent$'
+Consulter le wiki
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^$userRuto.*rtorrent$'" 8 98
+	__msgErreurBox
 fi
 
-#  ruTorrent ------------------------------------------------------------------
-
+#  fin partie rtorrent  __creaUserRuto-----------------------------------------
+#  partie rutorrent --------------------------------------------------------
 # dossier conf/users/userRuto
 mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
@@ -277,7 +280,7 @@ echo
 
 __creaUserRutoPasswd $userRuto $pwRuto   # insert/util_apache.sh et util_nginx ne renvoie rien
 
-# modif pour sftp / sécu sftp -------------------------------------------------------
+# modif pour sftp / sécu sftp __creaUserRuto  ---------------------------------
 
 # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
 usermod -s /bin/false $userRuto
@@ -292,26 +295,20 @@ if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
 fi
 service sshd restart > /dev/null
-# service ssh status
-echo "Sécurisation SFTP faite : seulement accès a /home/$userRuto"
-}   #  fin creauserruto
+echo "Sécurisation SFTP faite" # seulement accès a /home/$userRuto
+}   #  fin __creaUserRuto
 
 
 ####################################
 ##  Création utilisateur Cakebox
 ####################################
  __creaUserCake() {
-echo
-echo "**************************************"
-echo "|  Création d'un nouvel utilisateur  |"
-echo "|             Cakebox                |"
-echo "**************************************"
-echo
-echo -e "\tNom utilisateur : $userCake"
-echo -e "\tMot de passe    : $pwCake"
-echo
-sleep 1
 
+	__infoBox "Création utilisateur Cakebox" 3 "
+Nom utilisateur : $userCake
+Mot de passe    : $pwCake"
+
+clear
 # - copier conf/user.php modif rep à scanner
 cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
 sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/$userCake/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
@@ -329,37 +326,119 @@ rm $REPWEB/rutorrent/share/users/$userCake/settings/plugins.dat
 }  # fin __creaUserCake
 
 
+#################################################
+##  ajout utilisateur sous menu et traitements
+#################################################
+__ssmenuAjoutUtilisateur() {
+local typeUser=""; local tmp=""
+
+until [[ $tmp == "ok" ]]; do
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Ajouter un utilisateur" --menu "Quel type d'utilisateur voulez-vous ajouter ?
+
+- Un utilisateur ruTorrent ne peut être créé qu'avec un utilisateur Linux
+- Un utilisateur Cakebox ne peut être crtéé que si un homonyme ruTorrent existe déjà ou est créé dans la foulée
+
+ Créer un utilisateur :" 22 70 4 \
+	1 "Linux + ruTorrent"
+	2 "Linux + ruTorrent + Cakebox"
+	3 "Cakebox"
+	4 "Liste des utilisateurs")
+
+	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
+	if [[ $? -eq 0 ]]; then
+		case $typeUser in
+			1 )
+				__messageBox "Création utilisateur Linux/ruTorrent" "- Le nouvel utilisateur aura un accès SFTP avec son nom et mot de passe, même port que les autres utilisateurs.
+- Il sera limité à son répertoire /home.
+- Pas d'accès ssh"
+
+				__IDuser ruTorrent
+				if [ $userRuto != "" ]; then
+					__creaUserRuto
+					__infoBox "Création utilisateur Linux/ruTorrent" 3 "Traitement terminé
+Utilisateur $userRuto crée
+Mot de passe $pwRuto"
+					userRuto=""; pwRuto=""
+				fi
+			;;
+			2 )
+				__messageBox "Création utilisateur Linux/ruTorrent/Cakebox" "- Le nouvel utilisateur aura le même nom et Mot de passe pour les 3 accès.
+- Il aura un accès SFTP avec le même nom et mot de passe, même port que les autres utilisateurs.
+- Il sera limité à son répertoire /home.
+- Pas d'accès ssh"
+
+				__IDuser ruTorrent
+				if [ $userRuto != "" ]; then
+					__creaUserRuto # + linux
+					userCake=$userRuto; pwCake=$pwRuto
+					userRuto=""; pwRuto=""
+					__creaUserCake
+					__infoBox "Création utilisateur Linux/ruTorrent/Cakebox" 3 "Traitement terminé
+Utilisateur $userCake crée
+Mot de passe $pwCake"
+					userCake=""; pwCake=""
+				fi
+			;;
+			3 )
+				__messageBox "Création utilisateur Cakebox" "Le nouvel utilisateur ne pourra scanner que son répertoire de téléchargement."
+
+				__IDuser Cakebox
+				if [ $userCake != "" ]; then
+					__creaUserCake
+					__infoBox "Création utilisateur Cakebox" 3 "Traitement terminé
+Utilisateur $userCake crée
+Mot de passe $pwCake"
+					userCake=""; pwCake=""
+				fi
+			;;
+			[4] )
+				__listeUtilisateurs
+			;;
+		esac
+	else
+		tmp="ok"
+	fi
+done
+}   #  fin __ssmenuAjoutUtilisateur()
+
+
 ############################################
 ##  Suppression d'un utilisateur Cakebox
 ############################################
+
 __suppUserCake() {
+local tmp=""; local codeSortie=1
 # saisie nom sauf si conjoint à la supp rutorrent alors $suppUserCake pas vide
 if [[ ! $suppUserCake ]]; then
-	local tmp=""
 	until [[ $tmp == "ok" ]]; do
-		echo
-		echo -n "Nom de l'utilisateur Cakebox à supprimer "
-		read -a userCake
-		# user cakebox existe ? Si pas d'user L cela veut dire que userCake est l'utilisateur principal
-		__userExist $userCake  # insert/util_apache.sh et util_nginx
-		if [[ $userC -ne 0 ]] || [[ $userL -ne 0 ]]; then
-			echo "$userCake n'est pas un utilisateur Cakebox ou"
-			echo "$userCake correspond à l'utilisateur principal"
+		until [[ $codeSortie -eq 0 ]]; do
+			#  boucle après affichage de la liste des users
+			__saisieTexteBox "Suppression d'un utilisateur Cakebox" "
+			Saisissez le nom de l'utilisateur :"
+			codeSortie=$?
+		done  # fin boucle sur __saisieTexteBox
+		codeSortie=1
+		# user cakebox existe ? Si pas d'user L cela veut dire que __saisieTexteBox est l'utilisateur principal
+		__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
+		if [[ $userC -ne 0 ]] || [ $__saisieTexteBox == $LOGUSER ]; then
+			__infoBox "Suppression d'un utilisateur Cakebox" 3 "
+			$__saisieTexteBox n'est pas un utilisateur Cakebox ou
+			$__saisieTexteBox est l'utilisateur principal"
 		else
 			tmp="ok"
 		fi
 	done
 else  # conjoint à la supp rutorrent
-	userCake=$suppUserCake
+	__saisieTexteBox=$suppUserCake
 fi
-
-__suppUserCakePasswd $userCake   # insert/util_apache.sh et util_nginx
-__suppUserCakeConfSite $userCake   # insert/util_apache.sh et util_nginx
+clear
+__suppUserCakePasswd $__saisieTexteBox   # insert/util_apache.sh et util_nginx
+__suppUserCakeConfSite $__saisieTexteBox   # insert/util_apache.sh et util_nginx
 
 # supprimer le fichier conf/user.php
-rm $REPWEB/cakebox/config/$userCake.php
+rm $REPWEB/cakebox/config/$__saisieTexteBox.php
 echo
-echo "cakebox/config/$userCake.php supprimé"
+echo "cakebox/config/$__saisieTexteBox.php supprimé"
 echo
 }  # fin __suppUserCake
 
@@ -370,281 +449,62 @@ echo
 __suppUserRuto() {
 ### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
 # saisie nom
-local tmp=""
+local tmp=""; local codeSortie=1
 until [[ $tmp == "ok" ]]; do
-	echo
-	echo -n "Nom de l'utilisateur ruTorrent à supprimer "
-	read -a userRuto
+	until [[ $codeSortie -eq 0 ]]; do
+		#  boucle après affichage de la liste des users
+		__saisieTexteBox "Suppression d'un utilisateur ruTorrent/Linux" "
+		Saisissez le nom de l'utilisateur :"
+		codeSortie=$?
+	done  # fin boucle sur __saisieTexteBox $userRuto
+	codeSortie=1
 	# user ruto ?
-	__userExist $userRuto  # insert/util_apache.sh et util_nginx renvoie userR
-	if [[ $userR -ne 0 ]] || [[ $userL -ne 0 ]]; then
-		echo "$userRuto n'est pas un utilisateur ruTorrent"
-		echo "ou n'est pas un utilisateur Linux"
-	elif [[ $userRuto == $firstUserLinux ]]; then
-		echo "$userRuto correspond à l'utilisateur principal et ne peut être supprimé"
+	__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx renvoie userR
+	if [[ $userR -ne 0 ]] || [[ $userL -ne 0 ]] || [ $LOGUSER == $__saisieTexteBox]; then
+		__infoBox "Suppression d'un utilisateur ruTorrent/Linux" 3 "
+			$__saisieTexteBox n'est pas un utilisateur ruTorrent/Linux ou
+			$__saisieTexteBox est l'utilisateur principal"
 	else
 		tmp="ok"
 	fi
 done
 
+clear
 # suppression du user allowed dans sshd_config
-sed -i 's/'$userRuto' //' /etc/ssh/sshd_config
+sed -i 's/'$__saisieTexteBox' //' /etc/ssh/sshd_config
 service sshd restart
 
-__suppUserRutoPasswd $userRuto
+__suppUserRutoPasswd $__saisieTexteBox
 
 # dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
-rm -r $REPWEB/rutorrent/conf/users/$userRuto
-echo "Dossier conf/users/$userRuto sur ruTorrent supprimé"
+rm -r $REPWEB/rutorrent/conf/users/$__saisieTexteBox
+echo "Dossier conf/users/$__saisieTexteBox sur ruTorrent supprimé"
 echo
-rm -r $REPWEB/rutorrent/share/users/$userRuto
-echo "Dossier share/users/$userRuto sur ruTorrent supprimé"
+rm -r $REPWEB/rutorrent/share/users/$__saisieTexteBox
+echo "Dossier share/users/$__saisieTexteBox sur ruTorrent supprimé"
 echo
 
 # modif de rtorrentd.sh (daemon)
-sed -i '/.*'$userRuto.*'/d' /etc/init.d/rtorrentd.sh
-rm /etc/init/$userRuto-rtorrent.conf
+sed -i '/.*'$__saisieTexteBox.*'/d' /etc/init.d/rtorrentd.sh
+rm /etc/init/$__saisieTexteBox-rtorrent.conf
 
 systemctl daemon-reload
 service rtorrentd restart
 if [[ $? -eq 0 ]]; then
 	echo "rtorrent en daemon modifié et fonctionne."
 	echo
-else	echo "Un problème est survenu."
-	ps aux | grep -e '.*torrernt$'
-	echo
-	service rtorrentd status
-	__messageErreur
-	exit 1
+else
+	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : ps aux | grep -e '^utilisateur.*rtorrent$'
+Consulter le wiki
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^$__saisieTexteBox.*rtorrent$'" 8 98
+	__msgErreurBox
 fi
 # Suppression du home et suppression user linux (-f le home est root:root)
-userdel -fr $userRuto
-echo "Utilisateur linux et /home/$userRuto supprimé"
+userdel -fr $__saisieTexteBox
+echo "Utilisateur linux et /home/$__saisieTexteBox supprimé"
+# pour faire la liaison avec __suppUserCake
+suppUserCake=$__saisieTexteBox
 }  # fin __suppUserRuto
-
-
-####################
-##  Changement pw
-####################
-__saisiePW() {   # appelée par __changePW
-local tmp2=""
-	until [[ $tmp2 == "ok" ]]; do
-				echo -n "Choisissez un mot de passe (ni espace ni \) : "
-				read pw
-				echo -n "Resaisissez ce mot de passe : "
-				read pw2
-				case $pw in
-					"" )
-						echo "Le mot de passe ne peut pas être vide"
-						sleep 1
-					;;
-					$pw2)
-						tmp2="ok"
-					;;
-					*)
-						echo "Les deux saisies du mot de passe ne sont pas identiques. Recommencez"
-						echo
-						sleep 1
-					;;
-				esac
-	done
-}  #  fin __saisiePW
-
-__changePW() {
-local typeUser=""; local user=""; local tmp=""
-
-until [[ $tmp == "ok" ]]; do
-	echo
-	echo "Type d'utilisateur : "
-	echo -n "0) sortir  1) Linux  2) ruTorrent  3) Cakebox  4) Liste des utilisateurs : "
-	read typeUser
-
-		case $typeUser in
-			[1] )
-				echo "!!! Mot de passe valable aussi pour ftp !!!"
-				echo -n "Nom de l'utilisateur linux : "
-				read -a user
-				# user linux ?   idem apache et nginx
-				egrep "^$user:" /etc/passwd >/dev/null
-				if [[ $? -eq 0 ]]; then
-					passwd $user
-					if [[ $? != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
-					else
-						echo; echo "Traitement terminé"
-						echo "Utilisateur $user"
-					fi
-				else
-					echo
-					echo "$user n'est pas un utilisateur linux"
-				fi
-			;;
-			[2] )
-				echo -n "Nom de l'utilisateur ruTorrent : "
-				read -a user
-				# user ruTorrent ?
-				__userExist $user
-				if [[ $userR -eq 0 ]]; then
-					__saisiePW
-					__changePWRuto $user $pw  # insert/util_apache.sh et util_nginx
-					if [[ $sortie != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
-					else
-						echo; echo "Traitement terminé"
-						echo "Utilisateur $user"
-						echo "Nouveau mot de passe : $pw"
-					fi
-				else
-					echo
-					echo "$user n'est pas un utilisateur ruTorrent"
-				fi
-			;;
-			[3] )
-				echo -n "Nom de l'utilisateur Cakebox : "
-				read -a user
-				# user cakebox ?
-				__userExist $user
-				if [[ $userC -eq 0 ]]; then
-					__saisiePW
-					__changePWCake $user $pw   # insert/util_apache.sh  renvoie $sortie
-					if [[ $sortie != 0 ]]; then echo "une erreur c'est produite, mot de passe inchangé"
-					else
-						echo; echo "Traitement terminé"
-						echo "Utilisateur $user"
-						echo "Nouveau mot de passe : $pw"
-					fi
-				else
-					echo
-					echo "$user n'est pas un utilisateur Cakebox"
-				fi
-			;;
-			[4] )
-				__listeUtilisateurs
-				sleep 1
-			;;
-			[0] )
-				tmp="ok"
-			;;
-			* )
-				echo "Entrée invalide"
-				sleep 1
-			;;
-		esac
-done
-}  #  fin __changePW
-
-
-#################################################
-##  ajout utilisateur sous menu et traitements
-#################################################
-__ssmenuAjoutUtilisateur() {
-local typeUser=""; local tmp=""
-
-until [[ $tmp == "ok" ]]; do
-	echo
-	echo "Type d'utilisateur à ajouter : "
-	echo -e "\t1) Linux - ruTorrent"
-	echo -e "\t2) Linux - ruTorrent - Cakebox"
-	echo -e "\t3) Cakebox"
-	echo -e "\t4) Liste des utilisateurs"
-	echo -e "\t0) sortir"
-	echo
-	echo -n "(0, 1, 2, 3, 4) "
-	read typeUser
-
-	case $typeUser in
-		1 )
-			echo
-			echo "****************************************"
-			echo "|     Ajout d'un utilisateur Linux     |"
-			echo "|            et ruTorrent              |"
-			echo "****************************************"
-			echo
-			echo "- Sur ruTorrent il n'aura accès qu'a son"
-			echo "  répertoire de téléchargement"
-			echo
-			echo "- Le nouvel utilisateur aura un accès SFTP"
-			echo "  avec son ID et mot de passe, même port"
-			echo "  que les autres utilisateurs."
-			echo "- Il sera limité à son répertoire"
-			echo "- Pas d'accès ssh"
-			echo
-			__IDuser ruTorrent
-			__creaUserRuto
-
-			echo
-			echo "Traitement terminé"
-			echo "Utilisateur $userRuto crée"
-			echo "Mot de passe $pwRuto"
-			userRuto=""; pwRuto=""
-			sleep 1
-		;;
-		2 )
-			echo
-			echo "****************************************"
-			echo "|    Ajout d'un utilisateur Linux,     |"
-			echo "|       ruTorrent  et Cakebox          |"
-			echo "****************************************"
-			echo
-			echo "- Le nouvel utilisateur aura le même nom et"
-			echo "  Mot de passe pour les 3 accès"
-			echo
-			echo "- Le nouvel utilisateur aura un accès SFTP"
-			echo "  avec son ID et mot de passe, même port"
-			echo "  que les autres utilisateurs."
-			echo "- Il sera limité à son répertoire"
-			echo "- Pas d'accès ssh"
-			echo
-			echo "- Sur ruTorrent il n'aura accès qu'a son"
-			echo "  répertoire de téléchargement"
-			echo "- Sur Cakebox il ne pourra scanner"
-			echo "  que son répertoire de téléchargement."
-			echo
-			__IDuser ruTorrent
-			echo
-			__creaUserRuto # + linux
-			userCake=$userRuto; pwCake=$pwRuto
-			userRuto=""; pwRuto=""
-			echo
-			__creaUserCake
-			echo
-			echo "Traitement terminé"
-			echo "Utilisateur $userCake crée"
-			echo "Mot de passe $pwCake"
-			userCake=""; pwCake=""
-			sleep 1
-		;;
-		3 )
-			echo
-			echo "****************************************"
-			echo "|    Ajout d'un utilisateur Cakebox    |"
-			echo "****************************************"
-			echo
-			echo "- L'utilisateur devra déjà exister en tant"
-			echo "  qu'utilisateur ruTorrent"
-			echo "- Le nouvel utilisateur ne pourra scanner"
-			echo "  que son répertoire de téléchargement."
-			echo
-			__IDuser Cakebox
-			__creaUserCake
-			echo
-			echo "Traitement terminé"
-			echo "Utilisateur $userCake crée"
-			echo "Mot de passe $pwCake"
-			userCake=""; pwCake=""
-			sleep 1
-		;;
-		[4] )
-			__listeUtilisateurs
-		;;
-		[0] )
-			tmp="ok"
-		;;
-		* )
-			echo "Entrée invalide"
-			sleep 1
-		;;
-	esac
-done
-}   #  fin __ssmenuAjoutUtilisateur()
 
 
 ######################################################
@@ -654,73 +514,168 @@ __ssmenuSuppUtilisateur() {
 local typeUser=""; local tmp=""
 
 until [[ $tmp == "ok" ]]; do
-	echo
-	echo "Type d'utilisateur à supprimer : "
-	echo -e "\t1) Linux - ruTorrent - Cakebox"
-	echo -e "\t2) Cakebox"
-	echo -e "\t3) Liste des utilisateurs"
-	echo -e "\t0) sortir"
-	echo
-	echo -n "(0, 1, 2, 3) "
-	read typeUser
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
 
-	case $typeUser in
-		1 )
-			echo
-			echo "*************************************"
-			echo "|    Supprimer utilisateur Linux    |"
-			echo "|       ruTorrent et Cakebox        |"
-			echo "*************************************"
-			echo
-			echo "ATTENTION le répertoire /home de l'utilisateur"
-			echo "va être supprimé !!!!!!!!!!"
-			__ouinon
-			__suppUserRuto  # + linux
-			suppUserCake=$userRuto  # éviter de redemander le nom
-			echo    # si plus de user ruto et linux forcément ... suppression userCake
-			__userExist $suppUserCake
-			if [[ $userC -eq 0 ]]; then
+- Si un utilisateur ruTorrent est supprimé, son homonyme Linux
+le sera aussi.
+- Si un utilisateur Cakebox est supprimé, ses homonymes Linux et ruTorrent seront conservés
+
+ Supprimer un utilisateur :" 22 70 3 \
+	1 "Linux + ruTorrent + Cakebox"
+	2 "Cakebox"
+	3 "Liste des utilisateurs")
+
+	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
+	if [[ $? -eq 0 ]]; then
+		case $typeUser in
+			1 )
+				__ouinonBox "suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
+  de l'utilisateur va être supprimé"
+				if [[ $__ouinonBox -eq 0 ]]; then
+					__suppUserRuto  # + linux
+				# __suppUserRuto renvoie $suppUserCake  # éviter de redemander le nom
+					echo    # si plus de user ruto et linux forcément ... suppression userCake
+					__userExist $suppUserCake
+					if [[ $userC -eq 0 ]]; then
+						__suppUserCake
+					fi
+					__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
+Utilisateur $userRuto pour Linux/ruTorrent/Cakebox supprimé"
+					suppUserCake=""; userRuto=""; userCake=""; pwRuto=""; pwCake=""
+				fi
+			;;
+			2 )
+				echo
+				echo "*************************************"
+				echo "|   Supprimer utilisateur Cakebox   |"
+				echo "*************************************"
+				echo
 				__suppUserCake
-			fi
-			echo
-			echo "Traitement terminé"
-			echo "Utilisateur $userRuto supprimé"
-			suppUserCake=""; userRuto=""; userCake=""; pwRuto=""; pwCake=""
-			sleep 1
-		;;
-		2 )
-			echo
-			echo "*************************************"
-			echo "|   Supprimer utilisateur Cakebox   |"
-			echo "*************************************"
-			echo
-			__suppUserCake
-			echo
-			echo "Traitement terminé"
-			echo "Utilisateur $userCake supprimé"
-			userCake=""; pwCake=""
-			sleep 1
-		;;
-		3 )
-			__listeUtilisateurs
-		;;
-		0 )
-			tmp="ok"
-		;;
-		* )
-			echo "Entrée invalide"
-			sleep 1
-		;;
-	esac
+				__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
+Utilisateur $userCake supprimé"
+				userCake=""; pwCake=""
+			;;
+			3 )
+				__listeUtilisateurs
+			;;
+		esac
+	else
+		tmp="ok"
+	fi
 done
 }  #  fin __ssmenuSuppUtilisateur()
+
+
+####################
+##  Changement pw
+####################
+
+__changePW() {
+local typeUser=""; local user=""; local tmp=""; local codeSortie=1
+
+until [[ $tmp == "ok" ]]; do
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Changer un mot de passe utilisateur" --menu "
+
+
+
+
+	Quel type d'utilisateur voulez-vous modifier ?" 22 70 4 \
+	1 "Linux"
+	2 "ruTorrent"
+	3 "Cakebox"
+	4 "Liste des utilisateurs")
+
+	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
+	if [[ $? -eq 0 ]]; then
+		case $typeUser in
+			1 )   ###  utilisateur Linux
+				until [[ $codeSortie -eq 0 ]]; do
+					#  boucle après affichage de la liste des users
+					__saisieTexteBox "Modification mot de passe" "
+Saisissez un nom d'utilisateur Linux
+Mot de passe Linux valable aussi pour sftp !!!"
+					codeSortie=$?
+				done  # fin boucle sur __saisieTexteBox
+				codeSortie=1
+				# user linux ?   idem apache et nginx
+				egrep "^$__saisieTexteBox:" /etc/passwd >/dev/null
+				if [[ $? -eq 0 ]]; then
+					clear
+					passwd $__saisieTexteBox
+					if [[ $? -ne 0 ]]; then
+						echo "Une erreur c'est produite, mot de passe inchangé."
+					else
+						__infoBox "Saisie mot de passe Linux" 2 "Modification mot de passe de l'utilisateur $__saisieTexteBox
+Traitement terminé"
+					fi
+				else
+						__infoBox "Modification mot de passe" 3 "$__saisieTexteBox n'est pas un utilisateur Linux"
+				fi
+			;;
+			[2] )   ###  utilisateur ruTorrent
+				until [[ $codeSortie -eq 0 ]]; do
+					#  boucle après affichage de la liste des users
+					__saisieTexteBox "Modification mot de passe" "
+Saisissez un nom d'utilisateur ruTorrent"
+					codeSortie=$?
+				done  # fin boucle sur __saisieTexteBox
+				codeSortie=1
+					# user ruTorrent ?
+					__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
+					if [[ $userR -eq 0 ]]; then  # $userR sortie de __userExist 0 ou erreur
+						__saisiePwBox "Modification mot de passe ruTorrent" "Utilisateur $__saisieTexteBox" 4
+						__changePWRuto $__saisieTexteBox $__saisiePwBox  # insert/util_apache.sh et util_nginx
+						if [[ $sortie != 0 ]]; then
+							__infoBox "Saisie mot de passe" 3 "une erreur c'est produite, mot de passe inchangé"
+						else
+							__infoBox "Saisie mot de passe" 2 "Modification mot de passe de l'utilisateur $__saisieTexteBox
+Traitement terminé"
+						fi
+					else
+						__infoBox "Modification mot de passe" 2 "$__saisieTexteBox n'est pas un utilisateur ruTorrent"
+					fi
+			;;
+			[3] )   ###  utilisateur cakebox
+				until [[ $codeSortie -eq 0 ]]; do
+					#  boucle après affichage de la liste des users
+					__saisieTexteBox "Modification mot de passe" "
+Saisissez un nom d'utilisateur Cakebox"
+					codeSortie=$?
+				done  # fin boucle sur __saisieTexteBox
+				codeSortie=1
+				# user cakebox ?
+				__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
+				if [[ $userC -eq 0 ]]; then   # $userC sortie de __userExist 0 ou erreur
+					__saisiePwBox "Modification mot de passe Cakebox" "Utilisateur $__saisieTexteBox" 4
+					__changePWCake $__saisieTexteBox $__saisiePwBox   # insert/util_apache.sh  renvoie $sortie
+					if [[ $sortie != 0 ]]; then
+						__infoBox "Saisie mot de passe" 3 "une erreur c'est produite, mot de passe
+						inchangé"
+					else
+						__infoBox "Saisie mot de passe" 2 "Modification mot de passe de l'utilisateur $__saisieTexteBox
+Traitement terminé"
+					fi
+				else
+					__infoBox "Modification mot de passe" 2 "$__saisieTexteBox n'est pas un utilisateur Cakebox"
+				fi
+			;;
+			[4] )
+				__listeUtilisateurs
+			;;
+		esac
+	else
+		tmp="ok"
+	fi
+done
+}  #  fin __changePW
 
 
 ######################################################
 ##  ajout vpn téléchargement du script
 ######################################################
 __vpn() {
-	wget -o $REPLANCE/openvpn-install.sh https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
+	clear
+	wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
 	chmod +x $REPLANCE/openvpn-install.sh
 
 . $REPLANCE/openvpn-install.sh
@@ -731,131 +686,109 @@ __vpn() {
 ##  Menu principal
 ############################
 __menu() {
-clear
-echo
-echo "******************************************"
-echo "|         Hiwst-util : Utilitaires       |"
-echo "|      rtorrent - ruTorrent - Cakebox    |"
-echo "|                                        |"
-echo "|     A utiliser après une installation  |"
-echo "|           réalisée avec HiwsT          |"
-echo "******************************************"
-echo; echo
 local tmp=""; choixMenu=""
 until [[ $tmp == "ok" ]]; do
-	echo
-	echo "Voulez-vous"
-	echo
-	echo -e "\t1) Ajouter un utilisateur"
-	echo -e "\t2) Modifier un mot de passe utilisateur"
-	echo -e "\t3) Supprimer un utilisateur"
-	echo -e "\t4) Lister les utilisateurs existants"
-	echo
-	echo -e "\t5) Installer/déinstaller OpenVPN"
-	echo -e "\t   ajouter/supprimer un certificat pour un utilisateur"
-	echo
-	echo -e "\t6) Firewall"
-	echo -e "\t7) Relancer rtorrent manuellement"
-	echo -e "\t8) Diagnostique"
-	echo -e "\t9) Rebooter le serveur"
-	echo
-	echo -e "\t0) Sortir"
-	echo
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Menu principale" --cancel-label "Quitter" --menu "
+ A utiliser après une installation réalisée avec HiwsT
 
-	echo -n "Votre choix (0 1 2 3 4 5 6 7 8) "
-	read choixMenu
-	echo
-	case $choixMenu in
-		0 )
-			tmp="ok"
-		;;
-		1 )  # ajout user
-			__ssmenuAjoutUtilisateur
-		;;
-		2 )
-			echo
-			echo "********************************"
-			echo "|   Changer un mot de passe    |"
-			echo "********************************"
-			__changePW
-			echo
-		;;
-		3 )  # supp utilisateur
-			__ssmenuSuppUtilisateur
-		;;
-		4 )
-			echo
-			echo "****************************"
-			echo "|  Liste des utilisateurs  |"
-			echo "****************************"
-			echo
-			__listeUtilisateurs
-		;;
-		5 )
-			echo
-			echo "*************************"
-			echo "|          VPN          |"
-			echo "*************************"
-			echo
-			echo "VPN installé avec le script de Angristan (MIT  License),"
-			echo "avec son aimable autorisation. Merci à lui"
-			echo
-			echo "Dépôt github : https://github.com/Angristan/OpenVPN-install"
-			echo "Blog de Angristan : https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/"
-			echo
-			echo "Excellent script mettant l'accent sur la sécurité, permettant une installation sans histoire"
-			echo "sur des serveurs Debian, Ubuntu, CentOS et Arch Linux. Bravo !!!"
-			echo "Ne pas réinventer la roue (en moins bien), c'est ça l'Open Source"
-			echo
-			echo "Activer le firewall avant d'installer le VPN"
-			echo "A la question 'Tell me a name for the client cert'"
-			echo "donner le nom de l'utilisateur linux au quel est destiné le vpn"
-			__ouinon
-			__vpn
-		;;
-		6 )
-			echo
-			echo "****************************"
-			echo "|      Firewall / ufw      |"
-			echo "****************************"
-			echo
-			echo "Attention !!! le paramétrage suivant ne tient"
-			echo "compte que des installations effectuées avec HiwsT"
-			. $REPLANCE/insert/util_firewall.sh
-			sleep 1
-		;;
-		7 )
-			echo
-			echo "***************************"
-			echo "|    rtorrent restart     |"
-			echo "***************************"
-			echo
-			service rtorrentd restart
-			service rtorrentd status
-			sleep 1
-		;;
-		8 )
-			echo
-			echo "***************************"
-			echo "|      Diagnostique       |"
-			echo "***************************"
-			echo
-			. $REPLANCE/insert/util_diag.sh
-		;;
-		9 )
-			echo
-			echo "*********************"
-			echo "|      Reboot       |"
-			echo "*********************"
-			echo
-			__ouinon
-			reboot
-		;;
-		* )
-			echo "Entrée invalide"
-			sleep 1
-		;;
-	esac
+ Votre choix :" 22 70 9 \
+	1 "Ajouter un utilisateur" \
+	2 "Modifier un mot de passe utilisateur" \
+	3 "Supprimer un utilisateur" \
+	4 "Lister les utilisateurs existants" \
+	5 "Installer/déinstaller OpenVPN, utilisateurs openVPN" \
+	6 "Firewall" \
+	7 "Relancer rtorrent manuellement" \
+	8 "Diagnostique" \
+	9 "Rebooter le serveur")
+
+	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
+	if [[ $? -eq 0 ]]; then
+		case $choixMenu in
+			1 )  ################ ajout user  ################################
+				__ssmenuAjoutUtilisateur
+			;;
+			2 )
+				echo
+				echo "********************************"
+				echo "|   Changer un mot de passe    |"
+				echo "********************************"
+				__changePW
+				echo
+			;;
+			3 ) ################# supp utilisateur  ############################
+				__ssmenuSuppUtilisateur
+			;;
+			4 )
+				echo
+				echo "****************************"
+				echo "|  Liste des utilisateurs  |"
+				echo "****************************"
+				echo
+				__listeUtilisateurs
+			;;
+			5 )  ######### VPN  ###################################
+				__messageBox "openVPN" "
+				VPN installé avec le script de Angristan (MIT  License),
+				avec son aimable autorisation. Merci à lui
+
+				Dépôt github : https://github.com/Angristan/OpenVPN-install
+				Blog de Angristan : https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/
+
+				Excellent script mettant l'accent sur la sécurité, permettant une installation sans histoire
+				sur des serveurs Debian, Ubuntu, CentOS et Arch Linux. Bravo !!!
+				Ne pas réinventer la roue (en moins bien), c'est ça l'Open Source
+
+				Activer le firewall avant d'installer le VPN
+				A la question 'Tell me a name for the client cert'
+				donner le nom de l'utilisateur linux au quel est destiné le vpn" 22 100
+
+				__vpn
+			;;
+			6 )  ##########  firewall  ############################
+				__messageBox "Firewall et ufw" "
+
+
+				Attention !!! le paramétrage suivant ne tient compte que
+				des installations effectuées avec HiwsT" 12 75
+
+				. $REPLANCE/insert/util_firewall.sh
+			;;
+			7 )  #########  Relance rtorrent  ###############
+				__infoBox "Message" 1 "
+
+			 	  Relance
+
+		du daemon rtorrentd" 10 35
+				clear
+				service rtorrentd restart
+				service rtorrentd status
+			;;
+			8 )
+				echo
+				echo "***************************"
+				echo "|      Diagnostique       |"
+				echo "***************************"
+				echo
+				. $REPLANCE/insert/util_diag.sh
+			;;
+			9 )
+				echo
+				echo "*********************"
+				echo "|      Reboot       |"
+				echo "*********************"
+				echo
+				__ouinonBox "Reboot système"
+				if [[ $__ouinonBox -eq 0 ]]; then
+					clear
+					sleep 2
+					reboot
+				fi
+			;;
+		esac
+	else
+		tmp="ok"
+	fi
 done
 
 }   # fin menu
@@ -892,21 +825,28 @@ if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	exit 1
 fi
 
+#  chargement des f() nginx ou apache
 if [[ $sortieA -eq 0 ]]; then
 	serveurHttp="apache2"
-else
-	serveurHttp="nginx"
-fi
-
-if [[ $serveurHttp == "apache2" ]]; then
 	. $REPLANCE/insert/util_apache.sh
 else
+	serveurHttp="nginx"
 	. $REPLANCE/insert/util_nginx.sh
 fi
-###########################################################################
+. $REPLANCE/insert/util_listeusers.sh
+
+# installe dialog si pas installé
+which dialog
+if [ $? != 0 ]
+then
+echo “y” | sudo apt-get install ufw
+fi
+########################################################################
 
 
 __menu
 
+clear
+echo
 echo "Au revoir"
 echo

@@ -17,15 +17,6 @@ __creaUserRutoPasswd() {   # appelée par __creaUserRuto   $1 $userRuto   $2 $pw
   # sécuriser ruTorrent
   (echo -n "$1:rutorrent:" && echo -n "$1:rutorrent:$2" | md5sum) >> $REPAPA2/.htpasswd
   sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
-  # service apache2 restart
-  # if [[ $? -eq o ]]; then
-  # 	echo "Mot de passe de $1 créé"
-  # 	echo
-  # else
-  #   service apache2 status
-  # 	__messageErreur
-  # 	exit 1
-  # fi
 # ne renvoie rien
 }
 
@@ -39,7 +30,7 @@ __creaUserCakeConfSite() {  #  appelée par __creaUserCake  $1 $userCake
     echo
   else
     service apache2 status
-  	__messageErreur
+  	__msgErreurBox
   	exit 1
   fi
 # ne renvoie rien
@@ -73,7 +64,7 @@ __suppUserCakeConfSite() {   # appelée par __suppUserCake  $1 $userCake
     echo
   else
     service apache2 status
-  	__messageErreur
+  	__msgErreurBox
   	exit 1
   fi
 }

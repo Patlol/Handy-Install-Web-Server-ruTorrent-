@@ -1,4 +1,4 @@
-
+clear
 echo
 lsb_release -a
 echo
@@ -52,4 +52,6 @@ echo
 echo "-------------------------------------------------------------------------------"
 echo "Utilisateurs :"
 echo "--------------"
-. $REPLANCE/insert/util_listeusers.sh
+__listeUtilisateurs "texte"
+cat $REPLANCE/liste
+read

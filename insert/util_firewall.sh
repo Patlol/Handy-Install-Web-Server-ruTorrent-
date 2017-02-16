@@ -1,5 +1,5 @@
 
-
+clear
 # récupération du port ssh
 portSSH=0
 portSSH=$(cat /etc/ssh/sshd_config | grep ^Port | awk -F" " '{print$2}')

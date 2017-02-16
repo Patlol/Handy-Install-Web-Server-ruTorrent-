@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+__listeUtilisateurs() {
 # les différents tableaux : utilisateurs linux, ruto et cake
 listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
 if [[ $serveurHttp == "apache2" ]]; then
@@ -54,20 +54,25 @@ done
 echo $tab
 }
 
-echo
-__traitH
-__miseEnPage "users Linux"
-__miseEnPage "ruTorrent"
-__miseEnPage "Cakebox"
-echo
-__traitH
+  echo > $REPLANCE/liste
+  __traitH >> $REPLANCE/liste
+  __miseEnPage "users Linux" >> $REPLANCE/liste
+  __miseEnPage "ruTorrent" >> $REPLANCE/liste
+  __miseEnPage "Cakebox" >> $REPLANCE/liste
+  echo >> $REPLANCE/liste
+  __traitH >> $REPLANCE/liste
 
-for element in $(seq 0 $(($maxTab - 1)))
-do
-  __miseEnPage ${listeL[$element]}
-  __miseEnPage ${listeR[$element]}
-  __miseEnPage ${listeC[$element]}
-  echo
-done
-__traitH
-echo
+  for element in $(seq 0 $(($maxTab - 1)))
+  do
+    __miseEnPage ${listeL[$element]} >> $REPLANCE/liste
+    __miseEnPage ${listeR[$element]} >> $REPLANCE/liste
+    __miseEnPage ${listeC[$element]} >> $REPLANCE/liste
+    echo >> $REPLANCE/liste
+  done
+  __traitH >> $REPLANCE/liste
+  echo >> $REPLANCE/liste
+
+if [[ ${1} != "texte" ]]; then
+  dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Liste utilisateurs" --textbox  $REPLANCE/liste 0 0
+fi
+}

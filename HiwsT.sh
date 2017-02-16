@@ -1030,6 +1030,7 @@ sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/
 # copie les script dans home
 cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
+chown root:root $REPUL/HiwsT/pass1
 
 
 ########################################

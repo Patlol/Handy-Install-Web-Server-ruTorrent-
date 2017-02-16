@@ -67,7 +67,7 @@ then
 	sleep 1
 else
 	echo; echo "Une erreur nginx/php c'est produite"
-	__messageErreur    #  __messageErreur()
+	__msgErreurBox    #  __msgErreurBox()
 fi
 rm $REPWEB/info.php
 
