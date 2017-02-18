@@ -2,6 +2,8 @@ clear
 echo
 lsb_release -a
 echo
+echo "Serveur http : $serveurHttp"
+echo
 echo "-------------------------------------------------------------------------------"
 echo "RAM : "
 echo "-----"
@@ -54,4 +56,4 @@ echo "Utilisateurs :"
 echo "--------------"
 __listeUtilisateurs "texte"
 cat $REPLANCE/liste
-read
+read -p " faire défiler vers le haut pour voir le début, appuyer sur une touche pour sortir "

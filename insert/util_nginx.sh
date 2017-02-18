@@ -82,14 +82,14 @@ __suppUserRutoPasswd() {  #  appelée par __suppUserRuto  ${1} $userRuto
 __changePWRuto() {   #  appelée par __changePW  ${1} user  ${2} pw
   sed -i "s/^"${1}".*//" $REPNGINX/.htpasswdR
 	htpasswd -b $REPNGINX/.htpasswdR ${1} ${2}
-	sortie=$?
-# Renvoie $sortie
+	return $?
+# Renvoie code sortie
 }
 
 
 __changePWCake() {  #  appelée par __changePW  ${1} user  ${2} pw
   sed -i "s/^"${1}".*//" $REPNGINX/.htpasswdC
 	htpasswd -b $REPNGINX/.htpasswdC ${1} ${2}
-  sortie=$?
-# Renvoie $sortie
+  return $?
+# Renvoie code sortie
 }

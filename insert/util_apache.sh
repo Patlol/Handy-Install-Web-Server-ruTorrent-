@@ -80,14 +80,17 @@ __suppUserRutoPasswd() {  #  appelée par __suppUserRuto  ${1} $userRuto
 
 __changePWRuto() {   #  appelée par __changePW  ${1} user  ${2} pw
   sed -i "s/^"${1}".*//" $REPAPA2/.htpasswd
+	sortieCmd1=$?
 	(echo -n "${1}:rutorrent:" && echo -n "${1}:rutorrent:${2}" | md5sum) >> $REPAPA2/.htpasswd
+	sortieCmd2=$?
 	sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
-# ne renvoie rien
+	sortieCmd3=$?
+	let "total = $sortieCmd1 + $sortieCmd2 + $sortieCmd3"
+	return $total
 }
 
 
 __changePWCake() {  #  appelée par __changePW  ${1} user  ${2} pw
   htpasswd -b $REPWEB/cakebox/public/.htpasswd ${1} ${2}
-  sortie=$?
-# Renvoie $sortie
+  return $?
 }
