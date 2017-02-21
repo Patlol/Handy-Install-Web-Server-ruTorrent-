@@ -3,12 +3,13 @@ clear
 # récupération du port ssh
 portSSH=0
 portSSH=$(cat /etc/ssh/sshd_config | grep ^Port | awk -F" " '{print$2}')
+echo $portSSH
 if [ $portSSH -eq 0 ]; then
-  echo "Le port ssh est introuvable dans /etc/ssh/sshd_config"
-  echo "Impossible d'installer le firewall sans bloquer l'acces ssh !!!"
-  echo" https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
-  echo
-  sortir="ok"
+  __messageBox "Erreur port ssh" "
+Le port ssh est introuvable dans /etc/ssh/sshd_config
+Impossible d'installer le firewall sans bloquer l'acces ssh !!!
+Consulter le wiki :  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+  exit 1
 fi
 
 # si pas installé, installer

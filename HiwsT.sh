@@ -34,14 +34,14 @@ paquetsMediaU="mediainfo ffmpeg"
 upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
 debWebMinU="webmin-current.deb"
 
-REPWEB="/var/www/html"
-REPNGINX="/etc/nginx"
-REPAPA2="/etc/apache2"
-REPLANCE=$(echo `pwd`)
+readonly REPWEB="/var/www/html"
+readonly REPNGINX="/etc/nginx"
+readonly REPAPA2="/etc/apache2"
+readonly REPLANCE=$(echo `pwd`)
 REPUL=""    # voir ligne ~345 ->  # si 2ème passage
-PORT_SCGI=5000  # port 1er Utilisateur
-miniDispoRoot=319   # minimum pour alerete place
-miniDispoHome=299   # disponible sur disque
+readonly PORT_SCGI=5000  # port 1er Utilisateur
+readonly miniDispoRoot=319   # minimum pour alerete place
+readonly miniDispoHome=299   # disponible sur disque
 
 #############################
 #       Fonctions
@@ -1031,6 +1031,7 @@ sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/
 cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
 chown root:root $REPUL/HiwsT/pass1
+chmod 400 $REPUL/HiwsT/pass1  # r-- --- ---
 
 
 ########################################

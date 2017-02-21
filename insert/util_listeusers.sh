@@ -3,7 +3,7 @@
 __listeUtilisateurs() {
 # les différents tableaux : utilisateurs linux, ruto et cake
 listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
-if [[ $serveurHttp == "apache2" ]]; then
+if [[ $SERVEURHTTP == "apache2" ]]; then
   listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
   listeC=(`cat $REPWEB/cakebox/public/.htpasswd | awk -F":" '{ print $1 }'`)
 else
@@ -54,25 +54,25 @@ done
 echo $tab
 }
 
-  echo > $REPLANCE/liste
-  __traitH >> $REPLANCE/liste
-  __miseEnPage "users Linux" >> $REPLANCE/liste
-  __miseEnPage "ruTorrent" >> $REPLANCE/liste
-  __miseEnPage "Cakebox" >> $REPLANCE/liste
-  echo >> $REPLANCE/liste
-  __traitH >> $REPLANCE/liste
+  echo > /tmp/liste
+  __traitH >> /tmp/liste
+  __miseEnPage "users Linux" >> /tmp/liste
+  __miseEnPage "ruTorrent" >> /tmp/liste
+  __miseEnPage "Cakebox" >> /tmp/liste
+  echo >> /tmp/liste
+  __traitH >> /tmp/liste
 
   for element in $(seq 0 $(($maxTab - 1)))
   do
-    __miseEnPage ${listeL[$element]} >> $REPLANCE/liste
-    __miseEnPage ${listeR[$element]} >> $REPLANCE/liste
-    __miseEnPage ${listeC[$element]} >> $REPLANCE/liste
-    echo >> $REPLANCE/liste
+    __miseEnPage ${listeL[$element]} >> /tmp/liste
+    __miseEnPage ${listeR[$element]} >> /tmp/liste
+    __miseEnPage ${listeC[$element]} >> /tmp/liste
+    echo >> /tmp/liste
   done
-  __traitH >> $REPLANCE/liste
-  echo >> $REPLANCE/liste
+  __traitH >> /tmp/liste
+  echo >> /tmp/liste
 
 if [[ ${1} != "texte" ]]; then
-  dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Liste utilisateurs" --textbox  $REPLANCE/liste 0 0
+  dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Liste utilisateurs" --textbox  /tmp/liste 0 0
 fi
 }

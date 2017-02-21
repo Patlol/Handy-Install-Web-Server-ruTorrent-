@@ -5,48 +5,57 @@
 # Changement de mot de passe
 # ....
 
-# Version 1.0
+# Version dialog beta
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
 
 
-REPWEB="/var/www/html"
-REPAPA2="/etc/apache2"
-REPNGINX="/etc/nginx"
-REPLANCE=$(echo `pwd`)
-serveurHttp=""
+readonly REPWEB="/var/www/html"
+readonly REPAPA2="/etc/apache2"
+readonly REPNGINX="/etc/nginx"
+readonly REPLANCE=$(echo `pwd`)
+SERVEURHTTP=""
 # utilisateur linux principal dans pass1
-firstUserLinux=$(cat pass1)
-LOGUSER=$(logname)
-
+readonly firstUserLinux=$(cat pass1)
+# dialog param --aspect --colors
+readonly RATIO=12
+readonly R="\Z1"
+readonly BK="\Z0"  # black
+readonly G="\Z2"
+readonly Y="\Z3"
+readonly BL="\Z4"  # blue
+readonly W="\Z7"
+readonly BO="\Zb"  # bold
+readonly I="\Zr"   # vidéo inversée
+readonly N="\Zn"   # retour à la normale
 
 ########################################
 #       Fonctions utilitaires
 ########################################
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox 0 ou 1
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}"  --yesno "
+	CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}"  --yesno "
 ${2}" 0 0 )
 	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	__ouinonBox=$?
 }    #  fin ouinon
 
-__entInvalBox() {    # param : titre
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep 2 --infobox "
-Votre entrée n'est pas valide" 0 0)
-	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
-}
+# __entInvalBox() {    # param : titre
+# 	CMD=(dialog --aspect $RATIO --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep 2 --infobox "
+# Votre entrée n'est pas valide" 0 0)
+# 	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+# }
 
 # __listeUtilisateurs() {
 # 	. $REPLANCE/insert/util_listeusers.sh
 # }
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __infoBox() {   # param : titre sleep texte
-			CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -62,7 +71,7 @@ __msgErreurBox() {
 __saisieTexteBox() {   # param : titre, texte
 	local tmp=""
 	until [[ $tmp == "ok" ]]; do
-		CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --nocancel --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --nocancel --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 
 		if [ $? == 2 ]; then  # bouton "liste" (help) renvoie code sortie 2
@@ -83,7 +92,7 @@ Entre 2 et 15 caractères"
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local tmp=""; local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ $tmp == "ok" ]]; do
-		CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
 	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
@@ -118,6 +127,7 @@ Le mot de passe ne peut pas contenir d'espace ou de \\."
 ##  création utilisateur ruTorrent Linux
 ############################################
 __creaUserRuto () {
+	echo " param : ${1} ${2}"
 egrep "^sftp" /etc/group > /dev/null
 if [[ $? -ne 0 ]]; then
 	addgroup sftp
@@ -251,7 +261,7 @@ __ssmenuAjoutUtilisateur() {
 local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Ajouter un utilisateur" --menu "Quel type d'utilisateur voulez-vous ajouter ?
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Ajouter un utilisateur" --menu "
 
 - Un utilisateur ruTorrent ne peut être créé qu'avec un utilisateur Linux
 - Un utilisateur Cakebox ne peut être crtéé que si un homonyme ruTorrent existe déjà ou est créé dans la foulée
@@ -268,13 +278,12 @@ until [[ 1 -eq 2 ]]; do
 			until [[ $codeSortie -eq 0 ]]; do
 		#  boucle saise nom user
 			__saisieTexteBox "Création d'un utilisateur" "
-Saisissez le nom du nouvel utilisateur
-Ni espace, ni caractères spéciaux"
+Saisissez le nom du nouvel utilisateur$R
+Ni espace, ni caractères spéciaux$N"
 			codeSortie=$?
 		done  # fin boucle sur __saisieTexteBox
 		codeSortie=1
 		__userExist $__saisieTexteBox    # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
-		echo $__saisieTexteBox
 	fi
 		case $typeUser in
 			1 )  #  créa linux ruto
@@ -284,7 +293,7 @@ Il existe déjà un utilisateur $__saisieTexteBox"
 				else
 					__ouinonBox "Création utilisateur Linux/ruTorrent" "- Le nouvel utilisateur aura un accès SFTP avec son nom et mot de passe, même port que les autres utilisateurs.
 - Il sera limité à son répertoire /home.
-- Pas d'accès ssh
+- Pas d'accès ssh$R
 Vous confirmez $__saisieTexteBox comme nouvel utilisateur ?"
 					if [[ $__ouinonBox -eq 0 ]]; then
 						__saisiePwBox "Création d'un utilisateur ${1}" "
@@ -311,7 +320,7 @@ $__saisieTexteBox est déjà un utilisateur Cakebox" 0 0
 					__ouinonBox "Création utilisateur Linux/ruTorrent/Cakebox" "- Le nouvel utilisateur aura le même nom et Mot de passe pour les 3 accès.
 - Il aura un accès SFTP avec le même nom et mot de passe, même port que les autres utilisateurs.
 - Il sera limité à son répertoire /home.
-- Pas d'accès ssh
+- Pas d'accès ssh$R
 Vous confirmez $__saisieTexteBox comme nouvel utilisateur ?"
 					if [[ $__ouinonBox -eq 0 ]]; then
 						# saisie PW d'un utilisateur
@@ -335,7 +344,7 @@ $__saisieTexteBox est déjà un utilisateur Cakebox" 0 0
 $__saisieTexteBox n'a pas d'homonyme Linux et ruTorrent" 0 0
 				else
 					echo $__saisieTexteBox
-					__ouinonBox "Création utilisateur Cakebox" "Le nouvel utilisateur ne pourra scanner que son répertoire de téléchargement.
+					__ouinonBox "Création utilisateur Cakebox" "Le nouvel utilisateur ne pourra scanner que son répertoire de téléchargement.$R
 Vous confirmez "$__saisieTexteBox" comme nouvel utilisateur ?"
 					if [[ $__ouinonBox -eq 0 ]]; then
 						# saisie PW d'un utilisateur
@@ -396,6 +405,8 @@ Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	__msgErreurBox
 fi
+# suppression fichier témoin de screen
+rm -r /var/run/screen/S-${1}
 # Suppression du home et suppression user linux (-f le home est root:root)
 userdel -fr ${1}
 echo "Utilisateur linux et /home/${1} supprimé"
@@ -430,15 +441,17 @@ until [[ 1 -eq 2 ]]; do
 le sera aussi.
 - Si un utilisateur Cakebox est supprimé, ses homonymes Linux et ruTorrent seront conservés
 
- Supprimer un utilisateur :" 22 70 3 \
+ Supprimer un utilisateur :" 22 70 4 \
 	1 "Linux + ruTorrent + Cakebox"
-	2 "Cakebox"
-	3 "Liste des utilisateurs")
+	2 "Linux + ruTorrent"
+	3 "Cakebox"
+	4 "Liste des utilisateurs")
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
 		#	----------------------------------------------------------$ type
-		if [[ $typeUser -ne 3 ]]; then
+		# filtrer le choix 4 : liste user
+		if [[ $typeUser -ne 4 ]]; then
 			until [[ $codeSortie -eq 0 ]]; do
 				#  boucle saisie nom user
 				__saisieTexteBox "Suppression d'un utilisateur" "
@@ -454,38 +467,55 @@ Saisissez le nom de l'utilisateur :"
 				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
 de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
 				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ $LOGUSER != $__saisieTexteBox ] && [[ $userC -eq 0 ]]; then
+					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ $firstUserLinux != $__saisieTexteBox ] && [[ $userC -eq 0 ]]; then
 			    	#  --------------------------------------------------------$ __saisieTexteBox
 						__suppUserRuto $__saisieTexteBox; sleep 2
 						__suppUserCake $__saisieTexteBox; sleep 2
 						__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
-Utilisateur $__saisieTexteBox pour Linux/ruTorrent/Cakebox supprimé"
+Utilisateur$R $__saisieTexteBox$N pour Linux/ruTorrent/Cakebox supprimé"
 					else
 						__infoBox "Suppression d'un utilisateur ruTorrent/Linux" 3 "
-$__saisieTexteBox n'est pas un utilisateur Linux/ruTorrent/Cakebox
-$__saisieTexteBox est l'utilisateur principal"
+$__saisieTexteBox$R n'est pas un utilisateur Linux/ruTorrent/Cakebox ou$N
+$__saisieTexteBox$R est l'utilisateur principal"
 						#sortie case $typeUser et if  retour ss menu
 					fi
 				fi
 	      #  -----------------------------------------------------------fin
 			;;
 			2)
-				__ouinonBox "Suppression d'un utilisateur Cakebox" "
-Vous confirmez la suppression de $__saisieTexteBox ?"
+				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
+de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
 				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userC -eq 0 ]] && [ $__saisieTexteBox != $LOGUSER ]; then
-						__suppUserCake $__saisieTexteBox; sleep 2
-						__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
-Utilisateur $__saisieTexteBox supprimé"
+					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ $firstUserLinux != $__saisieTexteBox ]; then
+			    	#  --------------------------------------------------------$ __saisieTexteBox
+						__suppUserRuto $__saisieTexteBox; sleep 2
+						__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
+Utilisateur$R $__saisieTexteBox$N pour Linux/ruTorrent supprimé"
 					else
-						__infoBox "Suppression d'un utilisateur Cakebox" 3 "
-$__saisieTexteBox n'est pas un utilisateur Cakebox ou
-$__saisieTexteBox est l'utilisateur principal"
-						# sortie case $typeUser et if
+						__infoBox "Suppression d'un utilisateur Linux/ruTorrent" 3 "
+$__saisieTexteBox$R n'est pas un utilisateur Linux/ruTorrent ou$N
+$__saisieTexteBox$R est l'utilisateur principal"
+						#sortie case $typeUser et if  retour ss menu
 					fi
 				fi
 			;;
 			3)
+				__ouinonBox "Suppression d'un utilisateur Cakebox" "
+Vous confirmez la suppression de $__saisieTexteBox ?"
+				if [[ $__ouinonBox -eq 0 ]]; then
+					if [[ $userC -eq 0 ]] && [ $__saisieTexteBox != $firstUserLinux ]; then
+						__suppUserCake $__saisieTexteBox; sleep 2
+						__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
+Utilisateur$R $__saisieTexteBox$N supprimé"
+					else
+						__infoBox "Suppression d'un utilisateur Cakebox" 3 "
+$__saisieTexteBox$R n'est pas un utilisateur Cakebox ou$N
+$__saisieTexteBox$R est l'utilisateur principal"
+						# sortie case $typeUser et if
+					fi
+				fi
+			;;
+			4)
 				__listeUtilisateurs
 			;;
 			#-----------------------------------------------fin---$ __saisieTexteBox
@@ -616,7 +646,7 @@ __vpn() {
 	fi
 	wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
 	chmod +x $REPLANCE/openvpn-install.sh
-	sed -i "/#!\/bin\/bash/ a\trap 'sleep 4;"$REPLANCE"\/HiwsT-util.sh' EXIT" $REPLANCE/openvpn-install.sh
+	sed -i "/#!\/bin\/bash/ a\trap 'sleep 3;"$REPLANCE"\/HiwsT-util.sh' EXIT" $REPLANCE/openvpn-install.sh
  #trap '$REPLANCE/HiwsT-util.sh' EXIT
 . $REPLANCE/openvpn-install.sh
 }
@@ -649,53 +679,42 @@ until [[ $tmp == "ok" ]]; do
 				__ssmenuAjoutUtilisateur
 			;;
 			2 )
-				echo
-				echo "********************************"
-				echo "|   Changer un mot de passe    |"
-				echo "********************************"
 				__changePW
-				echo
 			;;
 			3 ) ################# supp utilisateur  ############################
 				__ssmenuSuppUtilisateur
 			;;
-			4 )
-				echo
-				echo "****************************"
-				echo "|  Liste des utilisateurs  |"
-				echo "****************************"
-				echo
+			4 )  ################# liste utilisateurs #######################
 				__listeUtilisateurs
 			;;
 			5 )  ######### VPN  ###################################
 				__messageBox "openVPN" "
-				VPN installé avec le script de Angristan (MIT  License),
+				VPN installé avec le$R script de Angristan$N (MIT  License),
 				avec son aimable autorisation. Merci à lui
 
 				Dépôt github : https://github.com/Angristan/OpenVPN-install
 				Blog de Angristan : https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/
 
 				Excellent script mettant l'accent sur la sécurité, permettant une installation sans histoire
-				sur des serveurs Debian, Ubuntu, CentOS et Arch Linux. Bravo !!!
+				sur des serveurs Debian, Ubuntu, CentOS et Arch Linux.
 				Ne pas réinventer la roue (en moins bien), c'est ça l'Open Source
-
+				$R $BO
 				--------------------------------------------------------------------
 				|  !!! Activer le firewall avant d'installer le VPN !!!
 				|  A la question 'Tell me a name for the client cert'
 				|  donner le nom de l'utilisateur linux au quel est destiné le vpn
-				--------------------------------------------------------------------" 22 100
-
+				--------------------------------------------------------------------$N" 22 100
 				__vpn
 			;;
-			6 )  ##########  firewall  ############################
+			6 )  #####################  firewall  ############################
 				__messageBox "Firewall et ufw" "
 
 
-Attention !!! le paramétrage suivant ne tient compte que des installations effectuées avec HiwsT" 12 75
+\ZrAttention !!!\ZR le paramétrage suivant ne tient compte que des installations effectuées avec HiwsT" 12 75
 
 				. $REPLANCE/insert/util_firewall.sh
 			;;
-			7 )  #########  Relance rtorrent  ###############
+			7 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
 
 			 	  Relance
@@ -706,21 +725,11 @@ Attention !!! le paramétrage suivant ne tient compte que des installations effe
 				service rtorrentd status
 				sleep 3
 			;;
-			8 )
-				echo
-				echo "***************************"
-				echo "|      Diagnostique       |"
-				echo "***************************"
-				echo
+			8 )  ################# Diagnostiques ###############################
 				. $REPLANCE/insert/util_diag.sh
 			;;
-			9 )
-				echo
-				echo "*********************"
-				echo "|      Reboot       |"
-				echo "*********************"
-				echo
-				__ouinonBox "Reboot système"
+			9 )  ###########################  REBOOT  #######################
+				__ouinonBox "$R $BO Reboot système$N"
 				if [[ $__ouinonBox -eq 0 ]]; then
 					clear
 					sleep 2
@@ -770,10 +779,10 @@ fi
 
 #  chargement des f() nginx ou apache
 if [[ $sortieA -eq 0 ]]; then
-	serveurHttp="apache2"
+	SERVEURHTTP="apache2"
 	. $REPLANCE/insert/util_apache.sh
 else
-	serveurHttp="nginx"
+	SERVEURHTTP="nginx"
 	. $REPLANCE/insert/util_nginx.sh
 fi
 . $REPLANCE/insert/util_listeusers.sh
