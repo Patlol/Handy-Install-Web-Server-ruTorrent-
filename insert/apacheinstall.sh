@@ -72,7 +72,7 @@ then
 	sleep 1
 else
 	echo; echo "Une erreur apache/php c'est produite"
-	__messageErreur    #  __messageErreur()
+	__msgErreurBox    #  __msgErreurBox()
 fi
 rm $REPWEB/info.php
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess
