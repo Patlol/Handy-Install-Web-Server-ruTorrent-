@@ -90,14 +90,18 @@ Entre 2 et 15 caractères"
 }
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
-  local tmp=""; local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
-	until [[ $tmp == "ok" ]]; do
+  local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
+	until [[ 1 -eq 2 ]]; do
 		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
+    if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
+      [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
+      __infoBox "${1}" 2 "
+Le mot de passe ne peut pas contenir d'espace ou de \\."
+    else
 	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
 	    pw2=$(echo $reponse | awk -F" " '{ print $2 }')
-
 			case $pw1 in
 				"" )
 					__infoBox ${1} 2 "
@@ -105,17 +109,14 @@ Le mot de passe ne peut pas être vide."
 				;;
 				$pw2 )
 					__saisiePwBox=$pw1
-					tmp="ok"
+					break
 				;;
 				* )
 					__infoBox ${1} 2 "
 Les 2 saisies ne sont pas identiques." 0 0
 				;;
 			esac
-			if [[ `echo $pw1 | grep -E "[ \\]"` -ne 0 ]]; then
-				__infoBox "${1}" 2 "
-Le mot de passe ne peut pas contenir d'espace ou de \\."
-			fi
+		fi
 	done
 }
 
@@ -747,7 +748,8 @@ done
 ################################################################################
 # #                             Début du script
 ################################################################################
-
+### Annule le trap de l'installation du VPN
+trap -- EXIT
 # root ?
 if [[ $(id -u) -ne 0 ]]; then
 	echo
@@ -758,7 +760,6 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 #########################################################################
-trap -- EXIT
 # apache vs nginx ?
 service nginx status > /dev/null
 sortieN=$?
