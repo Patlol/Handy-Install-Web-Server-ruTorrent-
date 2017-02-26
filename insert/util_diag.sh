@@ -57,8 +57,7 @@ echo "--------------"
 __listeUtilisateurs "texte"
 cat /tmp/liste
 
-tmp=""
-until [[ $tmp == "ok" ]]; do
+until [[ 1 -eq 2 ]]; do
   echo "faire défiler vers le haut pour voir le début"
   echo
   echo -e "\t1) Voir les règles iptables table 'filter'"
@@ -70,7 +69,7 @@ until [[ $tmp == "ok" ]]; do
 	echo
 	case $choixMenu in
 		0 )
-      tmp="ok"
+      break
     ;;
     1 )
       echo "------------------------------------------------------------------------"
@@ -88,4 +87,3 @@ until [[ $tmp == "ok" ]]; do
     ;;
   esac
 done
-tmp=""
