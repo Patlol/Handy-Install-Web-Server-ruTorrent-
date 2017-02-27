@@ -15,8 +15,7 @@ Install on Debian 8 or Ubuntu 16 server
 - <a href="https://github.com/cakebox/cakebox">Cakebox</a> multiuser
 - <a href="http://www.webmin.com/">WebMin</a>
 
-![copie d'écran](http://img15.hostingpics.net/pics/491787install.png)
-
+![COPIE D'ÉCRAN](http://img11.hostingpics.net/pics/313172install2.png) ![COPIE D'ÉCRAN](http://img11.hostingpics.net/pics/123020install5.png)
 # HiwsT-util
 With this utility you can  
 - Create other ruTorrent/Cakebox users and thus share your server.  
