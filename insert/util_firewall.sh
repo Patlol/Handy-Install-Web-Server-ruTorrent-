@@ -3,7 +3,7 @@ clear
 # récupération du port ssh
 portSSH=0
 portSSH=$(cat /etc/ssh/sshd_config | grep ^Port | awk -F" " '{print$2}')
-echo $portSSH
+
 if [ $portSSH -eq 0 ]; then
   __messageBox "Erreur port ssh" "
 Le port ssh est introuvable dans /etc/ssh/sshd_config
@@ -16,13 +16,14 @@ fi
 which ufw 2>&1 > /dev/null
 if [ $? != 0 ]; then
 apt-get -yq install ufw
+clear
 fi
 
 # menu
-tmp=""; choixMenu=""; sortir=""
-until [[ $tmp == "ok" ]]; do
+choixMenu=""; sortir=""
+until [[ 1 -eq 2 ]]; do
   echo
-  if ! [ `ufw show added | grep None` ] && [[ $choixMenu -ne 5 ]]; then
+  if ! [ `ufw show added | grep None` ] && [[ $choixMenu -ne 5 ]] && [[ $choixMenu -ne 6 ]]; then
     #  installé avec des règles préexistantes
     echo "** Règles actuellement en place : **"
     ufw status verbose
@@ -47,7 +48,8 @@ until [[ $tmp == "ok" ]]; do
   echo -e "\t2) Ajouter les nouvelles règles"
   echo -e "\t3) Desactiver le firewall sans effacer les règles"
   echo -e "\t4) Activer le firewall sans changer les règles (port ssh ouvert)"
-  echo -e "\t5) Voir les règles IPTABLES ;)"
+  echo -e "\t5) Voir les règles IPTABLES table 'filter'"
+  echo -e "\t6) Voir les règles IPTABLES table 'nat'(pour opnVPN)"
   echo -e "\t0) Sortir"
   echo
   echo -n "Votre choix (0 1 2 3 4 5) "
@@ -55,23 +57,23 @@ until [[ $tmp == "ok" ]]; do
 	echo
 	case $choixMenu in
 		0 )
-      tmp="ok"; sortir="ok"
+      sortir="ok"; break
     ;;
     1 )
       ufw --force reset
     ;;
     2 )
       ufw disable
-      tmp="ok"
+      break
     ;;
     3 )
       ufw disable
-      tmp="ok"; sortir="ok"
+      sortir="ok"; break
     ;;
     4 )
       ufw allow $portSSH
       ufw --force enable
-      tmp="ok"; sortir="ok"
+      sortir="ok"; break
     ;;
     5 )
       echo
@@ -80,9 +82,17 @@ until [[ $tmp == "ok" ]]; do
       iptables -L
       echo "*************************************************************************"
     ;;
+    6 )
+      echo
+      echo "*************************************************************************"
+      echo
+      iptables -t nat -n -L
+      echo "*************************************************************************"
+    ;;
     * )
       echo "Entrée invalide"
       sleep 1
+      clear
     ;;
   esac
 done
@@ -102,7 +112,6 @@ if [[ $sortir == "" ]]; then
   echo
   echo "Règles actuellement en place :"
   ufw status verbose
-
   ufw --force enable
   echo
 fi

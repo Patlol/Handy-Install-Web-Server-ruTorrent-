@@ -1,36 +1,18 @@
 # installation des paquets
-echo
-echo "***********************************************"
-echo "|          Installation des paquets           |"
-echo "|         necessaires au serveur web          |"
-echo "***********************************************"
-sleep 1
-
 if [[ $nameDistrib == "Debian" ]]; then
 	paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD
 else
 	paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
 fi
-apt-get install -yq $paquetsWeb
-if [[ $? -eq 0 ]]
-then
-	echo "****************************"
-	echo "|     Paquets installés    |"
-	echo "****************************"
-	sleep 1
-else
-	__erreurApt  # __erreurApt()
-fi
-
+__cmd "apt-get install -yq $paquetsWeb"
 echo
 echo "***********************************************"
-echo "|           Configuration apache2             |"
+echo "|     Paquets necessaires au serveur web      |"
+echo "|                  installés                  |"
 echo "***********************************************"
 sleep 1
 
 # config apache
-echo
-echo
 a2enmod ssl
 a2enmod auth_digest
 a2enmod reqtimeout
@@ -41,11 +23,11 @@ cp $REPAPA2/apache2.conf $REPAPA2/apache2.conf.old
 sed -i 's/^Timeout[ 0-9]*/Timeout 30/' $REPAPA2/apache2.conf
 echo -e "\nServerTokens Prod\nServerSignature Off" >> $REPAPA2/apache2.conf
 
-echo "***********************************************"
-echo "|      Fin de configuration d'Apache          |"
-echo "***********************************************"
-sleep 1
 echo
+echo "***********************************"
+echo "|       Apache2 configuré         |"
+echo "***********************************"
+sleep 1
 
 # mot de passe user rutorrent  htpasswd
 (echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) > $REPAPA2/.htpasswd
@@ -58,7 +40,6 @@ sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
 __serviceapache2restart
 
 # vérif bon fonctionnement apache et php
-
 echo "<?php phpinfo(); ?>" >$REPWEB/info.php
 headTest1=`curl -Is http://$IP/info.php/| head -n 1`
 headTest2=`curl -Is http://$IP/| head -n 1`
@@ -70,20 +51,16 @@ then
 	echo "|        Apache et php fonctionne             |"
 	echo "***********************************************"
 	sleep 1
+	rm $REPWEB/info.php
 else
-	echo; echo "Une erreur apache/php c'est produite"
-	__msgErreurBox    #  __msgErreurBox()
+	echo "curl -Is http://$IP/info.php/| head -n 1 renvoie $headTest1" >> /tmp/hiwst.log
+	echo "curl -Is http://$IP/| head -n 1 renvoie $headTest2" >> /tmp/hiwst.log
+	__msgErreurBox
 fi
-rm $REPWEB/info.php
+
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess
 
-echo
-echo "******************************************"
-echo "|    Création certificat auto signé      |"
-echo "******************************************"
-sleep 1
-echo
-
+## création certificat ---------------------------------------------------------
 openssl req -new -x509 -days 365 -nodes -newkey rsa:2048 -out $REPAPA2/apache.pem -keyout $REPAPA2/apache.pem -subj "/C=FR/ST=Paris/L=Paris/O=Global Security/OU=RUTO Department/CN=$IP"
 
 chmod 600 $REPAPA2/apache.pem
@@ -94,3 +71,9 @@ sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"r
 
 a2ensite default-ssl
 __serviceapache2restart
+echo
+echo "******************************************"
+echo "|      Certificat auto signé créé        |"
+echo "******************************************"
+sleep 1
+echo

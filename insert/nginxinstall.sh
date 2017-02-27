@@ -1,11 +1,4 @@
 # installation des paquets
-echo
-echo "***********************************************"
-echo "|          Installation des paquets           |"
-echo "|         necessaires au serveur web          |"
-echo "***********************************************"
-sleep 1
-
 if [[ $nameDistrib == "Debian" ]]; then
 	# nginx apache2-utils
 	paquetsWeb="nginx-full apache2-utils "$paquetsWebD
@@ -17,22 +10,14 @@ else
 	phpSock="/run/php/php7.0-fpm.sock"
 	repPhp="/etc/php/7.0"
 fi
-apt-get install -yq $paquetsWeb
-if [[ $? -eq 0 ]]
-then
-	echo "****************************"
-	echo "|     Paquets installés    |"
-	echo "****************************"
-	sleep 1
-else
-	__erreurApt  # __erreurApt()
-fi
-
+__cmd "apt-get install -yq $paquetsWeb"
 echo
 echo "***********************************************"
-echo "|            Configuration nginx              |"
+echo "|     Paquets necessaires au serveur web      |"
+echo "|                installés                    |"
 echo "***********************************************"
 sleep 1
+
 # config site default
 mv $REPNGINX/sites-available/default $REPNGINX/sites-available/default.old
 cp $REPLANCE/fichiers-conf/nginx_default $REPNGINX/sites-available/default
@@ -46,12 +31,11 @@ sed -i 's/.*;.*cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $repPhp/fpm/php.ini
 htpasswd -bc $REPNGINX/.htpasswdR $userRuto $pwRuto
 
 __servicenginxrestart
-
-echo "***********************************************"
-echo "|      Fin de configuration de nginx          |"
-echo "***********************************************"
-sleep 1
 echo
+echo "*********************************************"
+echo "|             nginx configuré               |"
+echo "*********************************************"
+sleep 1
 
 # vérif bon fonctionnement nginx et php
 echo "<?php phpinfo(); ?>" >$REPWEB/info.php
@@ -65,11 +49,12 @@ then
 	echo "|         nginx et php fonctionne             |"
 	echo "***********************************************"
 	sleep 1
+	rm $REPWEB/info.php
 else
-	echo; echo "Une erreur nginx/php c'est produite"
-	__msgErreurBox    #  __msgErreurBox()
+	echo "curl -Is http://$IP/info.php | head -n 1 renvoie $headTest1" >> /tmp/hiwst.log
+	echo "curl -Is http://$IP/| head -n 1 renvoie $headTest2" >> /tmp/hiwst.log
+	__msgErreurBox
 fi
-rm $REPWEB/info.php
 
 # Utilise le certificat fourni avec nginx
 # echo
