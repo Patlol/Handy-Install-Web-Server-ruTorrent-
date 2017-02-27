@@ -14,7 +14,7 @@
 
 
 NAME=rtorrentd.sh
-SCRIPTNAME=/etc/init.d/$NAME
+SCRIPTNAME=/etc/init.d/rtorrentd.sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 __go() {

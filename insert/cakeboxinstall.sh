@@ -1,5 +1,3 @@
-clear
-echo
 echo
 echo
 echo "*************************************************"
@@ -10,21 +8,22 @@ echo
 sleep 1
 
 # install prérequis ****************************************
-
-apt-get install -yq git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery
-if [[ $? -eq 0 ]]
-then
+__cmd "apt-get install -yq git python-software-properties nodejs npm javascript-common node-oauth-sign debhelper javascript-common libjs-jquery"
+	echo
 	echo "****************************"
 	echo "|     Paquets installés    |"
 	echo "****************************"
 	sleep 1
-else
-	erreurApt
-fi
 
 # install composer /tmp
 cd /tmp
 echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php
+sortie=$?
+if [[ $sortie -ne 0 ]]; then
+	echo -n "echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php renvoie l'erreur $sortie " >> /tmp/hiwst.log
+	tail --lines=12 /tmp/trace >> /tmp/hiwst.log
+	__msgErreurBox
+fi
 
 mv /tmp/composer.phar /usr/bin/composer
 chmod +x /usr/bin/composer
@@ -33,7 +32,7 @@ chmod +x /usr/bin/composer
 ln -s /usr/bin/nodejs /usr/bin/node
 
 # install bower
-npm install -g bower
+__cmd "npm install -g bower"
 
 # CakeBox depuis github sur /html  ********************************************
 
@@ -41,9 +40,9 @@ npm install -g bower
 
 chmod o+r /var/www
 chmod u+rwx,g+rwx $REPWEB
-git clone https://github.com/Cakebox/Cakebox-light.git $REPWEB/cakebox
+__cmd "git clone https://github.com/Cakebox/Cakebox-light.git $REPWEB/cakebox"
 cd $REPWEB/cakebox/
-git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))
+__cmd "git checkout -b $(git describe --tags $(git rev-list --tags --max-count=1))"
 
 chown -R $userLinux:$userLinux $REPWEB/cakebox/
 
@@ -59,12 +58,29 @@ if [[ $nameDistrib == "Ubuntu" ]]; then
 fi
 
 echo $userLinux | sudo -S -u $userLinux composer install
+sortie=$?
+if [[ $sortie -ne 0 ]]; then
+	echo -n "echo $userLinux | sudo -S -u $userLinux composer install renvoie l'erreur $sortie " >> /tmp/hiwst.log
+	tail --lines=12 /tmp/trace >> /tmp/hiwst.log
+	__msgErreurBox
+fi
 echo $userLinux | sudo -S -u $userLinux bower install
+sortie=$?
+if [[ $sortie -ne 0 ]]; then
+	echo -n "echo $userLinux | sudo -S -u $userLinux bower install renvoie l'erreur $sortie " >> /tmp/hiwst.log
+	tail --lines=12 /tmp/trace >> /tmp/hiwst.log
+	__msgErreurBox
+fi
 
 # pour Debian remise en l'état  de /root
 if [[ $nameDistrib == "Debian" ]]; then
 	chmod -R o-w /root/.composer; chmod o-x /root
 fi
+echo
+echo "***************************"
+echo "|    Cakebox installé     |"
+echo "***************************"
+sleep 1
 
 # configuration ***********************************************************
 cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
@@ -72,14 +88,14 @@ cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/$userCake.php
 sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"$REPUL/downloads/\";|" $REPWEB/cakebox/config/$userCake.php
 sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/$userCake.php
 chown -R www-data:www-data $REPWEB/cakebox/config
+echo
+echo "***************************"
+echo "|    Cakebox configuré    |"
+echo "***************************"
+sleep 1
 
 # modification apache pour cakebox
 if [[ $serveurHttp == "apache2" ]]; then
-	echo
-	echo "*************************************************"
-	echo "|            Modifications apache2              |"
-	echo "*************************************************"
-	echo
 	a2enmod headers
 	a2enmod rewrite
 	a2enconf javascript-common
@@ -91,13 +107,14 @@ if [[ $serveurHttp == "apache2" ]]; then
 
 	a2ensite cakebox.conf
 	__serviceapache2restart
+	echo
+	echo "******************************************"
+	echo "|            apache2 modifié             |"
+	echo "******************************************"
+	echo
+	sleep 1
 
 else   # modification nginx pour cakebox
-	echo
-	echo "*************************************************"
-	echo "|             Modifications nginx               |"
-	echo "*************************************************"
-	echo
 	# sur default : proxy
 	sed -i '/.*# Cakebox proxy/ r '$REPLANCE'/fichiers-conf/nginx_default_cakebox' $REPNGINX/sites-available/default
 	# conf site cakebox
@@ -106,6 +123,12 @@ else   # modification nginx pour cakebox
 	sed -i 's/<user-Cakebox>/'$userLinux'/' $REPNGINX/sites-available/cakebox
 	ln -s $REPNGINX/sites-available/cakebox  $REPNGINX/sites-enabled/cakebox
 	__servicenginxrestart
+	echo
+	echo "*******************************************"
+	echo "|             nginx modifié               |"
+	echo "*******************************************"
+	echo
+	sleep 1
 fi    # fin modif serveur http
 
 
@@ -118,7 +141,7 @@ echo "*******************************************************"
 sleep 1
 echo
 
-git clone https://github.com/Cakebox/linkcakebox.git $REPWEB/rutorrent/plugins/linkcakebox
+__cmd "git clone https://github.com/Cakebox/linkcakebox.git $REPWEB/rutorrent/plugins/linkcakebox"
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/linkcakebox
 
 sed -i "s|\(\$url.*\)|\$url = 'http:\/\/"$IP"\/cakebox\/index.html';|" $REPWEB/rutorrent/plugins/linkcakebox/conf.php
@@ -127,15 +150,15 @@ echo -e "\n    [linkcakebox]\n    enabled = yes" >> $REPWEB/rutorrent/conf/users
 
 chown www-data:www-data $REPWEB/cakebox/
 chown -R www-data:www-data $REPWEB/cakebox/public
-
-#  sécuriser cakebox
 echo
-echo "*************************"
-echo "|   Sécuriser Cakebox   |"
-echo "*************************"
+echo "*************************************************"
+echo "|    Plugin ruTorrent pour Cakebox installé     |"
+echo "*************************************************"
 sleep 1
 echo
 
+
+#  sécuriser cakebox
 if [[ $serveurHttp == "apache2" ]]; then
 	a2enmod auth_basic
 	echo -e 'AuthName "Entrer votre identifiant et mot de passe Cakebox"\nAuthType Basic\nAuthUserFile "/var/www/html/cakebox/public/.htpasswd"\nRequire valid-user' > $REPWEB/cakebox/public/.htaccess
@@ -143,7 +166,6 @@ if [[ $serveurHttp == "apache2" ]]; then
 
 	htpasswd -bc $REPWEB/cakebox/public/.htpasswd $userCake $pwCake
 	chown www-data:www-data $REPWEB/cakebox/public/.htpasswd
-
 	__serviceapache2restart
 	chmod 755 $REPWEB
 else
@@ -151,6 +173,11 @@ else
 	htpasswd -bc $REPNGINX/.htpasswdC $userCake $pwCake
   __servicenginxrestart
 fi
+echo "*************************"
+echo "|    Cakebox sécurisé   |"
+echo "*************************"
+sleep 1
+echo
 
 headTest=`curl -Is http://$IP/cakebox/index.html | head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
@@ -160,11 +187,8 @@ then
 	echo "***************************"
 	echo "|   Cakebox fonctionne    |"
 	echo "***************************"
+	sleep 1
 else
-	echo; echo "Une erreur c'est produite sur cakebox"
-	echo; echo "Consulter le wiki"
-	echo "https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
-	echo; echo "puis continuer/arrêter l'installation"
-	__ouinonBox
+	echo "curl -Is http://$IP/cakebox/index.html | head -n 1 renvoie $headTest" >> /tmp/hiwst.log
+	__msgErreurBox
 fi
-sleep 1
