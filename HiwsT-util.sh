@@ -617,17 +617,15 @@ done
 ##  ajout vpn, téléchargement du script
 ######################################################
 __vpn() {
-	clear
-	if [[ -e $REPLANCE/openvpn-install.sh ]]; then
-		rm $REPLANCE/openvpn-install.sh
-	fi
-	wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
-	chmod +x $REPLANCE/openvpn-install.sh
-	# if [[ -e /etc/openvpn/server.conf ]]; then
-	# 	sed -i "/#!\/bin\/bash/ a\trap '"$REPLANCE"\/HiwsT-util.sh' EXIT"  # SIGINT ctrl-c $REPLANCE/openvpn-install.sh
-	# else
-	# 	sed -i "/#!\/bin\/bash/ a\__myTrap() {\necho \"Retour au menu dans 4 secondes\"\nsleep 5\n$REPLANCE\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
-	# fi
+  clear
+  if [[ -e $REPLANCE/openvpn-install.sh ]]; then
+    rm $REPLANCE/openvpn-install.sh
+  fi
+  wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
+  chmod +x $REPLANCE/openvpn-install.sh
+  ERRVPN=0
+  export ERRVPN
+  sed -i "/#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\n$REPLANCE\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
 . $REPLANCE/openvpn-install.sh
 }
 
@@ -676,15 +674,19 @@ until [[ 1 -eq 2 ]]; do
 				Dépôt github : https://github.com/Angristan/OpenVPN-install
 				Blog de Angristan : https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/
 
-				Excellent script mettant l'accent sur la sécurité, permettant une installation sans histoire
+				Excellent script mettant l'accent sur la sécurité, permettant une installation sans problème
 				sur des serveurs Debian, Ubuntu, CentOS et Arch Linux.
 				Ne pas réinventer la roue (en moins bien), c'est ça l'Open Source
 				$R $BO
-				--------------------------------------------------------------------
-				|  !!! Activer le firewall avant d'installer le VPN !!!
-				|  A la question 'Tell me a name for the client cert'
-				|  donner le nom de l'utilisateur linux au quel est destiné le vpn
-				--------------------------------------------------------------------$N" 22 100
+				----------------------------------------------------------------------
+				|  !!! Activer le firewall AVANT d'installer le VPN !!!
+				|  - A la question 'Tell me a name for the client cert'
+				|    donner le nom de l'utilisateur linux au quel est destiné le vpn.
+				|  - Si vous relancer ce script vous pourrez ajouter ou supprimer
+				|    un utilisateur, déinstaller le VPN.
+				|  - Le fichier de configuration client se trouvera dans votre /home
+				----------------------------------------------------------------------$N" 22 100
+Your client config is available at ~/$CLIENT.ovpn
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
 			6 )  #####################  firewall  ############################
@@ -769,7 +771,18 @@ fi
 . $REPLANCE/insert/util_listeusers.sh
 
 ########################################################################
-
+# gestion de la sortie de openvpn-install.sh
+if [[ ! -z $ERRVPN && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
+  __messageBox "Sortie installation openVPN" "
+Code de Sortie : $ERRVPN
+Il y a eu un problème à l'éxécution de openvpn-install"
+trap - EXIT
+elif [[ ! -z $ERRVPN && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et non vide
+  __messageBox "Sortie installation openVPN" "
+Code de Sortie : $ERRVPN
+Sortie nominale de l'exécution de openvpn-install"
+trap - EXIT
+fi  # code vide veut dire openvpn-install pas exécuté
 
 __menu
 
