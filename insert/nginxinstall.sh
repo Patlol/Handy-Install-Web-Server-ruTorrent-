@@ -26,6 +26,29 @@ ln -s $REPNGINX/sites-available/default  $REPNGINX/sites-enabled/default
 
 # config php
 sed -i 's/.*;.*cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' $repPhp/fpm/php.ini
+if [[ $nameDistrib == "Debian" ]]; then   php5-fpm
+	service php5-fpm restart
+	service php5-fpm status
+	if [[ $? -eq 0 ]]; then
+		echo "php5-fpm fonctionne."
+		echo
+	else
+		dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service php5-fpm : Consulter le wiki
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "service php5-fpm" 8 98
+		__msgErreurBox
+	fi
+else
+	service php7.0-fpm restart
+	service php7.0-fpm status
+	if [[ $? -eq 0 ]]; then
+		echo "php7.0-fpm fonctionne."
+		echo
+	else
+		dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service php7.0-fpm : Consulter le wiki
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "service php7.0-fpm" 8 98
+		__msgErreurBox
+	fi
+fi
 
 # mot de passe rutorrent  htpasswdR
 htpasswd -bc $REPNGINX/.htpasswdR $userRuto $pwRuto
@@ -46,7 +69,7 @@ headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
 if [[ $headTest1 == OK* ]] && [[ $headTest2 == OK* ]]
 then
 	echo "***********************************************"
-	echo "|         nginx et php fonctionne             |"
+	echo "|         nginx et php fonctionnent           |"
 	echo "***********************************************"
 	sleep 1
 	rm $REPWEB/info.php

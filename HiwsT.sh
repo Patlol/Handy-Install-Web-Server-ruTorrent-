@@ -91,7 +91,7 @@ __msgErreurBox() {
 Consulter le wiki sur github $N
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal
 
-Le message d'erreur est enregistré dans $I/tmp/hiwst.log$N et $I/tmp/trace$N"
+Le message d'erreur est enregistré dans $I/tmp/trace$N"
 	__ouinonBox "Erreur" "
 Voulez-vous continuer malgré tout ?"
 	if [[ $__ouinonBox -ne 0 ]]; then exit 1; fi
@@ -147,15 +147,6 @@ __textBox() {   # $1 titre  $2 fichier à lire
   CMD=(dialog --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --textbox  "${2}" 0 0)
 	box=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
-__serviceapache2restart() {
-service apache2 restart
-__cmd "service apache2 status"
-}   #  fin __serviceapache2restart()
-
-__servicenginxrestart() {
-service nginx restart
-__cmd "service nginx status"
-}  #  fin de __servicenginxrestart
 
 __cmd() {
   local msgErreur
@@ -164,8 +155,8 @@ __cmd() {
   if [[ $err -ne 0 ]]; then
     msgErreur="$BO$R$*$N \nerreur N° $R$err$N"
 		echo "------------------" >> /tmp/hiwst.log
+    echo -e $msgErreur" " >> /tmp/hiwst.log
 		tail --lines=16 /tmp/trace >> /tmp/hiwst.log
-    echo -en $msgErreur" " >> /tmp/hiwst.log
     echo "------------------" >> /tmp/hiwst.log
     tail --lines=16 /tmp/trace
 		__msgErreurBox
@@ -176,6 +167,15 @@ __cmd() {
     return 0
   fi
 }
+__serviceapache2restart() {
+service apache2 restart
+__cmd "service apache2 status"
+}   #  fin __serviceapache2restart()
+
+__servicenginxrestart() {
+service nginx restart
+__cmd "service nginx status"
+}  #  fin de __servicenginxrestart
 
 #####################################
 ##    Fonctions principales
@@ -224,7 +224,7 @@ if [[ $(id -u) -ne 0 ]]; then
 	echo
 	exit 1
 fi
-
+clear
 # info système
 if [ ! -e $REPLANCE"/pass1" ]; then  # 1ère passe
 	# installe dialog si pas installé
@@ -543,7 +543,7 @@ echo
 echo
 echo "***********************************************"
 echo "|              Update système                 |"
-echo "|       Création de l'utilisateur linux       |"
+echo "|     Configuration de l'utilisateur linux    |"
 echo "|          Installation des paquets           |"
 echo "***********************************************"
 sleep 1
