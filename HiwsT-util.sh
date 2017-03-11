@@ -635,7 +635,7 @@ __vpn() {
 __menu() {
 choixMenu=""
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Menu principale" --cancel-label "Quitter" --menu "
+	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Menu principal" --cancel-label "Quitter" --menu "
 
  A utiliser après une installation réalisée avec HiwsT
 

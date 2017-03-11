@@ -29,7 +29,7 @@ With this utility you can
 - Add a VPN (openVPN)
 - Perform a system diagnosis  
 
-![copie d'écran](http://img4.hostingpics.net/pics/431253Capturedcran20170306164116.png)
+![copie d'écran](http://img4.hostingpics.net/pics/926115Kazamscreenshot00000.png)
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/1)-Home">Wiki</a> in french
 
