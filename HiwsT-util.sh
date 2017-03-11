@@ -13,6 +13,7 @@ readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPNGINX="/etc/nginx"
 readonly REPLANCE=$(echo `pwd`)
+readonly REPInstVpn=$REPLANCE
 SERVEURHTTP=""
 # utilisateur linux principal dans pass1
 readonly firstUserLinux=$(cat pass1)
@@ -178,8 +179,7 @@ if [[ $? -eq 0 ]]; then
 	echo "Daemon rtorrent modifié et fonctionne."
 	echo
 else
-	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : ps aux | grep -e '^utilisateur.*rtorrent$'
-Consulter le wiki
+	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	exit 1
 fi
@@ -391,8 +391,7 @@ if [[ $? -eq 0 ]]; then
 	echo "rtorrent en daemon modifié et fonctionne."
 	echo
 else
-	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : ps aux | grep -e '^utilisateur.*rtorrent$'
-Consulter le wiki
+	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	__msgErreurBox
 fi
@@ -625,8 +624,8 @@ __vpn() {
   chmod +x $REPLANCE/openvpn-install.sh
   ERRVPN=0
   export ERRVPN
-  sed -i "/#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\n$REPLANCE\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
-. $REPLANCE/openvpn-install.sh
+  sed -i "/#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\ncd $REPInstVpn\n$REPInstVpn\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
+	. $REPLANCE/openvpn-install.sh
 }
 
 
@@ -686,7 +685,6 @@ until [[ 1 -eq 2 ]]; do
 				|    un utilisateur, déinstaller le VPN.
 				|  - Le fichier de configuration client se trouvera dans votre /home
 				----------------------------------------------------------------------$N" 22 100
-Your client config is available at ~/$CLIENT.ovpn
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
 			6 )  #####################  firewall  ############################
@@ -776,12 +774,12 @@ if [[ ! -z $ERRVPN && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non 
   __messageBox "Sortie installation openVPN" "
 Code de Sortie : $ERRVPN
 Il y a eu un problème à l'éxécution de openvpn-install"
-trap - EXIT
+	trap - EXIT
 elif [[ ! -z $ERRVPN && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et non vide
   __messageBox "Sortie installation openVPN" "
 Code de Sortie : $ERRVPN
 Sortie nominale de l'exécution de openvpn-install"
-trap - EXIT
+	trap - EXIT
 fi  # code vide veut dire openvpn-install pas exécuté
 
 __menu
