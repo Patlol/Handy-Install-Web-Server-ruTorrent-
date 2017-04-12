@@ -775,12 +775,12 @@ fi
 
 ########################################################################
 # gestion de la sortie de openvpn-install.sh
-if [[ ! -z $ERRVPN && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
+if [[ ! -z "$ERRVPN" && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
   __messageBox "Sortie installation openVPN" "
 Code de Sortie : $ERRVPN
 Il y a eu un problème à l'éxécution de openvpn-install"
 	trap - EXIT
-elif [[ ! -z $ERRVPN && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et non vide
+elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et non vide
   __messageBox "Sortie installation openVPN" "
 Code de Sortie : $ERRVPN
 Sortie nominale de l'exécution de openvpn-install"
