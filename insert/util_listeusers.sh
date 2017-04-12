@@ -4,6 +4,12 @@ __listeUtilisateurs() {
 	local listeL; local listeR; local listeC; local listeVpn
 	# les différents tableaux : utilisateurs linux, ruto et cake et vpn
 	listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
+	# encadrement utilisateur principal
+  for (( i = 0; i < ${#listeL[@]}; i++ )); do
+    if [[ "${listeL[i]}" == "${FIRSTUSER[0]}" ]]; then
+      listeL[i]="[${listeL[i]}]"
+    fi
+  done
 
 	if [[ $SERVEURHTTP == "apache2" ]]; then
 	  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
@@ -12,6 +18,17 @@ __listeUtilisateurs() {
 	  listeR=(`cat $REPNGINX/.htpasswdR | awk -F":" '{ print $1 }'`)
 	  listeC=(`cat $REPNGINX/.htpasswdC | awk -F":" '{ print $1 }'`)
 	fi
+	# encadrement utilisateur principal
+  for (( i = 0; i < ${#listeR[@]}; i++ )); do
+    if [[ "${listeR[i]}" == "${FIRSTUSER[1]}" ]]; then
+      listeR[i]="[${listeR[i]}]"
+    fi
+  done
+  for (( i = 0; i < ${#listeC[@]}; i++ )); do
+    if [[ "${listeC[i]}" == "${FIRSTUSER[2]}" ]]; then
+      listeC[i]="[${listeC[i]}]"
+    fi
+  done
 
   if [[ -e /etc/openvpn/easy-rsa/pki/index.txt ]]; then
 		nbrClients=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c "^V")
