@@ -66,7 +66,7 @@ headTest1=`curl -Is http://$IP/info.php | head -n 1`
 headTest2=`curl -Is http://$IP/| head -n 1`
 headTest1=$(echo $headTest1 | awk -F" " '{ print $3 }')
 headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
-if [[ $headTest1 == OK* ]] && [[ $headTest2 == OK* ]]
+if [[ "$headTest1" == OK* ]] && [[ "$headTest2" == OK* ]]
 then
 	echo "***********************************************"
 	echo "|         nginx et php fonctionnent           |"

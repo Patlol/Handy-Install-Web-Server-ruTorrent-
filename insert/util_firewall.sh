@@ -12,7 +12,7 @@ Consulter le wiki :  https://github.com/Patlol/Handy-Install-Web-Server-ruTorren
   exit 1
 fi
 
-# si pas installé, installer
+# ufw si pas installé, installer
 which ufw 2>&1 > /dev/null
 if [ $? != 0 ]; then
 apt-get -yq install ufw

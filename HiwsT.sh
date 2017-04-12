@@ -102,7 +102,7 @@ __saisieTexteBox() {   # param : titre, texte
 		CMD=(dialog --aspect $RATIO --colors --nocancel --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --max-input 15 --inputbox "${2}" 0 0)
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 		if [ $? == 1 ]; then return 1; fi
-		if [[ $__saisieTexteBox =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+		if [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
 			break
 		else
 			__infoBox "Vérification saisie" 3 "
@@ -117,8 +117,8 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
 	until [[ 1 -eq 2 ]]; do
 		CMD=(dialog --aspect $RATIO --colors --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
-		if [[ $reponse =~ .*[[:space:]].*[[:space:]].* ]] || \
-		[[ $reponse =~ [\\] ]]; then
+		if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
+		[[ "$reponse" =~ [\\] ]]; then
       __infoBox "${1}" 2 "
 Le mot de passe ne peut pas contenir d'espace ou de \\."
     else
@@ -205,7 +205,7 @@ Impossible de créer un utilisateur linux"
 			exit 1
 		fi
 		sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu ok, debian ok après reboot
-		echo $userLinux > $REPLANCE/pass1
+		echo $userLinux > $REPLANCE/firstusers
 		break
 	fi
 done
@@ -226,11 +226,11 @@ if [[ $(id -u) -ne 0 ]]; then
 fi
 clear
 # info système
-if [ ! -e $REPLANCE"/pass1" ]; then  # 1ère passe
+if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
 	# installe dialog si pas installé
 	apt-get update
 	which dialog &>/dev/null
-	if [ $? != 0 ]; then
+	if [ $? -ne 0 ]; then
 		apt-get install -yq dialog
 	fi
 	# installe lsb_release si pas installé
@@ -263,7 +263,7 @@ fi
 # portSSH aléatoire
 RANDOM=$$  # N° processus du script
 portSSH=0   #   initialise 20000 65535
-while [ "$portSSH" -le $PLANCHER ]; do
+while [ $portSSH -le $PLANCHER ]; do
   portSSH=$RANDOM
   let "portSSH %= $ECHELLE"  # Ramène $portSSH dans $ECHELLE.
 done
@@ -302,7 +302,7 @@ fi
 #    ID, PW, questions
 #############################
 
-if [ ! -e $REPLANCE"/pass1" ]; then  # 1ère passe
+if [ ! -e "$REPLANCE/firstusers" ]; then  # 1ère passe
 
 	__messageBox "$R Avertissement $N" "
 
@@ -330,7 +330,7 @@ if [ ! -e $REPLANCE"/pass1" ]; then  # 1ère passe
 		len=${#rootDispo}
 		entier=${rootDispo:0:len-1}
 		entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
-	 	if [ "$entier" -lt "$miniDispoRoot" ]; then
+	 	if [ $entier -lt $miniDispoRoot ]; then
 			__infoBox "Avertissement" 4 "
 	$BO $R
 	ATTENTION $N
@@ -341,7 +341,7 @@ if [ ! -e $REPLANCE"/pass1" ]; then  # 1ère passe
 		len=${#homeDispo}
 		entier=${homeDispo:0:len-1}
 		entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
-	 	if [ "$entier" -lt "$miniDispoHome" ];then
+	 	if [ $entier -lt $miniDispoHome ];then
 			__infoBox "Avertissement" 4 "
 	$BO $R
 	ATTENTION $N
@@ -362,7 +362,7 @@ if [ ! -e $REPLANCE"/pass1" ]; then  # 1ère passe
 		chmod u+rwx,g+rx,o+rx $0
 		exit 0
 else   # si 2ème passage
-	userLinux=$(cat pass1)
+	userLinux=$(cat firstusers)
 	REPUL="/home/$userLinux"
 fi  # fin 1ère passe  ----------------------------------------------------------
 ## _____________________________________________________________________________
@@ -440,7 +440,7 @@ Choisir un nom d'utilisateur Cakebox$BO
 	userCake=$__saisieTexteBox
 	__saisiePwBox "Utilisateur Cakebox" "
 Mot de passe pour l'utilisateur $userCake :" 4
-	pwCake=$__saisiePwBox
+	pwCake="$__saisiePwBox"
 fi
 
 
@@ -746,7 +746,7 @@ sleep 1
 
 headTest=`curl -Is http://$IP/rutorrent/| head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ $headTest == Unauthorized* ]]
+if [[ "$headTest" == Unauthorized* ]]
 then
 	echo
 	echo "****************************"
@@ -760,7 +760,7 @@ fi
 
 
 #######################################################
-#   install cakebox and Coinstall cakebox and Co
+#             install cakebox and Co
 #######################################################
 
 if [[ $installCake -eq 0 ]]
@@ -791,8 +791,11 @@ sed -i "s/"$userLinux" ALL=(ALL) NOPASSWD:ALL/"$userLinux" ALL=(ALL:ALL) ALL/" /
 # copie les script dans home
 cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
-chown root:root $REPUL/HiwsT/pass1
-chmod 400 $REPUL/HiwsT/pass1  # r-- --- ---
+# complette firstusers
+echo $userRuto >> $REPUL/HiwsT/firstusers
+echo $userCake >> $REPUL/HiwsT/firstusers
+chown root:root $REPUL/HiwsT/firstusers
+chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
 cp -t $REPUL/HiwsT /tmp/hiwst.log /tmp/trace
 
 

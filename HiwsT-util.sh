@@ -15,8 +15,13 @@ readonly REPNGINX="/etc/nginx"
 readonly REPLANCE=$(echo `pwd`)
 readonly REPInstVpn=$REPLANCE
 SERVEURHTTP=""
-# utilisateur linux principal dans pass1
-readonly firstUserLinux=$(cat pass1)
+# Tableau des utilisateurs principaux 0=linux 1=rutorrent 2=cakebox
+i=0
+while read user; do
+FIRSTUSER[$i]=$user
+  (( i++ ))
+done < $REPLANCE/firstusers
+declare -ar FIRSTUSER
 # dialog param --aspect --colors
 readonly RATIO=12
 readonly R="\Z1"
@@ -70,7 +75,7 @@ __saisieTexteBox() {   # param : titre, texte
 			__listeUtilisateurs
  			# l'appelle de la f() boucle jusqu'à code sortie == 0
 		elif [ $codeRetour == 1 ]; then return 1
-		elif [[ $__saisieTexteBox =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+		elif [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
 			break
 		else
 			__infoBox "Vérification saisie" 3 "
@@ -456,7 +461,7 @@ Saisissez le nom de l'utilisateur :"
 				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
 de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
 				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ $firstUserLinux != $__saisieTexteBox ] && [[ $userC -eq 0 ]]; then
+					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ] && [[ $userC -eq 0 ]]; then
 			    	#  --------------------------------------------------------$ __saisieTexteBox
 						__suppUserRuto $__saisieTexteBox; sleep 2
 						__suppUserCake $__saisieTexteBox; sleep 2
@@ -471,11 +476,11 @@ $__saisieTexteBox$R est l'utilisateur principal"
 				fi
 	      #  -----------------------------------------------------------fin
 			;;
-			2)
+			2)  #   suppression utilisateur Linux/ruto ----------------
 				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
 de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
 				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ $firstUserLinux != $__saisieTexteBox ]; then
+					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
 			    	#  --------------------------------------------------------$ __saisieTexteBox
 						__suppUserRuto $__saisieTexteBox; sleep 2
 						__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
@@ -488,11 +493,11 @@ $__saisieTexteBox$R est l'utilisateur principal"
 					fi
 				fi
 			;;
-			3)
+			3)  #   suppression utilisateur cake ----------------
 				__ouinonBox "Suppression d'un utilisateur Cakebox" "
 Vous confirmez la suppression de $__saisieTexteBox ?"
 				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userC -eq 0 ]] && [ $__saisieTexteBox != $firstUserLinux ]; then
+					if [[ $userC -eq 0 ]] && [ "$__saisieTexteBox" != "${FIRSTUSER[2]}" ]; then
 						__suppUserCake $__saisieTexteBox; sleep 2
 						__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
 Utilisateur$R $__saisieTexteBox$N supprimé"

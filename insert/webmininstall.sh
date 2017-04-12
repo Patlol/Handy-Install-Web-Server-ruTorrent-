@@ -29,7 +29,7 @@ fi
 
 headTest=`curl -Is http://$IP:10000 | head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ $headTest == Document* ]]
+if [[ "$headTest" == Document* ]]
 then
 	echo "******************************"
 	echo "|     WebMin fonctionne      |"

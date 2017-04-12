@@ -19,7 +19,7 @@ __cmd "apt-get install -yq git python-software-properties nodejs npm javascript-
 cd /tmp
 echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php
 sortie=$?
-if [[ $sortie -ne 0 ]]; then
+if [[ "$sortie" -ne 0 ]]; then
 	echo -n "echo $userLinux | sudo -S -u $userLinux curl -sS http://getcomposer.org/installer | php renvoie l'erreur $sortie " >> /tmp/hiwst.log
 	tail --lines=12 /tmp/trace >> /tmp/hiwst.log
 	__msgErreurBox
@@ -59,14 +59,14 @@ fi
 
 echo $userLinux | sudo -S -u $userLinux composer install
 sortie=$?
-if [[ $sortie -ne 0 ]]; then
+if [[ "$sortie" -ne 0 ]]; then
 	echo -n "echo $userLinux | sudo -S -u $userLinux composer install renvoie l'erreur $sortie " >> /tmp/hiwst.log
 	tail --lines=12 /tmp/trace >> /tmp/hiwst.log
 	__msgErreurBox
 fi
 echo $userLinux | sudo -S -u $userLinux bower install
 sortie=$?
-if [[ $sortie -ne 0 ]]; then
+if [[ "$sortie" -ne 0 ]]; then
 	echo -n "echo $userLinux | sudo -S -u $userLinux bower install renvoie l'erreur $sortie " >> /tmp/hiwst.log
 	tail --lines=12 /tmp/trace >> /tmp/hiwst.log
 	__msgErreurBox
@@ -182,7 +182,7 @@ echo
 headTest=`curl -Is http://$IP/cakebox/index.html | head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 # unautorized pour apache, moved pour nginx
-if [[ $headTest == Unauthorized* ]] || [[ $headTest == Moved* ]]
+if [[ "$headTest" == Unauthorized* ]] || [[ "$headTest" == Moved* ]]
 then
 	echo "***************************"
 	echo "|   Cakebox fonctionne    |"
