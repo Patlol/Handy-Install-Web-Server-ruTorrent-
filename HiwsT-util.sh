@@ -628,9 +628,8 @@ __vpn() {
   fi
   wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
   chmod +x $REPLANCE/openvpn-install.sh
-  ERRVPN=0
-  export ERRVPN
-  sed -i "/#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\ncd $REPInstVpn\n$REPInstVpn\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
+  export ERRVPN="" NOMCLIENTVPN=""
+  sed -i "/^#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\nNOMCLIENTVPN=\$CLIENT\ncd $REPInstVpn\n$REPInstVpn\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
 	. $REPLANCE/openvpn-install.sh
 }
 
@@ -734,8 +733,7 @@ done
 ################################################################################
 # #                             Début du script
 ################################################################################
-### Annule le trap de l'installation du VPN
-# trap - EXIT
+
 # root ?
 if [[ $(id -u) -ne 0 ]]; then
 	echo
@@ -777,17 +775,41 @@ fi
 
 ########################################################################
 # gestion de la sortie de openvpn-install.sh
+
 if [[ ! -z "$ERRVPN" && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
   __messageBox "Sortie installation openVPN" "
 Code de Sortie : $ERRVPN
 Il y a eu un problème à l'éxécution de openvpn-install"
-	trap - EXIT
+        trap - EXIT
 elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et non vide
-  __messageBox "Sortie installation openVPN" "
+  # le script d'install copie le fichier *.ovpn dans ~ de l'admin
+  # le déplacer dans le rep de l'utilisateur si existe et lui donner le bon proprio
+  #                      si le compte existe                      et  si l'home a ce nom existe   et  si le compte a été manipulé
+  if [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ -e /home/$NOMCLIENTVPN ]] && [[ ! -z "$NOMCLIENTVPN" ]]; then
+    mv /home/${FIRSTUSER[0]}/$NOMCLIENTVPN.ovpn /home/$NOMCLIENTVPN/
+    chown $NOMCLIENTVPN:$NOMCLIENTVPN /home/$NOMCLIENTVPN/$NOMCLIENTVPN.ovpn
+    ici="/home/$NOMCLIENTVPN"
+  elif [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ ! -z "$NOMCLIENTVPN" ]]; then
+    chown ${FIRSTUSER[0]}:${FIRSTUSER[0]} /home/${FIRSTUSER[0]}/$NOMCLIENTVPN.ovpn
+    ici="/home/${FIRSTUSER[0]}"
+  fi
+
+  # contextualisation du message
+  #                 si le compte existe                           et si le compte a été manipulé
+  if [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ ! -z $NOMCLIENTVPN ]]; then
+    msg="
+Code de Sortie : $ERRVPN
+Sortie nominale de l'exécution de openvpn-install$I
+Le fichier $NOMCLIENTVPN.ovpn est dans le répertoire $ici $N"
+  else  # si le compte n'existe plus ou qu'il n'a pas été manipulé
+    msg="
 Code de Sortie : $ERRVPN
 Sortie nominale de l'exécution de openvpn-install"
-	trap - EXIT
-fi  # code vide veut dire openvpn-install pas exécuté
+  fi
+
+  __messageBox "Sortie installation openVPN" "$msg"
+  trap - EXIT
+fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
 
 __menu
 
