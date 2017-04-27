@@ -677,7 +677,7 @@ unzip -o master.zip
 mv -f ruTorrent-master $REPWEB/rutorrent
 chown -R www-data:www-data $REPWEB/rutorrent
 
-# fichier de config
+# fichier de config config.php générique ( modif dans conf/user/nonuser/)
 mv $REPWEB/rutorrent/conf/config.php $REPWEB/rutorrent/conf/config.php.old
 cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
 chown -R www-data:www-data $REPWEB/rutorrent
@@ -733,7 +733,7 @@ mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
 cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
-sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'$userRuto'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
+sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'$userLinux'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
 chown -R www-data:www-data $REPWEB/rutorrent/conf
 
