@@ -34,6 +34,7 @@ paquetsMediaU="mediainfo ffmpeg"
 upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
 debWebMinU="webmin-current.deb"
 #------------------------------------------------------------------------------
+readonly LANG=fr_FR.UTF-8
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
 readonly REPNGINX="/etc/nginx"
@@ -43,8 +44,8 @@ REPUL=""    # repertoire user Linux
 readonly PORT_SCGI=5000  # port 1er Utilisateur
 readonly PLANCHER=20001  # bas fourchette port ssh
 readonly ECHELLE=65534  # ht de la fourchette
-readonly miniDispoRoot=319   # minimum pour alerete place \
-readonly miniDispoHome=299   # disponible sur disque
+readonly miniDispoRoot=334495744   # 319 Go minimum pour alerete place \
+readonly miniDispoHome=313524224   # 299 Go disponible sur disque
 # dialog param --aspect --colors
 readonly RATIO=12
 readonly R="\Z1"
@@ -225,8 +226,18 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 clear
-# info système
+# localisation et infos système, 1ère passe
 if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
+	# vérifie la localisation (pour debian) et modif
+	if [[ ! `cat /etc/locale.gen | grep ^fr.*` ]]; then
+		echo "Votre systeme a besoin d'etre localise en $LANG"
+		sed -i -e "s/# $LANG UTF-8/$LANG UTF-8/" /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=$LANG && \
+		echo -e "Votre systeme va rebooter. Reconnectez-vous et\nrelancez le script" && \
+    { sleep 2; reboot; } || \
+		{ echo "Probleme avec la localisation en $LANG"; exit 1; }
+	fi
 	# installe dialog si pas installé
 	apt-get update
 	which dialog &>/dev/null
@@ -241,15 +252,16 @@ if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
 fi
 
 arch=$(uname -m)
-interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'  # pas tjs eth0 ...
-IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
+interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'  # pas tjs eth0 ... ou interface=$(ip -o -4 addr | grep $IP | awk '{print $2}')
+# ou ip -o -4 link | grep ether (ou BROADCAST)
+# 2: eth0: <BROADCAST,MULTI ... link/ether fa:1 ...
+readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
 distrib=$(cat /etc/issue | awk -F"\\" '{ print $1 }')
 nameDistrib=$(lsb_release -si)  # Debian ou Ubuntu
 os_version=$(lsb_release -sr)   # 18 , 8.041 ...
 os_version_M=$(echo $os_version | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')  # version majeur
 description=$(lsb_release -sd)     #  nom de code
 user=$(id -un)       #  root avec user sudo
-loguser=$(logname)   #  user avec user sudo
 
 # espace dispo
 homeDispo=$(df -h | grep /home | awk -F" " '{ print $4 }')
@@ -325,7 +337,7 @@ if [ ! -e "$REPLANCE/firstusers" ]; then  # 1ère passe
 	Place disponible sur les partitions du disques$BO
 	Votre partition root (/) a $rootDispo de libre.
 	$info"  # suivant $homeDispo
-
+##########   /!\ 1.7 T < miniDispoRoot miniDispoHome
 	if [ -z "$homeDispo" ]; then  # /
 		len=${#rootDispo}
 		entier=${rootDispo:0:len-1}
@@ -879,6 +891,7 @@ __ouinonBox "Fin d'installation" "Il peut être nécessaire de rebooter pour que
 Voulez-vous rebooter votre serveur maintenat ?"
 if [ $__ouinonBox -eq 0 ]; then
 	__ouinonBox "Fin d'installation" "
+Reboot :
 Etes-vous sûr ?"
 	if [ $__ouinonBox -eq 0 ]; then sleep 2; reboot; fi
 fi
