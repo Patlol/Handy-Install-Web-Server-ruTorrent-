@@ -76,6 +76,7 @@ __saisieTexteBox() {   # param : titre, texte
  			# l'appelle de la f() boucle jusqu'à code sortie == 0
 		elif [ $codeRetour == 1 ]; then return 1
 		elif [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+      __saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
 			__infoBox "Vérification saisie" 3 "
@@ -744,6 +745,7 @@ if [[ $(id -u) -ne 0 ]]; then
 	echo
 	exit 1
 fi
+
 #########################################################################
 # apache vs nginx ?
 service nginx status > /dev/null

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Version 1.0
-# Installation apache2, php, rtorrent, rutorrent, cakebox, WebMin
+# Installation apache2/nginx, php, rtorrent, rutorrent, cakebox, WebMin
 # testée sur ubuntu et debian server vps Ovh
-# à tester sur kimsufi et autres hébergeurs
+# et sur kimsufi. A tester sur autres hébergeurs
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
 
 
@@ -104,6 +104,7 @@ __saisieTexteBox() {   # param : titre, texte
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 		if [ $? == 1 ]; then return 1; fi
 		if [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
+			__saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
 			__infoBox "Vérification saisie" 3 "
@@ -145,7 +146,7 @@ Les 2 saisies ne sont pas identiques."
 
 __textBox() {   # $1 titre  $2 fichier à lire
 	local box
-  CMD=(dialog --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --textbox  "${2}" 0 0)
+  CMD=(dialog --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --exit-label "Suite" --title "${1}" --textbox  "${2}" 0 0)
 	box=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -249,6 +250,10 @@ if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
 	if [ $? -ne 0 ]; then
 		apt-get install -yq lsb-release
 	fi
+	which sudo &>/dev/null
+	if [ $? -ne 0 ]; then
+		apt-get install -yq sudo
+	fi
 fi
 
 arch=$(uname -m)
@@ -264,12 +269,12 @@ description=$(lsb_release -sd)     #  nom de code
 user=$(id -un)       #  root avec user sudo
 
 # espace dispo
-homeDispo=$(df -h | grep /home | awk -F" " '{ print $4 }')
-rootDispo=$(df -h | grep  /$ | awk -F" " '{ print $4 }')
+homeDispo=$(df | grep /home | awk -F" " '{ print $4 }')
+rootDispo=$(df | grep  /$ | awk -F" " '{ print $4 }')
 if [ -z "$homeDispo" ]; then
 	info="Vous n'avez pas de partition /home"
 else
-  info="Votre partition /home a $homeDispo de libre."
+  info="Votre partition /home a $(( $homeDispo/1024/1024 )) Go de libre."
 fi
 
 # portSSH aléatoire
@@ -335,30 +340,24 @@ if [ ! -e "$REPLANCE/firstusers" ]; then  # 1ère passe
 	Durée du script :$N environ 10mn
 
 	Place disponible sur les partitions du disques$BO
-	Votre partition root (/) a $rootDispo de libre.
-	$info"  # suivant $homeDispo
-##########   /!\ 1.7 T < miniDispoRoot miniDispoHome
+	Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
+	$info"  # $info valeur suivant $homeDispo
+
 	if [ -z "$homeDispo" ]; then  # /
-		len=${#rootDispo}
-		entier=${rootDispo:0:len-1}
-		entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
-	 	if [ $entier -lt $miniDispoRoot ]; then
+	 	if [ $rootDispo -lt $miniDispoRoot ]; then
 			__infoBox "Avertissement" 4 "
 	$BO $R
 	ATTENTION $N
 
-	Seulement $R$rootDispo$N, sur / pour stocker les fichiers téléchargés"
+	Seulement $R$(( $rootDispo/1024/1024 )) Go$N, sur / pour stocker les fichiers téléchargés"
 		fi
 	else  # /home
-		len=${#homeDispo}
-		entier=${homeDispo:0:len-1}
-		entier=$(echo $entier | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')
-	 	if [ $entier -lt $miniDispoHome ];then
+	 	if [ $homeDispo -lt $miniDispoHome ];then
 			__infoBox "Avertissement" 4 "
 	$BO $R
 	ATTENTION $N
 
-	Seulement $R$homeDispo$N, sur /home pour stocker les fichiers téléchargés"
+	Seulement $R$(( $homeDispo/1024/1024 )) Go$N, sur /home pour stocker les fichiers téléchargés"
 		fi
 	fi
 
@@ -499,9 +498,9 @@ Votre host name : $HOSTNAME
 then
 	echo "Vous n'avez pas de partition /home."
 else
-	echo "Votre partition /home a $homeDispo de libre."
+	echo "Votre partition /home a $(( $homeDispo/1024/1024 )) Go de libre."
 fi`
-Votre partition root (/) a $rootDispo de libre.
+Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
 Votre serveur http est $serveurHttp
 
 Nom de votre utilisateur accès SSH et SFTP : $userSSH
