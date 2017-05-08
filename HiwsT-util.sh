@@ -14,10 +14,12 @@ readonly REPAPA2="/etc/apache2"
 readonly REPNGINX="/etc/nginx"
 readonly REPLANCE=$(echo `pwd`)
 readonly REPInstVpn=$REPLANCE
+readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
+readonly HOSTNAME=$(hostname -f)
 SERVEURHTTP=""
 # Tableau des utilisateurs principaux 0=linux 1=rutorrent 2=cakebox
 i=0
-while read user; do
+while read user; do  # [0]=linux, [1]=ruTorrent, [2]=Cakebox
 FIRSTUSER[$i]=$user
   (( i++ ))
 done < $REPLANCE/firstusers
@@ -52,7 +54,7 @@ __messageBox() {   # param : titre texte
 
 __infoBox() {   # param : titre sleep texte
 			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
-			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+			("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __msgErreurBox() {
@@ -87,7 +89,7 @@ Entre 2 et 15 caractères"
 }
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
-  local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
+  local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ 1 -eq 2 ]]; do
 		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
@@ -111,6 +113,32 @@ Le mot de passe ne peut pas être vide."
 				* )
 					__infoBox "${1}" 2 "
 Les 2 saisies ne sont pas identiques."
+				;;
+			esac
+		fi
+	done
+}
+
+__saisieIdPwBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
+  # saise du mot de passe pour un utilisateur donné dans le texte $2
+  local reponse=""
+	until [[ 1 -eq 2 ]]; do
+		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --nocancel --insecure --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 20 25 25 )
+		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+
+    if [[ `echo $reponse | grep -Ec ".*[[:space:]].*"` -ne 0 ]] ||\
+      [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
+      __infoBox "${1}" 2 "
+Le mot de passe ne peut pas contenir d'espace ou de \\."
+    else
+			case $reponse in
+				"" )
+					__infoBox "${1}" 2 "
+Le mot de passe ne peut pas être vide."
+				;;
+				* )
+					__saisieIdPwBox=$reponse
+					break
 				;;
 			esac
 		fi
@@ -644,16 +672,17 @@ until [[ 1 -eq 2 ]]; do
 
  A utiliser après une installation réalisée avec HiwsT
 
- Votre choix :" 22 70 9 \
+ Votre choix :" 22 70 10 \
 	1 "Ajouter un utilisateur" \
 	2 "Modifier un mot de passe utilisateur" \
 	3 "Supprimer un utilisateur" \
 	4 "Lister les utilisateurs existants" \
 	5 "Installer/déinstaller OpenVPN, utilisateurs openVPN" \
-	6 "Firewall" \
-	7 "Relancer rtorrent manuellement" \
-	8 "Diagnostique" \
-	9 "Rebooter le serveur")
+  6 "Installation de ownCloud (apache2)" \
+	7 "Firewall" \
+	8 "Relancer rtorrent manuellement" \
+	9 "Diagnostique" \
+	10 "Rebooter le serveur")
 
 	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
@@ -692,7 +721,20 @@ until [[ 1 -eq 2 ]]; do
 				----------------------------------------------------------------------$N" 22 100
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
-			6 )  #####################  firewall  ############################
+      6 )  ###################### ownCloud #############################
+        __saisieIdPwBox "Installation d'ownCloud" "Saise du mot de passe de l'utilisateur principal Linux : $R${FIRSTUSER[0]}$N$BO
+        Ce mot de passe n'est pas conservé par le script$N" "3"
+
+        . $REPLANCE/insert/util_owncloud.sh
+
+        __messageBox "Fin d'installation d'ownCloud" "Installation treminée.
+Paramétrage sur http:// ou https://
+$HOSTNAME/owncloud ou $IP/owncloud$BO
+
+Compte admin : utilisatreur et PW idem utilisateur principal Linux : ${FIRSTUSER[0]}
+Storage & database : utiliser MySQL/MariaDB, User et PW : ${FIRSTUSER[0]}"
+      ;;
+			7 )  #####################  firewall  ############################
 				__messageBox "Firewall et ufw" "
 
 
@@ -700,7 +742,7 @@ until [[ 1 -eq 2 ]]; do
 
 				. $REPLANCE/insert/util_firewall.sh
 			;;
-			7 )  ########################  Relance rtorrent  ######################
+			8 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
 
 			 	  Relance
@@ -711,10 +753,10 @@ until [[ 1 -eq 2 ]]; do
 				service rtorrentd status
 				sleep 3
 			;;
-			8 )  ################# Diagnostiques ###############################
+			9 )  ################# Diagnostiques ###############################
 				. $REPLANCE/insert/util_diag.sh
 			;;
-			9 )  ###########################  REBOOT  #######################
+			10 )  ###########################  REBOOT  #######################
 				__ouinonBox "$R $BO Reboot système$N"
 				if [[ $__ouinonBox -eq 0 ]]; then
 					clear
