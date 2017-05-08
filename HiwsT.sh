@@ -170,13 +170,13 @@ __cmd() {
   fi
 }
 __serviceapache2restart() {
-service apache2 restart
-__cmd "service apache2 status"
+	service apache2 restart
+	__cmd "service apache2 status"
 }   #  fin __serviceapache2restart()
 
 __servicenginxrestart() {
-service nginx restart
-__cmd "service nginx status"
+	service nginx restart
+	__cmd "service nginx status"
 }  #  fin de __servicenginxrestart
 
 #####################################
@@ -799,15 +799,17 @@ fi   # Webmin
 # remettre sudoers en ordre
 sed -i "s/"$userLinux" ALL=(ALL) NOPASSWD:ALL/"$userLinux" ALL=(ALL:ALL) ALL/" /etc/sudoers
 
-# copie les script dans home
+# copie les scripts dans home
 cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
-# complette firstusers
+# complète firstusers
 echo $userRuto >> $REPUL/HiwsT/firstusers
 echo $userCake >> $REPUL/HiwsT/firstusers
 chown root:root $REPUL/HiwsT/firstusers
 chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
+# copie dans $REPUL/HiwsT les fichiers log et trace
 cp -t $REPUL/HiwsT /tmp/hiwst.log /tmp/trace
+rm -r $REPLANCE
 
 
 
