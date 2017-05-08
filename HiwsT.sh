@@ -409,7 +409,7 @@ CMD=(dialog --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --
 
 Quel serveur http souhaitez-vous installer ?" 0 0 2 \
 1 "utiliser nginx"
-2 "utiliser Apache2")
+2 "utiliser Apache2 (recommandé pour Cakebox)")
 
 choix=$("${CMD[@]}" 2>&1 > /dev/tty)
 if [[ $? -eq 0 ]]; then
