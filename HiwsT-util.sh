@@ -23,8 +23,9 @@ while read user; do  # [0]=linux, [1]=ruTorrent, [2]=Cakebox
 FIRSTUSER[$i]=$user
   (( i++ ))
 done < $REPLANCE/firstusers
-declare -ar FIRSTUSER
-# dialog param --aspect --colors
+declare -ar FIRSTUSER  # -r readonly
+readonly REPUL="/home/${FIRSTUSER[0]}"
+# dialog param --backtitle --aspect --colors
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -119,30 +120,43 @@ Les 2 saisies ne sont pas identiques."
 	done
 }
 
-__saisieIdPwBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
-  # saise du mot de passe pour un utilisateur donné dans le texte $2
-  local reponse=""
-	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --nocancel --insecure --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 20 25 25 )
-		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+__saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
+  __helpOC() {
+    dialog --backtitle "$TITRE" --title "Aide ownCloud" --exit-label "Retour saisie" --textbox  "insert/helpOC" "51" "71"
+  }
 
-    if [[ `echo $reponse | grep -Ec ".*[[:space:]].*"` -ne 0 ]] ||\
-      [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
-      __infoBox "${1}" 2 "
-Le mot de passe ne peut pas contenir d'espace ou de \\."
+  # saise du mot de passe pour un utilisateur donné dans le texte $2
+  local reponse="" codeRetour="" nbrItem="" nbrEspace=""
+  pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""
+	until [[ 1 -eq 2 ]]; do
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --form "${2}" 0 0 ${3} "Utilisateur Linux       :" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 "PW utilisateur Linux    :" 3 2 "$pwFirstuser" 3 28 16 15
+    "Admin Base de Données OC: " 5 2 "$userBdD" 5 28 16 15 "Mot de passe Admin BdD  : " 7 2 "$pwBdD" 7 28 16 15 "Taille max des fichiers :" 9 2 "$fileSize" 9 28 6 5 "Stockage externe [O/N]  : " 11 2 "$addStorage" 11 28 2 1 "Installation AudioPlayer:" 13 2 "$addAudioPlayer" 13 28 2 1)
+		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+    codeRetour=$?
+    nbrItem=$(echo $reponse | grep -o '\\' | wc -l)  # -o occurence
+    nbrEspace=$(echo $reponse | grep [[:space:]] | wc -l) # =1 si 1 ou +ieurs espaces trouvés (1 ligne)
+
+    # bouton "Aide" (help) renvoie code sortie 2 ou les 3 champs n'ont pas été remplis (si nbr d'items >3 il y a des "\" dans la saisie, le séparateur étant "\") ou des espaces ont été saisie
+		if [[ $codeRetour == 2 ]] || [[ $nbrItem -ne 6 ]] || [[ $nbrEspace -ne 0 ]]; then
+      __helpOC
     else
-			case $reponse in
-				"" )
-					__infoBox "${1}" 2 "
-Le mot de passe ne peut pas être vide."
-				;;
-				* )
-					__saisieIdPwBox=$reponse
-					break
-				;;
-			esac
-		fi
-	done
+      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
+      pwFirstuser=$(echo $reponse | awk -F"\\" '{ print $1 }')
+      userBdD=$(echo $reponse | awk -F"\\" '{ print $2 }')
+      pwBdD=$(echo $reponse | awk -F"\\" '{ print $3 }')
+      fileSize=$(echo $reponse | awk -F"\\" '{ print $4 }')
+      addStorage=$(echo $reponse | awk -F"\\" '{ print $5 }')
+      addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $6 }')
+      if [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] || [[ $userBdD == "" ]] || \
+        [[ $pwFirstuser == "" ]] || [[ $pwBdD == "" ]] || \
+        [[ ! $addStorage =~ ^[oONn]$ ]] || [[ ! $addAudioPlayer =~ ^[oONn]$ ]]; then
+        __helpOC
+      else
+        # renvoie pwFirstuser; userBdD; pwBdD; fileSize; addStorage; addAudioPlayer
+        break
+      fi
+    fi
+  done
 }
 
 ################################################################################
@@ -722,17 +736,29 @@ until [[ 1 -eq 2 ]]; do
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
       6 )  ###################### ownCloud #############################
-        __saisieIdPwBox "Installation d'ownCloud" "Saise du mot de passe de l'utilisateur principal Linux : $R${FIRSTUSER[0]}$N$BO
-        Ce mot de passe n'est pas conservé par le script$N" "3"
+        __saisieOCBox "Paramétrage ownCloud" $R"Consultez l'aide$N" 13
 
         . $REPLANCE/insert/util_owncloud.sh
-
+        varLocalhost="localhost"  # pour $I$varLocalhost dans __messageBox
+        varOwnCloud="owncloud"
         __messageBox "Fin d'installation d'ownCloud" "Installation treminée.
-Paramétrage sur http:// ou https://
-$HOSTNAME/owncloud ou $IP/owncloud$BO
+Retrouvez ownCloud sur https://$HOSTNAME/owncloud ou
+https://$IP/owncloud
+Accepter la connexion non sécurisée et l'exception pour ce certificat !
 
-Compte admin : utilisatreur et PW idem utilisateur principal Linux : ${FIRSTUSER[0]}
-Storage & database : utiliser MySQL/MariaDB, User et PW : ${FIRSTUSER[0]}"
+${BO}Notez que $N $I${FIRSTUSER[0]}$N$BO et son mot de passe est votre compte et le compte administrateur d'ownCloud.
+La base de données mysql $varOwnCloud a comme administrateur$N $I$userBdD$N
+
+Ces informations sont ajoutées au fichier $REPUL/HiwsT/RecapInstall.txt"
+        cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+
+Pour accéder a votre cloud privé :
+  https://$HOSTNAME/owncloud ou $IP/owncloud
+  Utilisateur (et administrateur) : ${FIRSTUSER[0]}
+  Mot de passe : $pwFirstuser
+  Administrateur de la base de donnée OC : $userBdD
+  Mot de passe : $pwBdD
+EOF
       ;;
 			7 )  #####################  firewall  ############################
 				__messageBox "Firewall et ufw" "
@@ -773,10 +799,10 @@ done
 }   # fin menu
 
 ################################################################################
-# #                             Début du script
+##                              Début du script
 ################################################################################
-
 # root ?
+
 if [[ $(id -u) -ne 0 ]]; then
 	echo
 	echo "Ce script nécessite d'être exécuté avec sudo."
@@ -786,8 +812,9 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 
-#########################################################################
+################################################################################
 # apache vs nginx ?
+
 service nginx status > /dev/null
 sortieN=$?
 service apache2 status > /dev/null
@@ -815,7 +842,11 @@ else
 fi
 . $REPLANCE/insert/util_listeusers.sh
 
-########################################################################
+################################################################################
+#  debian ou ubuntu ?  pour ownCloud
+nameDistrib=$(lsb_release -si)  # "Debian" ou "Ubuntu"
+
+################################################################################
 # gestion de la sortie de openvpn-install.sh
 
 if [[ ! -z "$ERRVPN" && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
@@ -836,22 +867,25 @@ elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et n
     ici="/home/${FIRSTUSER[0]}"
   fi
 
-  # contextualisation du message
+  # contextualisation du message dans __messageBox
   #                 si le compte existe                           et si le compte a été manipulé
   if [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ ! -z $NOMCLIENTVPN ]]; then
     msg="
 Code de Sortie : $ERRVPN
-Sortie nominale de l'exécution de openvpn-install$I
+Exécution nominale de openvpn-install$I
 Le fichier $NOMCLIENTVPN.ovpn est dans le répertoire $ici $N"
   else  # si le compte n'existe plus ou qu'il n'a pas été manipulé
     msg="
 Code de Sortie : $ERRVPN
-Sortie nominale de l'exécution de openvpn-install"
+Exécution nominale de openvpn-install"
   fi
 
   __messageBox "Sortie installation openVPN" "$msg"
   trap - EXIT
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
+
+################################################################################
+#  boucle menu / sortie
 
 __menu
 
