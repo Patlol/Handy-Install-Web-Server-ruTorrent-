@@ -26,6 +26,7 @@ done < $REPLANCE/firstusers
 declare -ar FIRSTUSER  # -r readonly
 readonly REPUL="/home/${FIRSTUSER[0]}"
 # dialog param --backtitle --aspect --colors
+readonly TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN - ownCloud"
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -42,19 +43,19 @@ readonly N="\Zn"   # retour à la normale
 ########################################
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox 0 ou 1
-	CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}"  --yesno "
+	CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}"  --yesno "
 ${2}" 0 0 )
 	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	__ouinonBox=$?
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __infoBox() {   # param : titre sleep texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
 			("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -70,7 +71,7 @@ __msgErreurBox() {
 __saisieTexteBox() {   # param : titre, texte
 	local codeRetour=""
 	until [[ 1  -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 		codeRetour=$?
 
@@ -92,7 +93,7 @@ Entre 2 et 15 caractères"
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
     if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
@@ -227,7 +228,7 @@ if [[ $? -eq 0 ]]; then
 	echo "Daemon rtorrent modifié et fonctionne."
 	echo
 else
-	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	exit 1
 fi
@@ -301,7 +302,7 @@ __ssmenuAjoutUtilisateur() {
 local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Ajouter un utilisateur" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Ajouter un utilisateur" --menu "
 
 - Un utilisateur ruTorrent ne peut être créé qu'avec un utilisateur Linux
 - Un utilisateur Cakebox ne peut être crtéé que si un homonyme ruTorrent existe déjà ou est créé dans la foulée
@@ -439,7 +440,7 @@ if [[ $? -eq 0 ]]; then
 	echo "rtorrent en daemon modifié et fonctionne."
 	echo
 else
-	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	__msgErreurBox
 fi
@@ -473,7 +474,7 @@ __ssmenuSuppUtilisateur() {
 local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
+	CMD=(dialog --backtitle "$TITRE" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
 
 - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
 le sera aussi.
@@ -571,7 +572,7 @@ __changePW() {
 local typeUser=""; local user=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Changer un mot de passe utilisateur" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Changer un mot de passe utilisateur" --menu "
 
 
 
@@ -682,7 +683,7 @@ __vpn() {
 __menu() {
 choixMenu=""
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Menu principal" --cancel-label "Quitter" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Menu principal" --cancel-label "Quitter" --menu "
 
  A utiliser après une installation réalisée avec HiwsT
 
@@ -701,13 +702,13 @@ until [[ 1 -eq 2 ]]; do
 	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
 		case $choixMenu in
-			1 )  ################ ajout user  ################################
+			1 )  ################ ajouter user  ################################
 				__ssmenuAjoutUtilisateur
 			;;
 			2 )
 				__changePW
 			;;
-			3 ) ################# supp utilisateur  ############################
+			3 ) ################# supprimer utilisateur  ############################
 				__ssmenuSuppUtilisateur
 			;;
 			4 )  ################# liste utilisateurs #######################
