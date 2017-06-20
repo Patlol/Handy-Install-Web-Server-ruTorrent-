@@ -46,7 +46,8 @@ readonly PLANCHER=20001  # bas fourchette port ssh
 readonly ECHELLE=65534  # ht de la fourchette
 readonly miniDispoRoot=334495744   # 319 Go minimum pour alerete place \
 readonly miniDispoHome=313524224   # 299 Go disponible sur disque
-# dialog param --aspect --colors
+# dialog param --backtitle --aspect --colors
+readonly TITRE="HiwsT : Installation rtorrent - ruTorrent - Cakebox"
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -68,19 +69,19 @@ __trap() {  # pour exit supprime NOPASSWD et info.php
 }
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 1
-	CMD=(dialog --aspect $RATIO --colors --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}"  --yesno "
+	CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}"  --yesno "
 ${2}" 0 0 )
 	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	__ouinonBox=$?
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __infoBox() {   # param : titre sleep texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -100,7 +101,7 @@ Voulez-vous continuer malgré tout ?"
 
 __saisieTexteBox() {   # param : titre, texte
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --nocancel --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --max-input 15 --inputbox "${2}" 0 0)
+		CMD=(dialog --aspect $RATIO --colors --nocancel --backtitle "$TITRE" --title "${1}" --max-input 15 --inputbox "${2}" 0 0)
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 		if [ $? == 1 ]; then return 1; fi
 		if [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
@@ -117,7 +118,7 @@ Entre 2 et 15 caractères"
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 		if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
 		[[ "$reponse" =~ [\\] ]]; then
@@ -144,10 +145,9 @@ Les 2 saisies ne sont pas identiques."
 	done
 }
 
-__textBox() {   # $1 titre  $2 fichier à lire
-	local box
-  CMD=(dialog --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --exit-label "Suite" --title "${1}" --textbox  "${2}" 0 0)
-	box=$("${CMD[@]}" 2>&1 >/dev/tty)
+__textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
+  CMD=(dialog --backtitle "$TITRE" --exit-label "Suite de l'installation" --title "${1}" --hline "${3}" --textbox  "${2}" 0 0)
+	("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __cmd() {
@@ -183,7 +183,7 @@ __servicenginxrestart() {
 ##    Fonctions principales
 #####################################
 
-__creauser() {
+__creauser() {    # création utilisateur principal linux
 until [[ 1 -eq 2 ]]; do
 	__saisieTexteBox "Utilisateur Linux" "
 Vous devez créer un utilisateur spécifique
@@ -214,9 +214,9 @@ done
 }  # __creauser
 
 
-#############################
-#     Début du script
-#############################
+###############################################################
+#                Début du script                              #
+###############################################################
 
 # root ?
 
@@ -227,18 +227,43 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 clear
+
 # localisation et infos système, 1ère passe
 if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
 	# vérifie la localisation (pour debian) et modif
-	if [[ ! `cat /etc/locale.gen | grep ^fr.*` ]]; then
-		echo "Votre systeme a besoin d'etre localise en $LANG"
-		sed -i -e "s/# $LANG UTF-8/$LANG UTF-8/" /etc/locale.gen && \
-    dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=$LANG && \
-		echo -e "Votre systeme va rebooter. Reconnectez-vous et\nrelancez le script" && \
-    { sleep 2; reboot; } || \
-		{ echo "Probleme avec la localisation en $LANG"; exit 1; }
-	fi
+	# if [[ ! `cat /etc/locale.gen | egrep ^[a-z].*UTF-8$` ]]; then
+	# if [[ ! `echo "é" | xxd |  awk -F" " '{ print $2 }'` != "c3a9"]]; then
+	# é return => é: command not found => ok \udcc3\udca9:  command not found pas ok
+	# export LC_ALL=en_US.UTF-8; unset LC_ALL # a la fin + rétablir les valeurs d'origine ?
+	#
+	# if [[ ! `cat /etc/locale.gen | grep ^fr.*` ]]; then
+	# 	echo "Votre systeme a besoin d'etre localise en $LANG"
+	# 	sed -i -e "s/# $LANG UTF-8/$LANG UTF-8/" /etc/locale.gen && \
+  #   dpkg-reconfigure --frontend=noninteractive locales && \
+  #   update-locale LANG=$LANG && locale-gen \
+	# 	&& {
+	# 		echo
+	# 		echo -e "Votre systeme va rebooter. Reconnectez-vous et\nrelancez le script"
+	#     sleep 2
+	# 		reboot
+	# 	} \
+	# 	|| {
+	# 		echo
+	# 		echo "Probleme avec la localisation en $LANG"
+	# 		exit 1
+	# 	}
+	# fi
+	# Complèter la localisation (vps)
+	lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{print $1 }')
+	export LANGUAGE=$lang
+	export LANG=$lang
+	export LC_ALL=$lang
+	update-locale LANGUAGE=$lang
+	update-locale LANG=$lang
+	update-locale LC_ALL=$lang
+	dpkg-reconfigure --frontend=noninteractive locales
+	locale-gen
+
 	# installe dialog si pas installé
 	apt-get update
 	which dialog &>/dev/null
@@ -250,6 +275,7 @@ if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
 	if [ $? -ne 0 ]; then
 		apt-get install -yq lsb-release
 	fi
+	# installe sudo si pas installé
 	which sudo &>/dev/null
 	if [ $? -ne 0 ]; then
 		apt-get install -yq sudo
@@ -257,7 +283,8 @@ if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
 fi
 
 arch=$(uname -m)
-interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'  # pas tjs eth0 ... ou interface=$(ip -o -4 addr | grep $IP | awk '{print $2}')
+interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'
+# pas tjs eth0 ... ou interface=$(ip -o -4 addr | grep $IP | awk '{print $2}')
 # ou ip -o -4 link | grep ether (ou BROADCAST)
 # 2: eth0: <BROADCAST,MULTI ... link/ether fa:1 ...
 readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
@@ -341,7 +368,7 @@ if [ ! -e "$REPLANCE/firstusers" ]; then  # 1ère passe
 
 	Place disponible sur les partitions du disques$BO
 	Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
-	$info"  # $info valeur suivant $homeDispo
+	$info"  # $info valeur suivant $homeDispo cf. # espace dispo
 
 	if [ -z "$homeDispo" ]; then  # /
 	 	if [ $rootDispo -lt $miniDispoRoot ]; then
@@ -368,6 +395,7 @@ if [ ! -e "$REPLANCE/firstusers" ]; then  # 1ère passe
 		__messageBox "Fin 1ère partie" "
 	Relancer le script : $BO
 	su $userLinux
+	bash $N # dans certains cas pour récupérer le prompt $BO
 	cd $REPLANCE
 	sudo ./`basename $0`"
 		chmod u+rwx,g+rx,o+rx $0
@@ -405,7 +433,7 @@ Si vous continuez ce script, la configuration existante va être remplacée par 
 	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
 fi
 
-CMD=(dialog --backtitle "HiwsT : Installation rtorrent - ruTorrent - Cakebox" --title "Serveur http" --menu "
+CMD=(dialog --backtitle "$TITRE" --title "Serveur http" --menu "
 
 Quel serveur http souhaitez-vous installer ?" 0 0 2 \
 1 "utiliser nginx"
@@ -486,7 +514,6 @@ fi
 #  Récapitulatif
 cat << EOF > $REPUL/RecapInstall.txt
 
-Les information suivantes sont sauvegardées dans le fichier $REPUL/RecapInstall.txt
 Ces informations seront utilisables seulement après la bonne exécution du script.
 
 Distribution    : $description
@@ -819,7 +846,14 @@ rm -r $REPLANCE
 
 cat << EOF > $REPUL/HiwsT/RecapInstall.txt
 
-Les information suivantes sont sauvegardées dans le fichier $REPUL/HiwsT/RecapInstall.txt
+Votre système
+
+	Distribution    : $description
+	Architecture    : $arch
+	Votre IP        : $IP
+	Votre host name : $HOSTNAME
+
+	Nom de votre utilisateur Linux : $userLinux
 
 Pour accéder à ruTorrent :
 	http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
@@ -887,16 +921,18 @@ EOF
 
 # efface la récap 1ère passe
 rm $REPUL/RecapInstall.txt
-__textBox "Récapitulatif de  l'installation" $REPUL/HiwsT/RecapInstall.txt
-__ouinonBox "Fin d'installation" "Il peut être nécessaire de rebooter pour que tout fonctionne à 100%.
+chmod 400 $REPUL/HiwsT/RecapInstall.txt
+__textBox "Récapitulatif de  l'installation" $REPUL/HiwsT/RecapInstall.txt "Informations sauvegardées dans le fichier RecapInstall.txt"
+__ouinonBox "Fin d'installation" "Utiliser HiwsT-util.sh pour toutes modifications
+Il peut être nécessaire de rebooter pour que tout fonctionne à 100%.
 Voulez-vous rebooter votre serveur maintenat ?"
 if [ $__ouinonBox -eq 0 ]; then
-	__ouinonBox "Fin d'installation" "
-Reboot :
+	__ouinonBox "Fin d'installation" "Reboot :
 Etes-vous sûr ?"
-	if [ $__ouinonBox -eq 0 ]; then sleep 2; reboot; fi
+	if [ $__ouinonBox -eq 0 ]; then rm -r $REPLANCE; sleep 1; reboot; fi
 fi
 clear
 echo
 echo "Au revoir"
 echo
+rm -r $REPLANCE

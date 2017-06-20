@@ -22,11 +22,13 @@ echo
 echo "-------------------------------------------------------------------------------"
 echo "firewall : ufw show listening"
 echo "-----------------------------"
-ufw show listening
+ufw show listening 2>/dev/null
+[[ $? -ne 0 ]] && echo "ufw n'est pas installé"
 echo "-------------------------------------------------------------------------------"
 echo "firewall : ufw status verbose"
 echo "-----------------------------"
-ufw status verbose
+ufw status verbose 2>/dev/null
+[[ $? -ne 0 ]] && echo "ufw n'est pas installé"
 echo "-------------------------------------------------------------------------------"
 if [[ $SERVEURHTTP == "apache2" ]]; then
   echo "apache2 :"
@@ -39,6 +41,15 @@ else
   service nginx status
   echo
 fi
+echo "-------------------------------------------------------------------------------"
+echo "php-fpm :"
+echo "---------"
+if [[ $nameDistrib == "Ubuntu" ]]; then
+  service php7.0-fpm status
+else
+  service php5-fpm status
+fi
+echo
 echo "-------------------------------------------------------------------------------"
 echo "sshd :"
 echo "------"

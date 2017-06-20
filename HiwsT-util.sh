@@ -14,15 +14,23 @@ readonly REPAPA2="/etc/apache2"
 readonly REPNGINX="/etc/nginx"
 readonly REPLANCE=$(echo `pwd`)
 readonly REPInstVpn=$REPLANCE
+readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
+readonly HOSTNAME=$(hostname -f)
 SERVEURHTTP=""
 # Tableau des utilisateurs principaux 0=linux 1=rutorrent 2=cakebox
+if [[ ! -e $REPLANCE/firstusers ]]; then
+  echo "Le fichier \"firstusers\" n'est pas disponible"
+  exit 2
+fi
 i=0
-while read user; do
-FIRSTUSER[$i]=$user
+while read user; do  # [0]=linux, [1]=ruTorrent, [2]=Cakebox
+  FIRSTUSER[$i]=$user
   (( i++ ))
 done < $REPLANCE/firstusers
-declare -ar FIRSTUSER
-# dialog param --aspect --colors
+declare -ar FIRSTUSER  # -r readonly
+readonly REPUL="/home/${FIRSTUSER[0]}"
+# dialog param --backtitle --aspect --colors
+readonly TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN - ownCloud"
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -39,20 +47,20 @@ readonly N="\Zn"   # retour à la normale
 ########################################
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox 0 ou 1
-	CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}"  --yesno "
+	CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}"  --yesno "
 ${2}" 0 0 )
 	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	__ouinonBox=$?
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __infoBox() {   # param : titre sleep texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
-			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
+			("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
 __msgErreurBox() {
@@ -67,7 +75,7 @@ __msgErreurBox() {
 __saisieTexteBox() {   # param : titre, texte
 	local codeRetour=""
 	until [[ 1  -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 		codeRetour=$?
 
@@ -87,9 +95,9 @@ Entre 2 et 15 caractères"
 }
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
-  local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
+  local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
     if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
@@ -115,6 +123,45 @@ Les 2 saisies ne sont pas identiques."
 			esac
 		fi
 	done
+}
+
+__saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
+  __helpOC() {
+    dialog --backtitle "$TITRE" --title "Aide ownCloud" --exit-label "Retour saisie" --textbox  "insert/helpOC" "51" "71"
+  }
+
+  # saise du mot de passe pour un utilisateur donné dans le texte $2
+  local reponse="" codeRetour="" nbrItem="" nbrEspace=""
+  pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""
+	until [[ 1 -eq 2 ]]; do
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --form "${2}" 0 0 ${3} "Utilisateur Linux       :" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 "PW utilisateur Linux    :" 3 2 "$pwFirstuser" 3 28 16 15
+    "Admin Base de Données OC: " 5 2 "$userBdD" 5 28 16 15 "Mot de passe Admin BdD  : " 7 2 "$pwBdD" 7 28 16 15 "Taille max des fichiers :" 9 2 "$fileSize" 9 28 6 5 "Stockage externe [O/N]  : " 11 2 "$addStorage" 11 28 2 1 "Installation AudioPlayer:" 13 2 "$addAudioPlayer" 13 28 2 1)
+		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+    codeRetour=$?
+    nbrItem=$(echo $reponse | grep -o '\\' | wc -l)  # -o occurence
+    nbrEspace=$(echo $reponse | grep [[:space:]] | wc -l) # =1 si 1 ou +ieurs espaces trouvés (1 ligne)
+
+    # bouton "Aide" (help) renvoie code sortie 2 ou les 3 champs n'ont pas été remplis (si nbr d'items >3 il y a des "\" dans la saisie, le séparateur étant "\") ou des espaces ont été saisie
+		if [[ $codeRetour == 2 ]] || [[ $nbrItem -ne 6 ]] || [[ $nbrEspace -ne 0 ]]; then
+      __helpOC
+    else
+      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
+      pwFirstuser=$(echo $reponse | awk -F"\\" '{ print $1 }')
+      userBdD=$(echo $reponse | awk -F"\\" '{ print $2 }')
+      pwBdD=$(echo $reponse | awk -F"\\" '{ print $3 }')
+      fileSize=$(echo $reponse | awk -F"\\" '{ print $4 }')
+      addStorage=$(echo $reponse | awk -F"\\" '{ print $5 }')
+      addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $6 }')
+      if [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] || [[ $userBdD == "" ]] || \
+        [[ $pwFirstuser == "" ]] || [[ $pwBdD == "" ]] || \
+        [[ ! $addStorage =~ ^[oONn]$ ]] || [[ ! $addAudioPlayer =~ ^[oONn]$ ]]; then
+        __helpOC
+      else
+        # renvoie pwFirstuser; userBdD; pwBdD; fileSize; addStorage; addAudioPlayer
+        break
+      fi
+    fi
+  done
 }
 
 ################################################################################
@@ -185,7 +232,7 @@ if [[ $? -eq 0 ]]; then
 	echo "Daemon rtorrent modifié et fonctionne."
 	echo
 else
-	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	exit 1
 fi
@@ -259,7 +306,7 @@ __ssmenuAjoutUtilisateur() {
 local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Ajouter un utilisateur" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Ajouter un utilisateur" --menu "
 
 - Un utilisateur ruTorrent ne peut être créé qu'avec un utilisateur Linux
 - Un utilisateur Cakebox ne peut être crtéé que si un homonyme ruTorrent existe déjà ou est créé dans la foulée
@@ -397,7 +444,7 @@ if [[ $? -eq 0 ]]; then
 	echo "rtorrent en daemon modifié et fonctionne."
 	echo
 else
-	dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	__msgErreurBox
 fi
@@ -431,7 +478,7 @@ __ssmenuSuppUtilisateur() {
 local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
+	CMD=(dialog --backtitle "$TITRE" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
 
 - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
 le sera aussi.
@@ -529,7 +576,7 @@ __changePW() {
 local typeUser=""; local user=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Changer un mot de passe utilisateur" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Changer un mot de passe utilisateur" --menu "
 
 
 
@@ -640,31 +687,32 @@ __vpn() {
 __menu() {
 choixMenu=""
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Menu principal" --cancel-label "Quitter" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Menu principal" --cancel-label "Quitter" --menu "
 
  A utiliser après une installation réalisée avec HiwsT
 
- Votre choix :" 22 70 9 \
+ Votre choix :" 22 70 10 \
 	1 "Ajouter un utilisateur" \
 	2 "Modifier un mot de passe utilisateur" \
 	3 "Supprimer un utilisateur" \
 	4 "Lister les utilisateurs existants" \
 	5 "Installer/déinstaller OpenVPN, utilisateurs openVPN" \
-	6 "Firewall" \
-	7 "Relancer rtorrent manuellement" \
-	8 "Diagnostique" \
-	9 "Rebooter le serveur")
+  6 "Installation de ownCloud" \
+	7 "Firewall" \
+	8 "Relancer rtorrent manuellement" \
+	9 "Diagnostique" \
+	10 "Rebooter le serveur")
 
 	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
 		case $choixMenu in
-			1 )  ################ ajout user  ################################
+			1 )  ################ ajouter user  ################################
 				__ssmenuAjoutUtilisateur
 			;;
 			2 )
 				__changePW
 			;;
-			3 ) ################# supp utilisateur  ############################
+			3 ) ################# supprimer utilisateur  ############################
 				__ssmenuSuppUtilisateur
 			;;
 			4 )  ################# liste utilisateurs #######################
@@ -692,7 +740,32 @@ until [[ 1 -eq 2 ]]; do
 				----------------------------------------------------------------------$N" 22 100
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
-			6 )  #####################  firewall  ############################
+      6 )  ###################### ownCloud #############################
+        __saisieOCBox "Paramétrage ownCloud" $R"Consultez l'aide$N" 13
+
+        . $REPLANCE/insert/util_owncloud.sh
+        varLocalhost="localhost"  # pour $I$varLocalhost dans __messageBox
+        varOwnCloud="owncloud"
+        __messageBox "Fin d'installation d'ownCloud" "Installation treminée.
+Retrouvez ownCloud sur https://$HOSTNAME/owncloud ou
+https://$IP/owncloud
+Accepter la connexion non sécurisée et l'exception pour ce certificat !
+
+${BO}Notez que $N $I${FIRSTUSER[0]}$N$BO et son mot de passe est votre compte et le compte administrateur d'ownCloud.
+La base de données mysql $varOwnCloud a comme administrateur$N $I$userBdD$N
+
+Ces informations sont ajoutées au fichier $REPUL/HiwsT/RecapInstall.txt"
+        cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+
+Pour accéder a votre cloud privé :
+  https://$HOSTNAME/owncloud ou $IP/owncloud
+  Utilisateur (et administrateur) : ${FIRSTUSER[0]}
+  Mot de passe : $pwFirstuser
+  Administrateur de la base de donnée OC : $userBdD
+  Mot de passe : $pwBdD
+EOF
+      ;;
+			7 )  #####################  firewall  ############################
 				__messageBox "Firewall et ufw" "
 
 
@@ -700,7 +773,7 @@ until [[ 1 -eq 2 ]]; do
 
 				. $REPLANCE/insert/util_firewall.sh
 			;;
-			7 )  ########################  Relance rtorrent  ######################
+			8 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
 
 			 	  Relance
@@ -711,10 +784,10 @@ until [[ 1 -eq 2 ]]; do
 				service rtorrentd status
 				sleep 3
 			;;
-			8 )  ################# Diagnostiques ###############################
+			9 )  ################# Diagnostiques ###############################
 				. $REPLANCE/insert/util_diag.sh
 			;;
-			9 )  ###########################  REBOOT  #######################
+			10 )  ###########################  REBOOT  #######################
 				__ouinonBox "$R $BO Reboot système$N"
 				if [[ $__ouinonBox -eq 0 ]]; then
 					clear
@@ -731,10 +804,10 @@ done
 }   # fin menu
 
 ################################################################################
-# #                             Début du script
+##                              Début du script
 ################################################################################
-
 # root ?
+
 if [[ $(id -u) -ne 0 ]]; then
 	echo
 	echo "Ce script nécessite d'être exécuté avec sudo."
@@ -744,8 +817,9 @@ if [[ $(id -u) -ne 0 ]]; then
 	exit 1
 fi
 
-#########################################################################
+################################################################################
 # apache vs nginx ?
+
 service nginx status > /dev/null
 sortieN=$?
 service apache2 status > /dev/null
@@ -773,7 +847,11 @@ else
 fi
 . $REPLANCE/insert/util_listeusers.sh
 
-########################################################################
+################################################################################
+#  debian ou ubuntu ?  pour ownCloud
+nameDistrib=$(lsb_release -si)  # "Debian" ou "Ubuntu"
+
+################################################################################
 # gestion de la sortie de openvpn-install.sh
 
 if [[ ! -z "$ERRVPN" && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
@@ -794,22 +872,25 @@ elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et n
     ici="/home/${FIRSTUSER[0]}"
   fi
 
-  # contextualisation du message
+  # contextualisation du message dans __messageBox
   #                 si le compte existe                           et si le compte a été manipulé
   if [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ ! -z $NOMCLIENTVPN ]]; then
     msg="
 Code de Sortie : $ERRVPN
-Sortie nominale de l'exécution de openvpn-install$I
+Exécution nominale de openvpn-install$I
 Le fichier $NOMCLIENTVPN.ovpn est dans le répertoire $ici $N"
   else  # si le compte n'existe plus ou qu'il n'a pas été manipulé
     msg="
 Code de Sortie : $ERRVPN
-Sortie nominale de l'exécution de openvpn-install"
+Exécution nominale de openvpn-install"
   fi
 
   __messageBox "Sortie installation openVPN" "$msg"
   trap - EXIT
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
+
+################################################################################
+#  boucle menu / sortie
 
 __menu
 

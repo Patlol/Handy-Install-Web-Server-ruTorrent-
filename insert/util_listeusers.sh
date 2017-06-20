@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# \u2502 │
+# \u2500 ─
+
+# \u250C ┌
+# \u252C ┬
+# \u2510 ┐
+
+# \u2514 └
+# \u2534 ┴
+# \u2518 ┘
+
+# \u251C ├
+# \u253C ┼
+# \u2524 ┤
+
 __listeUtilisateurs() {
 	local listeL; local listeR; local listeC; local listeVpn
 	# les différents tableaux : utilisateurs linux, ruto et cake et vpn
@@ -13,10 +28,10 @@ __listeUtilisateurs() {
 
 	if [[ $SERVEURHTTP == "apache2" ]]; then
 	  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
-	  listeC=(`cat $REPWEB/cakebox/public/.htpasswd | awk -F":" '{ print $1 }'`)
+	  listeC=(`cat $REPWEB/cakebox/public/.htpasswd 2>/dev/null | awk -F":" '{ print $1 }'`)
 	else
 	  listeR=(`cat $REPNGINX/.htpasswdR | awk -F":" '{ print $1 }'`)
-	  listeC=(`cat $REPNGINX/.htpasswdC | awk -F":" '{ print $1 }'`)
+	  listeC=(`cat $REPNGINX/.htpasswdC 2>/dev/null | awk -F":" '{ print $1 }'`)
 	fi
 	# encadrement utilisateur principal
   for (( i = 0; i < ${#listeR[@]}; i++ )); do
@@ -197,6 +212,6 @@ __listeUtilisateurs() {
     else
       la=$(($maxElem*3 +15))
     fi
-	  dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Liste utilisateurs" --textbox  "/tmp/liste" "$ht" "$la"
+	  dialog --backtitle "$TITRE" --title "Liste utilisateurs" --textbox  "/tmp/liste" "$ht" "$la"
 	fi
 }

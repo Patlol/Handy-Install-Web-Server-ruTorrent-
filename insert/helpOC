@@ -1,0 +1,46 @@
+
+Aucune des 6 entrées ne doit contenir de "\" ou d'espace.
+Les 6 champs sont obligatoires.
+
+Utilisateur Linux
+  N'est pas modifiable.
+  C'est l'utilisateur Linux principal, votre utilisateur.
+
+PW utilisateur Linux
+  Rentrez le mot de passe correspondant à
+  l'utilisateur ci-dessus.
+  Ce mot de passe n'est pas conservé par le script.
+
+Administrateur de la BdD d'ownCloud
+  15 caractères maximum.
+  Peut être l'utilisateur principal Linux
+  ou un nom quelconque.
+
+Mot de passe de l'administrateur de la BdD d'ownCloud
+  15 caractères maximum.
+  Ce mot de passe n'est pas conservé par le script.
+
+Taille maximum des fichiers téléchargeables dans ownCloud
+  5 caractères maximum.
+  Correspond aux variables php upload_max_filesize et
+  post_max_size pour le répertoire owncloud
+  Sauvegardé dans owncloud/.htaccess
+  En cas de problèmes consulter : https://doc.owncloud.org
+
+  /!\ Tenir compte de son espace disque !!!
+
+  FORMAT : 1-9[0-9][0-9][0-9]M|G sans espace
+  exemples : 200M 650M 1G 10G ...
+  Par défaut la valeur est de 513M
+
+Stockage externe (Recommandé avec l'installation de ruTorrent)
+  1 caractère maximum "o" ou "n" bas de casse ou majuscule.
+  Permet d'activer l'app External storage support
+  et de monter dans ownCloud le repertoire /home/user/downloads
+  de rutorrent. "user" étant l'utilisateur principal.
+
+Install AudioPlayer (Recommandé avec l'installation de ruTorrent)
+  1 caractère maximum "o" ou "n" bas de casse ou majuscule.
+  Permet d'installer et de configurer l'app Audio-Player.
+  Scanne votre répertoire data et externe si l'app
+  External storage est activée.

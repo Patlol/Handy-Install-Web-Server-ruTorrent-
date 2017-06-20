@@ -33,7 +33,7 @@ if [[ $nameDistrib == "Debian" ]]; then   php5-fpm
 		echo "php5-fpm fonctionne."
 		echo
 	else
-		dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service php5-fpm : Consulter le wiki
+		dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service php5-fpm : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "service php5-fpm" 8 98
 		__msgErreurBox
 	fi
@@ -44,7 +44,7 @@ else
 		echo "php7.0-fpm fonctionne."
 		echo
 	else
-		dialog --backtitle "Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN" --title "Message d'erreur" --prgbox "Problème au lancement du service php7.0-fpm : Consulter le wiki
+		dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service php7.0-fpm : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "service php7.0-fpm" 8 98
 		__msgErreurBox
 	fi

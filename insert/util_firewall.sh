@@ -15,7 +15,7 @@ fi
 # ufw si pas installé, installer
 which ufw 2>&1 > /dev/null
 if [ $? != 0 ]; then
-apt-get -yq install ufw
+apt-get update && apt-get -yq install ufw
 clear
 fi
 
