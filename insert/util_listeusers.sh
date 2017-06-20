@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# \u2502 │
+# \u2500 ─
+
+# \u250C ┌
+# \u252C ┬
+# \u2510 ┐
+
+# \u2514 └
+# \u2534 ┴
+# \u2518 ┘
+
+# \u251C ├
+# \u253C ┼
+# \u2524 ┤
+
 __listeUtilisateurs() {
 	local listeL; local listeR; local listeC; local listeVpn
 	# les différents tableaux : utilisateurs linux, ruto et cake et vpn
