@@ -52,7 +52,7 @@ server {
                auth_basic_user_file /etc/nginx/.htpasswdR;
         }
 
-        # Cakebox proxy
+        # proxy
 
         # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
         #

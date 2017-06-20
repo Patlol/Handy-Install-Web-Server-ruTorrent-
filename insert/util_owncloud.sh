@@ -127,10 +127,10 @@ else
 fi
 
 ################################################################################
-#  Modif des limites fichiers .htaccess
+#  apache Modif des limites fichiers .htaccess
 #  upload_max_filesize=513M post_max_size=513Mpost_max_size=513M valeurs d'origine
 #  supprime l'integrity check    sed -i 's/  php_value memory_limit 512M/# php_value memory_limit 512M/g' $ocpath/.htaccess
-if [[ $fileSize != "513M" ]]; then
+if [[ $fileSize != "513M" ]] && [[ $SERVEURHTTP == "apache2" ]]; then
   sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
          -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess
 
@@ -143,6 +143,8 @@ if [[ $fileSize != "513M" ]]; then
   echo "|   et post_max_size paramétrés     |"
   echo "| ajout de integrity.check.disabled |"
   echo "*************************************"
+else # nginx
+  :
 fi
 
 chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ

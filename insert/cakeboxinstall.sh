@@ -116,7 +116,7 @@ if [[ $serveurHttp == "apache2" ]]; then
 
 else   # modification nginx pour cakebox
 	# sur default : proxy
-	sed -i '/.*# Cakebox proxy/ r '$REPLANCE'/fichiers-conf/nginx_default_cakebox' $REPNGINX/sites-available/default
+	sed -i '/.*# proxy/ r '$REPLANCE'/fichiers-conf/nginx_default_cakebox' $REPNGINX/sites-available/default
 	# conf site cakebox
 	cp $REPLANCE/fichiers-conf/nginx_cakebox $REPNGINX/sites-available/cakebox
 	sed -i 's|<php-sock>|'$phpSock'|' $REPNGINX/sites-available/cakebox

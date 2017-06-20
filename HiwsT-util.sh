@@ -18,9 +18,13 @@ readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ prin
 readonly HOSTNAME=$(hostname -f)
 SERVEURHTTP=""
 # Tableau des utilisateurs principaux 0=linux 1=rutorrent 2=cakebox
+if [[ ! -e $REPLANCE/firstusers ]]; then
+  echo "Le fichier \"firstusers\" n'est pas disponible"
+  exit 2
+fi
 i=0
 while read user; do  # [0]=linux, [1]=ruTorrent, [2]=Cakebox
-FIRSTUSER[$i]=$user
+  FIRSTUSER[$i]=$user
   (( i++ ))
 done < $REPLANCE/firstusers
 declare -ar FIRSTUSER  # -r readonly
@@ -693,7 +697,7 @@ until [[ 1 -eq 2 ]]; do
 	3 "Supprimer un utilisateur" \
 	4 "Lister les utilisateurs existants" \
 	5 "Installer/déinstaller OpenVPN, utilisateurs openVPN" \
-  6 "Installation de ownCloud (apache2)" \
+  6 "Installation de ownCloud" \
 	7 "Firewall" \
 	8 "Relancer rtorrent manuellement" \
 	9 "Diagnostique" \
