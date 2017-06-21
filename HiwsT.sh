@@ -34,7 +34,6 @@ paquetsMediaU="mediainfo ffmpeg"
 upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
 debWebMinU="webmin-current.deb"
 #------------------------------------------------------------------------------
-readonly LANG=fr_FR.UTF-8
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
 readonly REPNGINX="/etc/nginx"
@@ -230,29 +229,6 @@ clear
 
 # localisation et infos système, 1ère passe
 if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
-	# vérifie la localisation (pour debian) et modif
-	# if [[ ! `cat /etc/locale.gen | egrep ^[a-z].*UTF-8$` ]]; then
-	# if [[ ! `echo "é" | xxd |  awk -F" " '{ print $2 }'` != "c3a9"]]; then
-	# é return => é: command not found => ok \udcc3\udca9:  command not found pas ok
-	# export LC_ALL=en_US.UTF-8; unset LC_ALL # a la fin + rétablir les valeurs d'origine ?
-	#
-	# if [[ ! `cat /etc/locale.gen | grep ^fr.*` ]]; then
-	# 	echo "Votre systeme a besoin d'etre localise en $LANG"
-	# 	sed -i -e "s/# $LANG UTF-8/$LANG UTF-8/" /etc/locale.gen && \
-  #   dpkg-reconfigure --frontend=noninteractive locales && \
-  #   update-locale LANG=$LANG && locale-gen \
-	# 	&& {
-	# 		echo
-	# 		echo -e "Votre systeme va rebooter. Reconnectez-vous et\nrelancez le script"
-	#     sleep 2
-	# 		reboot
-	# 	} \
-	# 	|| {
-	# 		echo
-	# 		echo "Probleme avec la localisation en $LANG"
-	# 		exit 1
-	# 	}
-	# fi
 	# Complèter la localisation (vps)
 	lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{print $1 }')
 	export LANGUAGE=$lang
