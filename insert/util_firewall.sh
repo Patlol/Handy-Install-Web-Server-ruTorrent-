@@ -44,7 +44,7 @@ until false ; do
       echo "autoriser le port $portSSH/tcp IN (port ssh)"
       echo "autoriser le port 80 IN"
       echo "autoriser le port 443 IN"
-      echo "autoriser le port 445 IN"
+      # echo "autoriser le port 445 IN"
       # echo "autoriser le port 25/tcp IN"
       echo "autoriser la plage de ports 55950:56000/tcp IN (rtorrent)"
       echo "autoriser la plage de ports 55950:56000/udp IN (rtorrent)"
@@ -65,7 +65,7 @@ until false ; do
             ufw allow $portSSH/tcp
             ufw allow 80
             ufw allow 443
-            ufw allow 445
+            # ufw allow 445
             ufw allow 55950:56000/tcp
             ufw allow 55950:56000/udp
             ufw allow 10000/tcp

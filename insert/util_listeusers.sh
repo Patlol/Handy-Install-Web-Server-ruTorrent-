@@ -16,8 +16,8 @@
 # \u2524 ┤
 
 __listeUtilisateurs() {
-	local listeL; local listeR; local listeC; local listeVpn
-	# les différents tableaux : utilisateurs linux, ruto et cake et vpn
+	local listeL; local listeR; local listeVpn
+	# les différents tableaux : utilisateurs linux, ruto et vpn
 	listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
 	# encadrement utilisateur principal
   for (( i = 0; i < ${#listeL[@]}; i++ )); do
@@ -26,22 +26,12 @@ __listeUtilisateurs() {
     fi
   done
 
-	if [[ $SERVEURHTTP == "apache2" ]]; then
-	  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
-	  listeC=(`cat $REPWEB/cakebox/public/.htpasswd 2>/dev/null | awk -F":" '{ print $1 }'`)
-	else
-	  listeR=(`cat $REPNGINX/.htpasswdR | awk -F":" '{ print $1 }'`)
-	  listeC=(`cat $REPNGINX/.htpasswdC 2>/dev/null | awk -F":" '{ print $1 }'`)
-	fi
+  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
+
 	# encadrement utilisateur principal
   for (( i = 0; i < ${#listeR[@]}; i++ )); do
     if [[ "${listeR[i]}" == "${FIRSTUSER[1]}" ]]; then
       listeR[i]="[${listeR[i]}]"
-    fi
-  done
-  for (( i = 0; i < ${#listeC[@]}; i++ )); do
-    if [[ "${listeC[i]}" == "${FIRSTUSER[2]}" ]]; then
-      listeC[i]="[${listeC[i]}]"
     fi
   done
 
@@ -56,7 +46,7 @@ __listeUtilisateurs() {
 	fi
 
 	# tableau contenant la longueur de chaque tableau ci-dessus
-	tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeC[@]} ${#listeVpn[@]})
+	tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeVpn[@]})
 
 	# le + grand tableau en nbre d'éléments
 	maxTab=${tabLong[0]}
@@ -67,7 +57,7 @@ __listeUtilisateurs() {
 	done
 
 	# Concaténation des éléments des tab
-	concaTab=(${listeC[*]} ${listeL[*]} ${listeR[*]} ${listeVpn[*]})
+	concaTab=(${listeL[*]} ${listeR[*]} ${listeVpn[*]})
 
 	# l'element le + long des tab
 	maxElem=${#concaTab[0]}
@@ -180,12 +170,11 @@ __listeUtilisateurs() {
     #  chapeau
 	  __traitHt >> /tmp/liste
 	  __miseEnPageD "users Linux" >> /tmp/liste
-	  __miseEnPageM "ruTorrent" >> /tmp/liste
     if [[ ${#listeVpn[*]} -ne 0 ]]; then
-      __miseEnPageM "Cakebox" >> /tmp/liste
+			__miseEnPageM "ruTorrent" >> /tmp/liste
       __miseEnPageG "VPN" >> /tmp/liste
     else
-      __miseEnPageG "Cakebox" >> /tmp/liste
+      __miseEnPageG "ruTorrent" >> /tmp/liste
     fi
 	   echo >> /tmp/liste
 	  __traitM >> /tmp/liste
@@ -193,12 +182,12 @@ __listeUtilisateurs() {
 	  for element in $(seq 0 $(($maxTab - 1)))
 	  do
 	    __miseEnPageD ${listeL[$element]} >> /tmp/liste
-	    __miseEnPageM ${listeR[$element]} >> /tmp/liste
+
       if [[ ${#listeVpn[*]} -ne 0 ]]; then
-        __miseEnPageM ${listeC[$element]} >> /tmp/liste
+				__miseEnPageM ${listeR[$element]} >> /tmp/liste
         __miseEnPageG ${listeVpn[$element]} >> /tmp/liste
       else
-        __miseEnPageG ${listeC[$element]} >> /tmp/liste
+        __miseEnPageG ${listeR[$element]} >> /tmp/liste
       fi
 	     echo >> /tmp/liste
 	  done

@@ -30,17 +30,10 @@ echo "-----------------------------"
 ufw status verbose 2>/dev/null
 [[ $? -ne 0 ]] && echo "ufw n'est pas installé"
 echo "-------------------------------------------------------------------------------"
-if [[ $SERVEURHTTP == "apache2" ]]; then
-  echo "apache2 :"
-  echo "---------"
-  service apache2 status
-  echo
-else
-  echo "nginx :"
-  echo "-------"
-  service nginx status
-  echo
-fi
+echo "apache2 :"
+echo "---------"
+service apache2 status
+echo
 echo "-------------------------------------------------------------------------------"
 echo "php-fpm :"
 echo "---------"

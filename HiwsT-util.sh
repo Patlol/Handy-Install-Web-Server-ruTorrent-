@@ -11,7 +11,6 @@
 
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
-readonly REPNGINX="/etc/nginx"
 readonly REPLANCE=$(echo `pwd`)
 readonly REPInstVpn=$REPLANCE
 readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
@@ -23,14 +22,14 @@ if [[ ! -e $REPLANCE/firstusers ]]; then
   exit 2
 fi
 i=0
-while read user; do  # [0]=linux, [1]=ruTorrent, [2]=Cakebox
+while read user; do  # [0]=linux, [1]=ruTorrent
   FIRSTUSER[$i]=$user
   (( i++ ))
 done < $REPLANCE/firstusers
 declare -ar FIRSTUSER  # -r readonly
 readonly REPUL="/home/${FIRSTUSER[0]}"
 # dialog param --backtitle --aspect --colors
-readonly TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - Cakebox - openVPN - ownCloud"
+readonly TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - openVPN - ownCloud"
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -277,28 +276,6 @@ service sshd restart > /dev/null
 echo "Sécurisation SFTP faite" # seulement accès a /home/${1}
 }   #  fin __creaUserRuto
 
-
-####################################
-##  Création utilisateur Cakebox
-####################################
- __creaUserCake() {
-# - copier conf/user.php modif rep à scanner
-cp $REPWEB/cakebox/config/default.php.dist $REPWEB/cakebox/config/${1}.php
-sed -i "s|\(\$app\[\"cakebox.root\"\].*\)|\$app\[\"cakebox.root\"\] = \"/home/${1}/downloads/\";|" $REPWEB/cakebox/config/${1}.php
-sed -i "s|\(\$app\[\"player.default_type\"\].*\)|\$app\[\"player.default_type\"\] = \"vlc\";|" $REPWEB/cakebox/config/${1}.php
-chown -R www-data:www-data $REPWEB/cakebox/config
-echo
-echo "cakebox/config/${1}.php créé"
-echo
-
-__creaUserCakeConfSite ${1}
-__creaUserCakePasswd ${1} ${2}
-
-# Réactiver le plugin linkcakebox
-rm $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
-}  # fin __creaUserCake
-
-
 #################################################
 ##  ajout utilisateur sous menu et traitements
 #################################################
@@ -309,24 +286,21 @@ until [[ 1 -eq 2 ]]; do
 	CMD=(dialog --backtitle "$TITRE" --title "Ajouter un utilisateur" --menu "
 
 - Un utilisateur ruTorrent ne peut être créé qu'avec un utilisateur Linux
-- Un utilisateur Cakebox ne peut être crtéé que si un homonyme ruTorrent existe déjà ou est créé dans la foulée
 
  Créer un utilisateur :" 22 70 4 \
 	1 "Linux + ruTorrent"
-	2 "Linux + ruTorrent + Cakebox"
-	3 "Cakebox"
-	4 "Liste des utilisateurs")
+	2 "Liste des utilisateurs")
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
-		if [[ $typeUser -ne 4 ]]; then
+		if [[ $typeUser -ne 2 ]]; then
 			__saisieTexteBox "Création d'un utilisateur" "
 Saisissez le nom du nouvel utilisateur$R
 Ni espace, ni caractères spéciaux$N"
 			if [[ $? -eq 1 ]]; then   # 1 si bouton cancel
 				typeUser=""
 			else
-				__userExist $__saisieTexteBox    # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
+				__userExist $__saisieTexteBox    # insert/util_apache.sh renvoie userL userR
 			fi
 		fi
 		case $typeUser in
@@ -349,60 +323,7 @@ Mot de passe $__saisiePwBox"
 					fi
 				fi
 			;;
-			2 )  #  créa linux ruto cake
-				if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
-					# pas de userlinux ou existe usercake NON
-					__infoBox "Création d'un utilisateur Linux/ruTorrent/Cakebox" 2 "
-$__saisieTexteBox est déjà un utilisateur Linux ou
-$__saisieTexteBox est déjà un utilisatreur ruTorrent." 0 0
-				elif [[ $userC -eq 0 ]]; then
-					# existe userl  pas de userrutorrent  pas de userc NON
-					__infoBox "Création d'un utilisateur Linux/ruTorrent/Cakebox" 2 "
-$__saisieTexteBox est déjà un utilisateur Cakebox" 0 0
-				else
-					# existe userl exite userr pas de userc OUI
-					__ouinonBox "Création utilisateur Linux/ruTorrent/Cakebox" "- Le nouvel utilisateur aura le même nom et Mot de passe pour les 3 accès.
-- Il aura un accès SFTP avec le même nom et mot de passe, même port que les autres utilisateurs.
-- Il sera limité à son répertoire /home.
-- Pas d'accès ssh$R
-Vous confirmez $__saisieTexteBox comme nouvel utilisateur ?"
-					if [[ $__ouinonBox -eq 0 ]]; then
-						# saisie PW d'un utilisateur
-						__saisiePwBox "Création d'un nouvel utilisateur" "
-Saisissez d'un mot de passe utilisateur" 0 0
-
-						clear; __creaUserRuto $__saisieTexteBox $__saisiePwBox; sleep 2
-						__creaUserCake $__saisieTexteBox $__saisiePwBox; sleep 2
-						__infoBox "Création utilisateur Linux/ruTorrent/Cakebox" 3 "Traitement terminé
-Utilisateur $__saisieTexteBox crée
-Mot de passe $__saisiePwBox"
-					fi
-				fi
-			;;
-			3 )  #  créa cake
-				if [[ $userC -eq 0 ]]; then
-					__infoBox "Création d'un utilisateur Linux/ruTorrent/Cakebox" 2 "
-$__saisieTexteBox est déjà un utilisateur Cakebox" 0 0
-				elif [[ $userL -ne 0 ]] && [[ $userR -ne 0 ]]; then
-					__infoBox "Création d'un utilisateur Linux/ruTorrent/Cakebox" 2 "
-$__saisieTexteBox n'a pas d'homonyme Linux et ruTorrent" 0 0
-				else
-					echo $__saisieTexteBox
-					__ouinonBox "Création utilisateur Cakebox" "Le nouvel utilisateur ne pourra scanner que son répertoire de téléchargement.$R
-Vous confirmez "$__saisieTexteBox" comme nouvel utilisateur ?"
-					if [[ $__ouinonBox -eq 0 ]]; then
-						# saisie PW d'un utilisateur
-						__saisiePwBox "Création d'un nouvel utilisateur" "
-Saisissez d'un mot de passe utilisateur" 0 0
-
-						clear; __creaUserCake $__saisieTexteBox $__saisiePwBox; sleep 2
-						__infoBox "Création utilisateur Cakebox" 3 "Traitement terminé
-Utilisateur $__saisieTexteBox crée
-Mot de passe $__saisiePwBox"
-					fi
-				fi
-			;;
-			4 )
+			2 )
 				__listeUtilisateurs
 			;;
 		esac
@@ -455,22 +376,6 @@ userdel -fr ${1}
 echo "Utilisateur linux et /home/${1} supprimé"
 }  # fin __suppUserRuto
 
-############################################
-##  Suppression d'un utilisateur Cakebox
-############################################
-__suppUserCake() {
-	# ${1} == $__saisieTexteBox
-clear
-__suppUserCakePasswd ${1}   # insert/util_apache.sh et util_nginx
-__suppUserCakeConfSite ${1}   # insert/util_apache.sh et util_nginx
-
-# supprimer le fichier conf/user.php
-rm $REPWEB/cakebox/config/${1}.php
-echo
-echo "cakebox/config/${1}.php supprimé"
-echo
-}  # fin __suppUserCake
-
 ######################################################
 ##  supprimer utilisateur sous menu et traitements
 ######################################################
@@ -482,49 +387,27 @@ until [[ 1 -eq 2 ]]; do
 
 - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
 le sera aussi.
-- Si un utilisateur Cakebox est supprimé, ses homonymes Linux et ruTorrent seront conservés
 
  Supprimer un utilisateur :" 22 70 4 \
-	1 "Linux + ruTorrent + Cakebox"
-	2 "Linux + ruTorrent"
-	3 "Cakebox"
-	4 "Liste des utilisateurs")
+	1 "Linux + ruTorrent"
+	2 "Liste des utilisateurs")
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
 		#	----------------------------------------------------------$ type
 		# filtrer le choix 4 : liste user
-		if [[ $typeUser -ne 4 ]]; then
+		if [[ $typeUser -ne 2 ]]; then
 			__saisieTexteBox "Suppression d'un utilisateur" "
 Saisissez le nom de l'utilisateur :"
 			if [[ $? -eq 1 ]]; then  # 1 si bouton cancel
 				typeUser=""
 			else
-				__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx.sh renvoie userL userR userC
+				__userExist $__saisieTexteBox  # insert/util_apache.sh renvoie userL userR
 			fi
 		fi
 		# ---------------------------------------------------- $type $userL R C $__saisieTexteBox
 		case $typeUser in
-			1 ) #   suppression utilisateur Linux/ruto/cake ----------------
-				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
-de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
-				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ] && [[ $userC -eq 0 ]]; then
-			    	#  --------------------------------------------------------$ __saisieTexteBox
-						__suppUserRuto $__saisieTexteBox; sleep 2
-						__suppUserCake $__saisieTexteBox; sleep 2
-						__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
-Utilisateur$R $__saisieTexteBox$N pour Linux/ruTorrent/Cakebox supprimé"
-					else
-						__infoBox "Suppression d'un utilisateur ruTorrent/Linux" 3 "
-$__saisieTexteBox$R n'est pas un utilisateur Linux/ruTorrent/Cakebox ou$N
-$__saisieTexteBox$R est l'utilisateur principal"
-						#sortie case $typeUser et if  retour ss menu
-					fi
-				fi
-	      #  -----------------------------------------------------------fin
-			;;
-			2)  #   suppression utilisateur Linux/ruto ----------------
+			1)  #   suppression utilisateur Linux/ruto ----------------
 				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
 de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
 				if [[ $__ouinonBox -eq 0 ]]; then
@@ -541,23 +424,7 @@ $__saisieTexteBox$R est l'utilisateur principal"
 					fi
 				fi
 			;;
-			3)  #   suppression utilisateur cake ----------------
-				__ouinonBox "Suppression d'un utilisateur Cakebox" "
-Vous confirmez la suppression de $__saisieTexteBox ?"
-				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userC -eq 0 ]] && [ "$__saisieTexteBox" != "${FIRSTUSER[2]}" ]; then
-						__suppUserCake $__saisieTexteBox; sleep 2
-						__infoBox "suppression d'un utilisateur Cakebox" 3 "Traitement terminé
-Utilisateur$R $__saisieTexteBox$N supprimé"
-					else
-						__infoBox "Suppression d'un utilisateur Cakebox" 3 "
-$__saisieTexteBox$R n'est pas un utilisateur Cakebox ou$N
-$__saisieTexteBox$R est l'utilisateur principal"
-						# sortie case $typeUser et if
-					fi
-				fi
-			;;
-			4)
+			2)
 				__listeUtilisateurs
 			;;
 			#-----------------------------------------------fin---$ __saisieTexteBox
@@ -584,8 +451,7 @@ until [[ 1 -eq 2 ]]; do
 	Quel type d'utilisateur voulez-vous modifier ?" 22 70 4 \
 	1 "Linux"
 	2 "ruTorrent"
-	3 "Cakebox"
-	4 "Liste des utilisateurs")
+	3 "Liste des utilisateurs")
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
@@ -633,28 +499,7 @@ Traitement terminé"
 					fi
 				fi
 			;;
-			[3] )   ###  utilisateur cakebox
-				__saisieTexteBox "Modification mot de passe" "
-Saisissez un nom d'utilisateur Cakebox"
-				if [[ $? -eq 0 ]]; then
-					# user cakebox ?
-					__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
-					if [[ $userC -eq 0 ]]; then   # $userC sortie de __userExist 0 ou erreur
-						__saisiePwBox "Modification mot de passe Cakebox" "Utilisateur $__saisieTexteBox" 4
-						clear
-						__changePWCake $__saisieTexteBox $__saisiePwBox   # insert/util_apache.sh  renvoie $?
-						if [[ $? -ne 0 ]]; then
-							__infoBox "Modification mot de passe Cakebox" 3 "une erreur c'est produite"
-						else
-							__infoBox "Modification mot de passe Cakebox" 2 "Modification mot de passe de l'utilisateur $__saisieTexteBox
-Traitement terminé"
-						fi
-					else
-						__infoBox "Modification mot de passe" 2 "$__saisieTexteBox n'est pas un utilisateur Cakebox"
-					fi
-				fi
-			;;
-			[4] )
+			[3] )
 				__listeUtilisateurs
 			;;
 		esac
@@ -830,6 +675,12 @@ if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
 	echo
 	exit 1
 fi
+if [[ $sortieN -eq 0 ]] && [[ $sortieA -ne 0 ]]; then
+  echo
+  echo "Vous avez une configuration nginx. Le script utilise apache2"
+  echo
+  exit 1
+fi
 if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	echo
 	echo "Ni apache ni nginx ne sont actifs"
@@ -837,14 +688,9 @@ if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	exit 1
 fi
 
-#  chargement des f() nginx ou apache
-if [[ $sortieA -eq 0 ]]; then
-	SERVEURHTTP="apache2"
-	. $REPLANCE/insert/util_apache.sh
-else
-	SERVEURHTTP="nginx"
-	. $REPLANCE/insert/util_nginx.sh
-fi
+#  chargement des f() apache
+SERVEURHTTP="apache2"
+. $REPLANCE/insert/util_apache.sh
 . $REPLANCE/insert/util_listeusers.sh
 
 ################################################################################

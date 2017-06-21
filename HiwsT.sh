@@ -36,7 +36,6 @@ debWebMinU="webmin-current.deb"
 #------------------------------------------------------------------------------
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
-readonly REPNGINX="/etc/nginx"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(echo `pwd`)
 REPUL=""    # repertoire user Linux
@@ -45,8 +44,9 @@ readonly PLANCHER=20001  # bas fourchette port ssh
 readonly ECHELLE=65534  # ht de la fourchette
 readonly miniDispoRoot=334495744   # 319 Go minimum pour alerete place \
 readonly miniDispoHome=313524224   # 299 Go disponible sur disque
+readonly serveurHttp="apache2"
 # dialog param --backtitle --aspect --colors
-readonly TITRE="HiwsT : Installation rtorrent - ruTorrent - Cakebox"
+readonly TITRE="HiwsT : Installation rtorrent - ruTorrent"
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -172,11 +172,6 @@ __serviceapache2restart() {
 	service apache2 restart
 	__cmd "service apache2 status"
 }   #  fin __serviceapache2restart()
-
-__servicenginxrestart() {
-	service nginx restart
-	__cmd "service nginx status"
-}  #  fin de __servicenginxrestart
 
 #####################################
 ##    Fonctions principales
@@ -314,6 +309,31 @@ if [ $nameDistrib != "Debian" -a $nameDistrib != "Ubuntu" ]; then
 	Ce script fonctionne sur un serveur Debian 8.xx ou Ubuntu 16.xx"
 	exit 1
 fi
+
+# Vérif serveur hhtp
+service apache2 restart &> /dev/null
+service nginx restart &> /dev/null
+service apache2 status &> /dev/null; serveurHttpA=$?
+service nginx status &> /dev/null; serveurHttpN=$?
+service apache2 stop &> /dev/null
+service nginx stop &> /dev/null
+
+if [[ $serveurHttpN -eq 0 ]] && [[ $serveurHttpA -eq 0 ]]; then
+	__ouinonBox "Serveur http" "
+Vous avez apache2$BO ET$N nginx d'installés !?
+Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
+	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
+elif [[ $serveurHttpA -eq 0 ]]; then
+	__ouinonBox "Serveur http" "
+Vous avez apache2 d'installer,
+Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
+	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
+elif [[ $serveurHttpN -eq 0 ]]; then
+	__ouinonBox "Serveur http" "
+Vous avez nginx d'installer,
+Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
+	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
+fi
 #--------------------------------------------------------------
 
 
@@ -384,52 +404,6 @@ fi  # fin 1ère passe  ---------------------------------------------------------
 ## ------------------------- debut 2ème passe ----------------------------------
 ## _____________________________________________________________________________
 clear
-# Choix serveur hhtp
-service apache2 restart &> /dev/null
-service nginx restart &> /dev/null
-service apache2 status &> /dev/null; serveurHttpA=$?
-service nginx status &> /dev/null; serveurHttpN=$?
-service apache2 stop &> /dev/null
-service nginx stop &> /dev/null
-
-if [[ $serveurHttpN -eq 0 ]] && [[ $serveurHttpA -eq 0 ]]; then
-	__ouinonBox "Serveur http" "
-Vous avez apache2$BO ET$N nginx d'installés !?
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
-	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
-elif [[ $serveurHttpA -eq 0 ]]; then
-	__ouinonBox "Serveur http" "
-Vous avez apache2 d'installer,
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
-	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
-elif [[ $serveurHttpN -eq 0 ]]; then
-	__ouinonBox "Serveur http" "
-Vous avez nginx d'installer,
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
-	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
-fi
-
-CMD=(dialog --backtitle "$TITRE" --title "Serveur http" --menu "
-
-Quel serveur http souhaitez-vous installer ?" 0 0 2 \
-1 "utiliser nginx"
-2 "utiliser Apache2 (recommandé pour Cakebox)")
-
-choix=$("${CMD[@]}" 2>&1 > /dev/tty)
-if [[ $? -eq 0 ]]; then
-	case $choix in
-	1 )
-		serveurHttp="nginx"
-	;;
-	2 )
-		serveurHttp="apache2"
-	;;
-	esac
-else
-	clear
-	exit 0
-fi
-
 
 # Rutorrent user
 __saisieTexteBox "Utilisateur ruTorrent" "
@@ -442,28 +416,10 @@ __saisiePwBox "Utilisateur ruTorrent" "
 Mot de passe pour l'utilisateur $userRuto :" 4
 pwRuto=$__saisiePwBox
 
-
-#  cakebox
-__ouinonBox "Cakebox" "
-Souhaitez-vous installer Cakebox ?"
-installCake=$__ouinonBox
-if [ $installCake -eq 0 ]; then
-	__saisieTexteBox "Utilisateur Cakebox" "
-
-Choisir un nom d'utilisateur Cakebox$BO
-(peut-être le même que pour rutorrent)$N$R (ni espace ni \)$N : "
-	userCake=$__saisieTexteBox
-	__saisiePwBox "Utilisateur Cakebox" "
-Mot de passe pour l'utilisateur $userCake :" 4
-	pwCake="$__saisiePwBox"
-fi
-
-
 #  webmin
 __ouinonBox "Webmin" "
 Souhaitez-vous installer Webmin ?"
 installWebMin=$__ouinonBox
-
 
 # port ssh
 __ouinonBox "Sécurisation ssh/sftp" "
@@ -513,15 +469,6 @@ Nom de votre utilisateur Linux : $userLinux
 
 Nom de votre utilisateur ruTorrent          : $userRuto
 Mot de passe de votre utilisateur ruTorrent : $pwRuto
-
-`if [[ $installCake -ne 0 ]]
-then
-	echo "Vous ne souhaitez pas installer Cakebox"
-else
-	echo "Vous souhaitez installer Cakebox"
-	echo "Nom de votre utilisateur Cakebox          : $userCake"
-	echo "Mot de passe de votre utilisateur Cakebox : $pwCake"
-fi`
 
 `if [[ $installWebMin -ne 0 ]]
 then
@@ -596,14 +543,8 @@ echo
 ############################################
 #      Installation du serveur http
 ############################################
-
-if [[ $serveurHttp == "apache2" ]]; then
 	service nginx stop &> /dev/null
 	. $REPLANCE/insert/apacheinstall.sh
-else
-	service apache2 stop &> /dev/null
-	. $REPLANCE/insert/nginxinstall.sh
-fi
 
 ############################################
 #           installation rtorrent
@@ -669,8 +610,8 @@ fi
 #        installation de rutorrent
 ############################################
 
-# création de userRuto dans apacheinstall.sh / nginxinstall.sh
-# Modifier la configuration du site par défaut (pour rutorrent) dans apacheinstall.sh / nginxinstall.sh
+# création de userRuto dans apacheinstall.sh
+# Modifier la configuration du site par défaut (pour rutorrent) dans apacheinstall.sh
 
 # téléchargement
 mkdir $REPWEB/source
@@ -686,10 +627,8 @@ cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
 chown -R www-data:www-data $REPWEB/rutorrent
 chmod -R 755 $REPWEB/rutorrent
 
-if [[ $serveurHttp == "apache2" ]]; then
-	# modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
-	echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
-fi
+# modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
+echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
 
 # modif du thème de rutorrent
 mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
@@ -772,16 +711,6 @@ else
 	__msgErreurBox
 fi
 
-
-#######################################################
-#             install cakebox and Co
-#######################################################
-
-if [[ $installCake -eq 0 ]]
-then
-. $REPLANCE/insert/cakeboxinstall.sh
-fi  # cakebox
-
 #######################################################
 #             installation de WebMin
 #######################################################
@@ -807,7 +736,6 @@ cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
 # complète firstusers
 echo $userRuto >> $REPUL/HiwsT/firstusers
-echo $userCake >> $REPUL/HiwsT/firstusers
 chown root:root $REPUL/HiwsT/firstusers
 chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
 # copie dans $REPUL/HiwsT les fichiers log et trace
@@ -837,17 +765,6 @@ Pour accéder à ruTorrent :
 	En https accepter la connexion non sécurisée et
 	l'exception pour ce certificat !
 
-`if [[ $installCake -eq 0 ]]; then
-	echo "Pour accéder à Cakebox :"
-	echo -en "\thttp://$IP/cakebox"
-	echo "   ID : $userCake  PW : $pwCake"
-	echo -e "\tou http://$HOSTNAME/cakebox"
-	echo -e "\t /!\\ NE PAS utiliser https si vous voulez streamer !"
-	echo -e "\tSur votre poste en local pour le streaming utiliser firefox"
-	echo -e "\tPenser à vérifier la présence du plugin vlc sur firefox"
-	echo -e "\tSur linux : sudo apt-get install browser-plugin-vlc"
-	echo " "
-fi`
 `if [[ $installWebMin -eq 0 ]]; then
 	echo "Pour accéder à WebMin :"
 	echo -e "\thttps://$IP:10000"

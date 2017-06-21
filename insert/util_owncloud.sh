@@ -46,43 +46,38 @@ echo "|  Installation des paquets terminée  |"
 echo "***************************************"
 
 ################################################################################
-# installation apache / nginx
-if [[ $SERVEURHTTP = "apache2" ]]; then
-  # paramétrage apache
-  cp $REPLANCE/fichiers-conf/apa_site_owncloud.conf $REPAPA2/sites-available/owncloud.conf
-  cp $REPLANCE/fichiers-conf/apa_conf_owncloud.conf $REPAPA2/conf-available/owncloud.conf
+# paramétrage apache
+cp $REPLANCE/fichiers-conf/apa_site_owncloud.conf $REPAPA2/sites-available/owncloud.conf
+cp $REPLANCE/fichiers-conf/apa_conf_owncloud.conf $REPAPA2/conf-available/owncloud.conf
 
-  a2enmod rewrite
-  a2enmod headers
-  a2enmod env
-  a2enmod dir
-  a2enmod mime
+a2enmod rewrite
+a2enmod headers
+a2enmod env
+a2enmod dir
+a2enmod mime
 
-  [[ ! -e $REPAPA2/sites-enabled/owncloud.conf ]] && \
-    ln -s $REPAPA2/sites-available/owncloud.conf $REPAPA2/sites-enabled/owncloud.conf
+[[ ! -e $REPAPA2/sites-enabled/owncloud.conf ]] && \
+  ln -s $REPAPA2/sites-available/owncloud.conf $REPAPA2/sites-enabled/owncloud.conf
 
-  [[ ! -e $REPAPA2/conf-enabled/owncloud.conf ]] && \
-    ln -s $REPAPA2/conf-available/owncloud.conf $REPAPA2/conf-enabled/owncloud.conf
+[[ ! -e $REPAPA2/conf-enabled/owncloud.conf ]] && \
+  ln -s $REPAPA2/conf-available/owncloud.conf $REPAPA2/conf-enabled/owncloud.conf
 
-  # L'en-tête HTTP "Strict-Transport-Security" n'est pas configurée à "15552000" secondes.
-  # Pour renforcer la sécurité nous recommandons d'activer HSTS cf. Guide pour le renforcement et la sécurité.
-  # ==> man-in-the-middle attacks https://79.137.33.190/owncloud/index.php/settings/help?mode=admin
-  sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
+# L'en-tête HTTP "Strict-Transport-Security" n'est pas configurée à "15552000" secondes.
+# Pour renforcer la sécurité nous recommandons d'activer HSTS cf. Guide pour le renforcement et la sécurité.
+# ==> man-in-the-middle attacks https://79.137.33.190/owncloud/index.php/settings/help?mode=admin
+sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
 
-  service apache2 reload
-  service apache2 restart
-  if [[ $? -ne 0 ]]; then
-    service apache2 status
-    echo
-    echo "Erreur apache !!!"
-    exit 1
-  else
-    echo "********************************"
-    echo "|  Paramétrage apache terminé  |"
-    echo "********************************"
-  fi
-else  # nginx
-  :
+service apache2 reload
+service apache2 restart
+if [[ $? -ne 0 ]]; then
+  service apache2 status
+  echo
+  echo "Erreur apache !!!"
+  exit 1
+else
+  echo "********************************"
+  echo "|  Paramétrage apache terminé  |"
+  echo "********************************"
 fi
 
 ################################################################################
@@ -130,7 +125,7 @@ fi
 #  apache Modif des limites fichiers .htaccess
 #  upload_max_filesize=513M post_max_size=513Mpost_max_size=513M valeurs d'origine
 #  supprime l'integrity check    sed -i 's/  php_value memory_limit 512M/# php_value memory_limit 512M/g' $ocpath/.htaccess
-if [[ $fileSize != "513M" ]] && [[ $SERVEURHTTP == "apache2" ]]; then
+if [[ $fileSize != "513M" ]]; then
   sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
          -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess
 
@@ -143,8 +138,6 @@ if [[ $fileSize != "513M" ]] && [[ $SERVEURHTTP == "apache2" ]]; then
   echo "|   et post_max_size paramétrés     |"
   echo "| ajout de integrity.check.disabled |"
   echo "*************************************"
-else # nginx
-  :
 fi
 
 chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ
