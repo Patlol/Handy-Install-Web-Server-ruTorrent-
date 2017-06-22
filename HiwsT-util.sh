@@ -256,7 +256,7 @@ chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
 echo "Dossier users/${1} sur ruTorrent crée"
 echo
 
-__creaUserRutoPasswd ${1} ${2}   # insert/util_apache.sh et util_nginx ne renvoie rien
+__creaUserRutoPasswd ${1} ${2}   # insert/util_apache.sh ne renvoie rien
 
 # modif pour sftp / sécu sftp __creaUserRuto  ---------------------------------
 # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
@@ -461,7 +461,7 @@ until [[ 1 -eq 2 ]]; do
 Saisissez un nom d'utilisateur Linux
 Mot de passe Linux valable aussi pour sftp !!!"
 				if [[ $? -eq 0 ]]; then  # 1 si bouton cancel
-					# user linux    idem apache et nginx
+					# user linux
 					clear
 					egrep "^$__saisieTexteBox:" /etc/passwd >/dev/null
 					if [[ $? -eq 0 ]]; then
@@ -483,11 +483,11 @@ Traitement terminé"
 Saisissez un nom d'utilisateur ruTorrent"
 				if [[ $? -eq 0 ]]; then
 					# user ruTorrent ?
-					__userExist $__saisieTexteBox  # insert/util_apache.sh et util_nginx
+					__userExist $__saisieTexteBox  # insert/util_apache.sh
 					if [[ $userR -eq 0 ]]; then  # $userR sortie de __userExist 0 ou erreur
 						__saisiePwBox "Modification mot de passe ruTorrent" "Utilisateur $__saisieTexteBox" 4
 						clear
-						__changePWRuto $__saisieTexteBox $__saisiePwBox  # insert/util_apache.sh et util_nginx, renvoie $?
+						__changePWRuto $__saisieTexteBox $__saisiePwBox  # insert/util_apache.sh, renvoie $?
 						if [[ $? -ne 0 ]]; then
 							__infoBox "Modification mot de passe" 3 "une erreur c'est produite"
 						else
@@ -666,14 +666,13 @@ fi
 # apache vs nginx ?
 
 service nginx status > /dev/null
-sortieN=$?
+sortieN=$?  # 0 actif, 1 erreur == inactif
 service apache2 status > /dev/null
 sortieA=$?
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
 	echo
-	echo "Votre configuration apache2/nginx est incompatible avec ce script"
-	echo
-	exit 1
+	echo "Apache2 et nginx sont actifs. Apache2 doit être le serveur http"
+  read -p "Pour continuer [Enter] pour stoper [Ctrl-c] "
 fi
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -ne 0 ]]; then
   echo

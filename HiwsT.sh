@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Version 1.0
-# Installation apache2/nginx, php, rtorrent, rutorrent, cakebox, WebMin
+# Installation apache2, php, rtorrent, rutorrent, cakebox, WebMin
 # testée sur ubuntu et debian server vps Ovh
 # et sur kimsufi. A tester sur autres hébergeurs
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
@@ -321,7 +321,7 @@ service nginx stop &> /dev/null
 if [[ $serveurHttpN -eq 0 ]] && [[ $serveurHttpA -eq 0 ]]; then
 	__ouinonBox "Serveur http" "
 Vous avez apache2$BO ET$N nginx d'installés !?
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
+Si vous continuez ce script, la configuration existante va être remplacée par celle du script (apache2)"
 	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
 elif [[ $serveurHttpA -eq 0 ]]; then
 	__ouinonBox "Serveur http" "
@@ -331,7 +331,7 @@ Si vous continuez ce script, la configuration existante va être remplacée par 
 elif [[ $serveurHttpN -eq 0 ]]; then
 	__ouinonBox "Serveur http" "
 Vous avez nginx d'installer,
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
+Si vous continuez ce script, la configuration existante va être remplacée par celle du script (apache2)"
 	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
 fi
 #--------------------------------------------------------------
