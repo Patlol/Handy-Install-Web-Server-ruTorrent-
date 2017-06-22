@@ -8,7 +8,13 @@ echo "*************************************************"
 echo
 echo
 sleep 1
-
+# paquets debian
+upDebWebMinD="http://prdownloads.sourceforge.net/webadmin/webmin_1.830_all.deb"
+paquetWebMinD="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
+debWebMinD="webmin_1.830_all.deb"
+ # paquets ubuntu
+upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
+debWebMinU="webmin-current.deb"
 
 cd /tmp
 

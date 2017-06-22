@@ -305,7 +305,7 @@ Ni espace, ni caractères spéciaux$N"
 		fi
 		case $typeUser in
 			1 )  #  créa linux ruto
-				if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]] || [[ $userC -eq 0 ]]; then
+				if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
 					__infoBox "Création d'un utilisateur" 2 "
 Il existe déjà un utilisateur $__saisieTexteBox"
 				else

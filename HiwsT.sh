@@ -19,10 +19,6 @@ paquetsRtoD="xmlrpc-api-utils libtorrent14 rtorrent"
 sourceMediaD="deb http://www.deb-multimedia.org jessie main non-free"
 paquetsMediaD="mediainfo ffmpeg"
 
-upDebWebMinD="http://prdownloads.sourceforge.net/webadmin/webmin_1.830_all.deb"
-paquetWebMinD="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
-debWebMinD="webmin_1.830_all.deb"
-
 # Ubuntu
 # liste sans serveur http
 paquetsWebU="mc aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-dev php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
@@ -31,14 +27,12 @@ paquetsRtoU="xmlrpc-api-utils libtorrent19 rtorrent"
 
 paquetsMediaU="mediainfo ffmpeg"
 
-upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
-debWebMinU="webmin-current.deb"
 #------------------------------------------------------------------------------
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(echo `pwd`)
-REPUL=""    # repertoire user Linux
+REPUL=""    # repertoire user Linux dans __creauser
 readonly PORT_SCGI=5000  # port 1er Utilisateur
 readonly PLANCHER=20001  # bas fourchette port ssh
 readonly ECHELLE=65534  # ht de la fourchette
@@ -63,7 +57,6 @@ readonly N="\Zn"   # retour à la normale
 ######################################
 
 __trap() {  # pour exit supprime NOPASSWD et info.php
-	sed -i "s/$userLinux ALL=(ALL) NOPASSWD:ALL/$userLinux ALL=(ALL:ALL) ALL/" /etc/sudoers
 	if [ -e $REPWEB/info.php ]; then rm $REPWEB/info.php; fi
 }
 
@@ -173,40 +166,6 @@ __serviceapache2restart() {
 	__cmd "service apache2 status"
 }   #  fin __serviceapache2restart()
 
-#####################################
-##    Fonctions principales
-#####################################
-
-__creauser() {    # création utilisateur principal linux
-until [[ 1 -eq 2 ]]; do
-	__saisieTexteBox "Utilisateur Linux" "
-Vous devez créer un utilisateur spécifique
-Choisir un nom d'utilisateur linux$R
-(ni espace ni \)$N : "
-	userLinux=$__saisieTexteBox
-	egrep "^$userLinux:" /etc/passwd >/dev/null
-	if [[ $? -eq 0 ]]; then
-		__infoBox "Utilisateur Linux" 3 "
-$userLinux existe déjà, choisir un autre nom"
-	else
-		__saisiePwBox "Utilisateur Linux" "
-Mot de passe pour l'utilisateur $userLinux :" 4
-		pwLinux=$__saisiePwBox
-		#  créer l'utilisateur $userlinux
-		pwCrypt=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
-		useradd -m -G adm,dip,plugdev,www-data,sudo -p $pwCrypt $userLinux
-		if [[ $? -ne 0 ]]; then
-			__infoBox "Utilisateur Linux" 3 "
-Impossible de créer un utilisateur linux"
-			exit 1
-		fi
-		sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu ok, debian ok après reboot
-		echo $userLinux > $REPLANCE/firstusers
-		break
-	fi
-done
-}  # __creauser
-
 
 ###############################################################
 #                Début du script                              #
@@ -222,36 +181,38 @@ if [[ $(id -u) -ne 0 ]]; then
 fi
 clear
 
-# localisation et infos système, 1ère passe
-if [ ! -e $REPLANCE"/firstusers" ]; then  # 1ère passe
-	# Complèter la localisation (vps)
-	lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{print $1 }')
-	export LANGUAGE=$lang
-	export LANG=$lang
-	export LC_ALL=$lang
-	update-locale LANGUAGE=$lang
-	update-locale LANG=$lang
-	update-locale LC_ALL=$lang
-	dpkg-reconfigure --frontend=noninteractive locales
-	locale-gen
+#########################################
+## localisation et infos système        #
+#########################################
 
-	# installe dialog si pas installé
-	apt-get update
-	which dialog &>/dev/null
-	if [ $? -ne 0 ]; then
-		apt-get install -yq dialog
-	fi
-	# installe lsb_release si pas installé
-	which lsb_release &>/dev/null
-	if [ $? -ne 0 ]; then
-		apt-get install -yq lsb-release
-	fi
-	# installe sudo si pas installé
-	which sudo &>/dev/null
-	if [ $? -ne 0 ]; then
-		apt-get install -yq sudo
-	fi
+# Complèter la localisation (vps)
+lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{print $1 }')
+export LANGUAGE=$lang
+export LANG=$lang
+export LC_ALL=$lang
+update-locale LANGUAGE=$lang
+update-locale LANG=$lang
+update-locale LC_ALL=$lang
+dpkg-reconfigure --frontend=noninteractive locales
+locale-gen
+
+# installe dialog si pas installé
+apt-get update
+which dialog &>/dev/null
+if [ $? -ne 0 ]; then
+	apt-get install -yq dialog
 fi
+# installe lsb_release si pas installé
+which lsb_release &>/dev/null
+if [ $? -ne 0 ]; then
+	apt-get install -yq lsb-release
+fi
+# installe sudo si pas installé
+which sudo &>/dev/null
+if [ $? -ne 0 ]; then
+	apt-get install -yq sudo
+fi
+
 
 arch=$(uname -m)
 interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'
@@ -342,68 +303,60 @@ fi
 #    ID, PW, questions
 #############################
 
-if [ ! -e "$REPLANCE/firstusers" ]; then  # 1ère passe
+__messageBox "$R Avertissement $N" "
 
-	__messageBox "$R Avertissement $N" "
+                              									$I ATTENTION !!! $N
 
-	                              									$I ATTENTION !!! $N
+ L'utilisation de ce script doit se faire sur un serveur, tel que livré par votre hébergeur.
 
-	 L'utilisation de ce script doit se faire sur un serveur, tel que livré par votre hébergeur.
+$R Une installation quelconque risque d'être endommagée par ce script !!!
+ Ne jamais exécuter ce script sur un serveur en production."
 
-	$R Une installation quelconque risque d'être endommagée par ce script !!!
-	 Ne jamais exécuter ce script sur un serveur en production."
+__messageBox "Votre système" " $BO
 
-	__messageBox "Votre système" " $BO
+Distribution :$N $description $BO
+Architecture :$N $arch $BO
+Votre IP     :$N $IP $BO
+Le script tourne sous :$N $user
+$BO
+Durée du script :$N environ 10mn
 
-	Distribution :$N $description $BO
-	Architecture :$N $arch $BO
-	Votre IP     :$N $IP $BO
-	Le script tourne sous :$N $user
-	$BO
-	Durée du script :$N environ 10mn
+Place disponible sur les partitions du disques$BO
+Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
+$info"  # $info valeur suivant $homeDispo cf. # espace dispo
 
-	Place disponible sur les partitions du disques$BO
-	Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
-	$info"  # $info valeur suivant $homeDispo cf. # espace dispo
+if [ -z "$homeDispo" ]; then  # /
+ 	if [ $rootDispo -lt $miniDispoRoot ]; then
+		__infoBox "Avertissement" 4 "
+$BO $R
+ATTENTION $N
 
-	if [ -z "$homeDispo" ]; then  # /
-	 	if [ $rootDispo -lt $miniDispoRoot ]; then
-			__infoBox "Avertissement" 4 "
-	$BO $R
-	ATTENTION $N
-
-	Seulement $R$(( $rootDispo/1024/1024 )) Go$N, sur / pour stocker les fichiers téléchargés"
-		fi
-	else  # /home
-	 	if [ $homeDispo -lt $miniDispoHome ];then
-			__infoBox "Avertissement" 4 "
-	$BO $R
-	ATTENTION $N
-
-	Seulement $R$(( $homeDispo/1024/1024 )) Go$N, sur /home pour stocker les fichiers téléchargés"
-		fi
+Seulement $R$(( $rootDispo/1024/1024 )) Go$N, sur / pour stocker les fichiers téléchargés"
 	fi
+else  # /home
+ 	if [ $homeDispo -lt $miniDispoHome ];then
+		__infoBox "Avertissement" 4 "
+$BO $R
+ATTENTION $N
 
-	#-----------------------------------------------------------------------------
+Seulement $R$(( $homeDispo/1024/1024 )) Go$N, sur /home pour stocker les fichiers téléchargés"
+	fi
+fi
 
-	# Création de linux user
-		__creauser
-		__messageBox "Fin 1ère partie" "
-	Relancer le script : $BO
-	su $userLinux
-	bash $N # dans certains cas pour récupérer le prompt $BO
-	cd $REPLANCE
-	sudo ./`basename $0`"
-		chmod u+rwx,g+rx,o+rx $0
-		exit 0
-else   # si 2ème passage
-	userLinux=$(cat firstusers)
-	REPUL="/home/$userLinux"
-fi  # fin 1ère passe  ----------------------------------------------------------
-## _____________________________________________________________________________
-## ------------------------- debut 2ème passe ----------------------------------
-## _____________________________________________________________________________
-clear
+# utilisateur linux
+__saisieTexteBox "Utilisateur Linux" "
+Vous devez créer un utilisateur spécifique
+Choisir un nom d'utilisateur linux$R
+(ni espace ni \)$N : "
+userLinux=$__saisieTexteBox
+egrep "^$userLinux:" /etc/passwd >/dev/null
+if [[ $? -eq 0 ]]; then
+	__infoBox "Utilisateur Linux" 3 "
+$userLinux existe déjà, choisir un autre nom"
+else
+	__saisiePwBox "Utilisateur Linux" "
+Mot de passe pour l'utilisateur $userLinux :" 4
+	pwLinux=$__saisiePwBox
 
 # Rutorrent user
 __saisieTexteBox "Utilisateur ruTorrent" "
@@ -518,36 +471,46 @@ echo "|  Mise à jour effectuée   |"
 echo "****************************"
 sleep 1
 
-# user linux
-echo
-echo "$userLinux ALL=(ALL) NOPASSWD:ALL" >>/etc/sudoers;
+##############################
+#  Création de linux user    #
+##############################
+pwCrypt=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
+useradd -m -G adm,dip,plugdev,www-data,sudo -p $pwCrypt $userLinux
+if [[ $? -ne 0 ]]; then
+	__infoBox "Utilisateur Linux" 3 "
+Impossible de créer un utilisateur linux"
+	exit 1
+fi
+sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu ok, debian ok après reboot
+echo $userLinux > $REPLANCE/firstusers
+readonly REPUL="/home/$userLinux"
 trap "__trap" EXIT # supprime nopasswd et info.php en cas d'exit
 __cmd "usermod -aG www-data $userLinux"
 
-# config mc
+## config mc (installé dans apacheinstall)
 # config mc user
 mkdir -p $REPUL/.config/mc/
 cp $REPLANCE/fichiers-conf/mc_panels.ini $REPUL/.config/mc/panels.ini
-chown -R $userLinux:$userLinux $REPUL/.config/
+chown R $userLinux:$userLinux $REPUL/.config/
 # config mc root
 mkdir -p /root/.config/mc/
 cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
 
 echo
-echo "******************************"
-echo "|    Utilisateur linux ok    |"
-echo "******************************"
+echo "********************************"
+echo "|    Utilisateur linux créé    |"
+echo "********************************"
 sleep 1
 echo
 
 ############################################
-#      Installation du serveur http
+#      Installation du serveur http        #
 ############################################
 	service nginx stop &> /dev/null
 	. $REPLANCE/insert/apacheinstall.sh
 
 ############################################
-#           installation rtorrent
+#           installation rtorrent          #
 ############################################
 # téléchargement rtorrent libtorrent xmlrpc
 if [[ $nameDistrib == "Debian" ]]; then
@@ -607,7 +570,7 @@ fi
 
 
 ############################################
-#        installation de rutorrent
+#        installation de rutorrent         #
 ############################################
 
 # création de userRuto dans apacheinstall.sh
@@ -712,7 +675,7 @@ else
 fi
 
 #######################################################
-#             installation de WebMin
+#             installation de WebMin                  #
 #######################################################
 
 if [[ $installWebMin -eq 0 ]]
@@ -721,31 +684,29 @@ then
 fi   # Webmin
 
 ########################################
-#            sécuriser ssh
+#            sécuriser ssh             #
 ########################################
 #  des choses à faire de tte façon
 . $REPLANCE/insert/sshsecuinstall.sh
 
 
-
-# remettre sudoers en ordre
-sed -i "s/"$userLinux" ALL=(ALL) NOPASSWD:ALL/"$userLinux" ALL=(ALL:ALL) ALL/" /etc/sudoers
-
-# copie les scripts dans home
+## copie les scripts dans home
 cp -r  $REPLANCE $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
-# complète firstusers
+
+## complète firstusers
 echo $userRuto >> $REPUL/HiwsT/firstusers
 chown root:root $REPUL/HiwsT/firstusers
 chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
-# copie dans $REPUL/HiwsT les fichiers log et trace
+
+## copie dans $REPUL/HiwsT les fichiers log et trace
 cp -t $REPUL/HiwsT /tmp/hiwst.log /tmp/trace
 rm -r $REPLANCE
 
 
 
 ########################################
-#            générique de fin
+#            générique de fin          #
 ########################################
 
 cat << EOF > $REPUL/HiwsT/RecapInstall.txt
@@ -812,7 +773,7 @@ else   # ssh n'est pas sécurisé
 fi  # ssh pas sécurisé/ sécurisé`
 EOF
 
-# efface la récap 1ère passe
+# efface la récap 1ère version
 rm $REPUL/RecapInstall.txt
 chmod 400 $REPUL/HiwsT/RecapInstall.txt
 __textBox "Récapitulatif de  l'installation" $REPUL/HiwsT/RecapInstall.txt "Informations sauvegardées dans le fichier RecapInstall.txt"

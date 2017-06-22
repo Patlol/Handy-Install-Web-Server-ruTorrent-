@@ -27,7 +27,6 @@ __listeUtilisateurs() {
   done
 
   listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
-
 	# encadrement utilisateur principal
   for (( i = 0; i < ${#listeR[@]}; i++ )); do
     if [[ "${listeR[i]}" == "${FIRSTUSER[1]}" ]]; then
@@ -35,6 +34,7 @@ __listeUtilisateurs() {
     fi
   done
 
+	# user openVPN
   if [[ -e /etc/openvpn/easy-rsa/pki/index.txt ]]; then
 		nbrClients=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c "^V")
 		clients=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 )
@@ -45,7 +45,7 @@ __listeUtilisateurs() {
 		done
 	fi
 
-	# tableau contenant la longueur de chaque tableau ci-dessus
+	# tableau contenant la longueur (en nbr d'éléments) de chaque tableau ci-dessus
 	tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeVpn[@]})
 
 	# le + grand tableau en nbre d'éléments
@@ -56,12 +56,12 @@ __listeUtilisateurs() {
 	  fi
 	done
 
-	# Concaténation des éléments des tab
-	concaTab=(${listeL[*]} ${listeR[*]} ${listeVpn[*]})
+	# Tab contenant les éléments de ts tab d'utilisateurs
+	concaTab=(${listeL[@]} ${listeR[@]} ${listeVpn[@]})
 
-	# l'element le + long des tab
+	# l'element le + long des tab d'utilisateurs
 	maxElem=${#concaTab[0]}
-	for (( i = 1; i < ${#concaTab[*]}; i++ )); do
+	for (( i = 1; i < ${#concaTab[@]}; i++ )); do
 	  if [[ $maxElem -lt ${#concaTab[i]} ]]; then
 	    maxElem=${#concaTab[i]}
 	  fi
@@ -85,7 +85,7 @@ __listeUtilisateurs() {
 		for (( i = 0; i < $espace; i++ )); do
 		  tab=$tab" "
 		done
-		printf "\u2502 ${1}$tab"
+		printf "\u2502 ${1}$tab"  # trait V
 	}
 
 	__miseEnPageG() {
@@ -94,7 +94,7 @@ __listeUtilisateurs() {
 		for (( i = 0; i < $espace; i++ )); do
 		  tab=$tab" "
 		done
-		printf "\u2502 ${1}$tab\u2502"
+		printf "\u2502 ${1}$tab\u2502\n"  # trait V
 	}
 
 	__traitHt() {
@@ -106,11 +106,7 @@ __listeUtilisateurs() {
 		for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			tab=$tab"\u2500"  # trait H
 		done  #  pour ruto
-		tab=$tab"\u252C"  # Croix bas
-		for (( i = 0; i < (($maxElem + 2)); i++ )); do
-			tab=$tab"\u2500"  # trait H
-		done  #  pour cake
-    if [[ ${#listeVpn[*]} -ne 0 ]]; then
+    if [[ ${#listeVpn[@]} -ne 0 ]]; then
       tab=$tab"\u252C"  # Croix bas
       for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			     tab=$tab"\u2500"  # trait H
@@ -126,14 +122,10 @@ __listeUtilisateurs() {
 			tab=$tab"\u2500"  # trait H
 		done  # pour Linux
 		tab=$tab"\u253C"   # croix
-			for (( i = 0; i < (($maxElem + 2)); i++ )); do
+		for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			tab=$tab"\u2500"
 		done  # pour ruto
-		tab=$tab"\u253C"  # croix
-			for (( i = 0; i < (($maxElem + 2)); i++ )); do
-			tab=$tab"\u2500"
-		done  # pour cake
-    if [[ ${#listeVpn[*]} -ne 0 ]]; then
+    if [[ ${#listeVpn[@]} -ne 0 ]]; then
       tab=$tab"\u253C"   # croix
       for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			     tab=$tab"\u2500"  # trait H
@@ -147,16 +139,12 @@ __listeUtilisateurs() {
 		local tab="\u2514"  # Coin DrBas
 		for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			tab=$tab"\u2500"  # trait H
-		done
+		done  # pour Linux
 		tab=$tab"\u2534"   # croiX Ht
-			for (( i = 0; i < (($maxElem + 2)); i++ )); do
+		for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			tab=$tab"\u2500"
-		done
-		tab=$tab"\u2534"  # croix Ht
-			for (( i = 0; i < (($maxElem + 2)); i++ )); do
-			tab=$tab"\u2500"
-		done
-    if [[ ${#listeVpn[*]} -ne 0 ]]; then
+		done  # pour ruto
+    if [[ ${#listeVpn[@]} -ne 0 ]]; then
       tab=$tab"\u2534"   # croiX Ht
       for (( i = 0; i < (($maxElem + 2)); i++ )); do
 			     tab=$tab"\u2500"  # trait H
@@ -167,39 +155,39 @@ __listeUtilisateurs() {
 	}
 
 	  echo > /tmp/liste
-    #  chapeau
+    ##  chapeau
 	  __traitHt >> /tmp/liste
 	  __miseEnPageD "users Linux" >> /tmp/liste
-    if [[ ${#listeVpn[*]} -ne 0 ]]; then
+    if [[ ${#listeVpn[@]} -ne 0 ]]; then
 			__miseEnPageM "ruTorrent" >> /tmp/liste
       __miseEnPageG "VPN" >> /tmp/liste
     else
       __miseEnPageG "ruTorrent" >> /tmp/liste
     fi
-	   echo >> /tmp/liste
+	  # echo >> /tmp/liste
 	  __traitM >> /tmp/liste
-    # corps
+    ##  corps
 	  for element in $(seq 0 $(($maxTab - 1)))
 	  do
 	    __miseEnPageD ${listeL[$element]} >> /tmp/liste
 
-      if [[ ${#listeVpn[*]} -ne 0 ]]; then
+      if [[ ${#listeVpn[@]} -ne 0 ]]; then
 				__miseEnPageM ${listeR[$element]} >> /tmp/liste
         __miseEnPageG ${listeVpn[$element]} >> /tmp/liste
       else
         __miseEnPageG ${listeR[$element]} >> /tmp/liste
       fi
-	     echo >> /tmp/liste
+	    # echo >> /tmp/liste
 	  done
-    # base
+    ##  base
 	  __traitBs >> /tmp/liste
 
 	if [[ ${1} != "texte" ]]; then
     ht=$(($maxTab +10))  #  --aspect ne fonctionne pas avec --textbox
-    if [[ ${#listeVpn[*]} -ne 0 ]]; then
-      la=$(($maxElem*4 +18))
+    if [[ ${#listeVpn[@]} -ne 0 ]]; then
+      la=$(($maxElem*3 +18))
     else
-      la=$(($maxElem*3 +15))
+      la=$(($maxElem*2 +18))
     fi
 	  dialog --backtitle "$TITRE" --title "Liste utilisateurs" --textbox  "/tmp/liste" "$ht" "$la"
 	fi
