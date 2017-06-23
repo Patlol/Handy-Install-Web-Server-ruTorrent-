@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent et cakebox
+# Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent
 # L'ajout ou la suppression d'utilisateurs
 # Changement de mot de passe
 # ....
+# installation d'openvpn et ownCloud
+# L'ajout ou la suppression d'utilisateurs
 
-# Version dialog beta
+# testée sur ubuntu et debian server vps Ovh
+# et sur kimsufi. A tester sur autres hébergeurs
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
 
 
@@ -133,8 +136,8 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   local reponse="" codeRetour="" nbrItem="" nbrEspace=""
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --form "${2}" 0 0 ${3} "Utilisateur Linux       :" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 "PW utilisateur Linux    :" 3 2 "$pwFirstuser" 3 28 16 15
-    "Admin Base de Données OC: " 5 2 "$userBdD" 5 28 16 15 "Mot de passe Admin BdD  : " 7 2 "$pwBdD" 7 28 16 15 "Taille max des fichiers :" 9 2 "$fileSize" 9 28 6 5 "Stockage externe [O/N]  : " 11 2 "$addStorage" 11 28 2 1 "Installation AudioPlayer:" 13 2 "$addAudioPlayer" 13 28 2 1)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Utilisateur Linux       :" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW utilisateur Linux    :" 3 2 "$pwFirstuser" 3 28 16 15 1
+    "Admin Base de Données OC: " 5 2 "$userBdD" 5 28 16 15 0 "Mot de passe Admin BdD  : " 7 2 "$pwBdD" 7 28 16 15 1 "Taille max des fichiers :" 9 2 "$fileSize" 9 28 6 5 0 "Stockage externe [O/N]  : " 11 2 "$addStorage" 11 28 2 1 0 "Installation AudioPlayer:" 13 2 "$addAudioPlayer" 13 28 2 1 0)
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
     nbrItem=$(echo $reponse | grep -o '\\' | wc -l)  # -o occurence
@@ -337,102 +340,102 @@ done
 #####################################################
 ##  Suppression d'un utilisateur linux et rutorrent
 #####################################################
- __suppUserRuto() {
+__suppUserRuto() {
  ### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
  # ${1} == $__saisieTexteBox
  clear
-# suppression du user allowed dans sshd_config
-sed -i 's/'${1}' //' /etc/ssh/sshd_config
-service sshd restart
+  # suppression du user allowed dans sshd_config
+  sed -i 's/'${1}' //' /etc/ssh/sshd_config
+  service sshd restart
 
-__suppUserRutoPasswd ${1}
+  __suppUserRutoPasswd ${1}
 
-# dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
-rm -r $REPWEB/rutorrent/conf/users/${1}
-echo "Dossier conf/users/${1} sur ruTorrent supprimé"
-echo
-rm -r $REPWEB/rutorrent/share/users/${1}
-echo "Dossier share/users/${1} sur ruTorrent supprimé"
-echo
+  # dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
+  rm -r $REPWEB/rutorrent/conf/users/${1}
+  echo "Dossier conf/users/${1} sur ruTorrent supprimé"
+  echo
+  rm -r $REPWEB/rutorrent/share/users/${1}
+  echo "Dossier share/users/${1} sur ruTorrent supprimé"
+  echo
 
-# modif de rtorrentd.sh (daemon)
-sed -i '/.*'${1}.*'/d' /etc/init.d/rtorrentd.sh
-rm /etc/init/${1}-rtorrent.conf
+  # modif de rtorrentd.sh (daemon)
+  sed -i '/.*'${1}.*'/d' /etc/init.d/rtorrentd.sh
+  rm /etc/init/${1}-rtorrent.conf
 
-systemctl daemon-reload
-service rtorrentd restart
-if [[ $? -eq 0 ]]; then
-	echo "rtorrent en daemon modifié et fonctionne."
-	echo
-else
-	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+  systemctl daemon-reload
+  service rtorrentd restart
+  if [[ $? -eq 0 ]]; then
+  	echo "rtorrent en daemon modifié et fonctionne."
+  	echo
+  else
+  	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
-	__msgErreurBox
-fi
-# suppression fichier témoin de screen
-rm -r /var/run/screen/S-${1}
-# Suppression du home et suppression user linux (-f le home est root:root)
-userdel -fr ${1}
-echo "Utilisateur linux et /home/${1} supprimé"
+  	__msgErreurBox
+  fi
+  # suppression fichier témoin de screen
+  rm -r /var/run/screen/S-${1}
+  # Suppression du home et suppression user linux (-f le home est root:root)
+  userdel -fr ${1}
+  echo "Utilisateur linux et /home/${1} supprimé"
 }  # fin __suppUserRuto
 
 ######################################################
 ##  supprimer utilisateur sous menu et traitements
 ######################################################
 __ssmenuSuppUtilisateur() {
-local typeUser=""; local codeSortie=1
+  local typeUser=""; local codeSortie=1
 
-until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "$TITRE" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
+  until [[ 1 -eq 2 ]]; do
+  	CMD=(dialog --backtitle "$TITRE" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
 
-- Si un utilisateur ruTorrent est supprimé, son homonyme Linux
+  - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
 le sera aussi.
 
- Supprimer un utilisateur :" 22 70 4 \
-	1 "Linux + ruTorrent"
-	2 "Liste des utilisateurs")
+Supprimer un utilisateur :" 22 70 4 \
+  1 "Linux + ruTorrent"
+  2 "Liste des utilisateurs")
 
-	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
-	if [[ $? -eq 0 ]]; then
-		#	----------------------------------------------------------$ type
-		# filtrer le choix 4 : liste user
-		if [[ $typeUser -ne 2 ]]; then
-			__saisieTexteBox "Suppression d'un utilisateur" "
+   typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
+    if [[ $? -eq 0 ]]; then
+      #	 $type
+      # filtrer le choix 2 : liste user
+      if [[ $typeUser -ne 2 ]]; then
+        __saisieTexteBox "Suppression d'un utilisateur" "
 Saisissez le nom de l'utilisateur :"
-			if [[ $? -eq 1 ]]; then  # 1 si bouton cancel
-				typeUser=""
-			else
-				__userExist $__saisieTexteBox  # insert/util_apache.sh renvoie userL userR
-			fi
-		fi
-		# ---------------------------------------------------- $type $userL R C $__saisieTexteBox
-		case $typeUser in
-			1)  #   suppression utilisateur Linux/ruto ----------------
-				__ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
+        if [[ $? -eq 1 ]]; then  # 1 si bouton cancel
+  	      typeUser=""
+        else
+  	      __userExist $__saisieTexteBox  # insert/util_apache.sh renvoie userL userR
+        fi
+  	  fi
+  	# $type $userL R $__saisieTexteBox
+  	  case $typeUser in
+       1)  #   suppression utilisateur Linux/ruto ----------------
+  	      __ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
 de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
-				if [[ $__ouinonBox -eq 0 ]]; then
-					if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
-			    	#  --------------------------------------------------------$ __saisieTexteBox
-						__suppUserRuto $__saisieTexteBox; sleep 2
-						__infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
+  	      if [[ $__ouinonBox -eq 0 ]]; then
+  		      if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
+      	    #  $ __saisieTexteBox
+  			      __suppUserRuto $__saisieTexteBox; sleep 2
+  			      __infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
 Utilisateur$R $__saisieTexteBox$N pour Linux/ruTorrent supprimé"
-					else
-						__infoBox "Suppression d'un utilisateur Linux/ruTorrent" 3 "
+  		      else
+  			      __infoBox "Suppression d'un utilisateur Linux/ruTorrent" 3 "
 $__saisieTexteBox$R n'est pas un utilisateur Linux/ruTorrent ou$N
 $__saisieTexteBox$R est l'utilisateur principal"
-						#sortie case $typeUser et if  retour ss menu
-					fi
-				fi
-			;;
-			2)
-				__listeUtilisateurs
-			;;
-			#-----------------------------------------------fin---$ __saisieTexteBox
-		esac
-	else
-		break
-	fi
-done
+  			      #sortie case $typeUser et if  retour ss menu
+  		      fi
+  	      fi
+        ;;
+        2)
+  	      __listeUtilisateurs
+        ;;
+      #  fin $ __saisieTexteBox
+  	  esac
+    else
+  	  break
+    fi
+  done
 }
 
 ####################

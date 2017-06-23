@@ -6,7 +6,7 @@ readonly htgroup='www-data'
 readonly rootuser='root'
 
 ################################################################################
-# install paquet manquant (ubuntu / debian) + owncloud + php
+# install paquet manquant (ubuntu / debian) + owncloud + php + cache
 # module php et paquets necessaires cf doc owncloud
 # apt-get install apache2 libapache2-mod-php5 # mariadb-server
 # apt-get install php5-gd php5-json php5-mysql php5-curl
@@ -16,13 +16,35 @@ if [[ $nameDistrib = "Ubuntu" ]]; then
   apt-key add - < ./Release.key
   sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/xUbuntu_16.04/ /' >> /etc/apt/sources.list.d/owncloud.list"
   apt-get update
-  apt-get -yq install mysql-server php7.0-gd php7.0-mysql php7.0-intl php-imagick owncloud   # owncloud pour installation complette avec ttes les dépendances.
+  apt-get -yq install mysql-server php7.0-gd php7.0-mysql php7.0-intl php-imagick php-apcu apcupsd php-redis redis-server owncloud   # owncloud pour installation complette avec ttes les dépendances.
+  service php7.0-fpm restart
+  if [[ $? -ne 0 ]]; then
+    service php7.0-fpm status
+    echo
+    echo "Erreur php !!!"
+    exit 1
+  else
+    echo "********************************"
+    echo "|  redémarrage php (Redis) ok  |"
+    echo "********************************"
+  fi
 else  # Debian 8.xx
   wget -nv https://download.owncloud.org/download/repositories/stable/Debian_8.0/Release.key -O Release.key
   apt-key add - < Release.key
   sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/Debian_8.0/ /' > /etc/apt/sources.list.d/owncloud.list"
   apt-get update
-  apt-get -yq install php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick owncloud
+  apt-get -yq install php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server owncloud
+  service php5-fpm restart
+  if [[ $? -ne 0 ]]; then
+    service php5-fpm-fpm status
+    echo
+    echo "Erreur php !!!"
+    exit 1
+  else
+    echo "********************************"
+    echo "|  redémarrage php (cache) ok  |"
+    echo "********************************"
+  fi
 fi
 
 ################################################################################
@@ -206,7 +228,7 @@ mais sans iwatch (problème au paramétrage)"
     __messageBox "Installation Audio-player" "Installation réussie
 les modifications sur les répertoires owncloud/data/${FIRSTUSER[0]}
 ( et /home/${FIRSTUSER[0]}/downloads si stockage externe activé )
-mises à jour automatiquement dans Audio-player"
+seront mises à jour automatiquement dans Audio-player"
     fi
     clear
   fi
@@ -215,6 +237,8 @@ fi
 ################################################################################
 ##  Sur config/config.php ajouter à trusted_domains notre IP
 sed -i "/0 => 'localhost',/a 1 => '"$IP"'," $ocpath/config/config.php
+##  Prise en compte du memcache APCu/Redis
+sed -i "/);/i 'memcache.local' => '/\OC/\Memcache/\APCu',\n'memcache.locking' => '/\OC/\Memcache/\Redis',\n'redis' => array(\n     'host' => 'localhost',\n     'port' => 6379,\n      )," $ocpath/config/config.php
 
 ################################################################################
 ## modif des droits

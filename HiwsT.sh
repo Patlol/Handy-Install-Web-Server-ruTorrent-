@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Version 1.0
-# Installation apache2, php, rtorrent, rutorrent, cakebox, WebMin
+# Installation apache2, php, rtorrent, rutorrent, WebMin
 # testée sur ubuntu et debian server vps Ovh
 # et sur kimsufi. A tester sur autres hébergeurs
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
@@ -357,7 +356,7 @@ else
 	__saisiePwBox "Utilisateur Linux" "
 Mot de passe pour l'utilisateur $userLinux :" 4
 	pwLinux=$__saisiePwBox
-
+fi
 # Rutorrent user
 __saisieTexteBox "Utilisateur ruTorrent" "
 
@@ -384,11 +383,14 @@ L'utilisateur sera $userLinux et le port aléatoire $portSSH$BO ou un port dési
 Souhaitez-vous appliquer cette modification ?"
 changePort=$__ouinonBox
 if [ $changePort -eq 0 ]; then
-	CMD=(dialog --aspect $RATIO --colors --title "Port ssh/sftp" --rangebox "
+	choix=0
+	until [ $choix -le $ECHELLE -a $choix -ge $PLANCHER ]; do
+	  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "Port ssh/sftp" --max-input 5 --nocancel --inputbox "
 Le port aléatoire proposé est $I$portSSH$N $BO
-Si vous souhaitez un autre port : flèches Gche Dr ou souris pour selectionner un digit, flèches Ht Bas ou clavier numérique pour modifier le digit.$N" 0 0 $PLANCHER $ECHELLE $portSSH)
-	portSSH=$("${CMD[@]}" 2>&1 >/dev/tty)
-	portSSH=$(echo $portSSH | tr -d [:space:])  # espace en fin de chaine bloque le sed modifiant sshd_config
+Vous pouvez le modifier entre $PLANCHER et $ECHELLE$N" 0 0 $portSSH)
+	  choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+	done
+	portSSH=$choix
 	userSSH=$userLinux
 else
 	portSSH=22
