@@ -19,9 +19,11 @@ readonly REPInstVpn=$REPLANCE
 readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
 readonly HOSTNAME=$(hostname -f)
 SERVEURHTTP=""
-# Tableau des utilisateurs principaux 0=linux 1=rutorrent 2=cakebox
+# Tableau des utilisateurs principaux 0=linux 1=rutorrent
 if [[ ! -e $REPLANCE/firstusers ]]; then
-  echo "Le fichier \"firstusers\" n'est pas disponible"
+  echo
+  echo "The file \"firstusers\" is not available"
+  echo
   exit 2
 fi
 i=0
@@ -66,9 +68,9 @@ __infoBox() {   # param : titre sleep texte
 }
 
 __msgErreurBox() {
-	__messageBox "Message d'erreur" "
+	__messageBox "Error message" "
 
-	Consulter le wiki
+	See the wiki on github
 
   https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
 	exit 1
@@ -77,7 +79,7 @@ __msgErreurBox() {
 __saisieTexteBox() {   # param : titre, texte
 	local codeRetour=""
 	until [[ 1  -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --help-button --help-label "liste users" --max-input 15 --inputbox "${2}" 0 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --help-button --help-label "Users list" --max-input 15 --inputbox "${2}" 0 0)
 		__saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
 		codeRetour=$?
 
@@ -89,9 +91,9 @@ __saisieTexteBox() {   # param : titre, texte
       __saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
-			__infoBox "Vérification saisie" 3 "
-Uniquement des caractères alphanumériques
-Entre 2 et 15 caractères"
+			__infoBox "validation entry" 3 "
+Only alphanumeric characters
+Between 2 and 15 characters"
 		fi
 	done
 }
@@ -99,20 +101,20 @@ Entre 2 et 15 caractères"
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Password: " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
     if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
       [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
       __infoBox "${1}" 2 "
-Le mot de passe ne peut pas contenir d'espace ou de \\."
+The password can't contain spaces or \\."
     else
 	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
 	    pw2=$(echo $reponse | awk -F" " '{ print $2 }')
 			case $pw1 in
 				"" )
 					__infoBox "${1}" 2 "
-Le mot de passe ne peut pas être vide."
+The password can't be empty."
 				;;
 				$pw2 )
 					__saisiePwBox=$pw1
@@ -120,7 +122,7 @@ Le mot de passe ne peut pas être vide."
 				;;
 				* )
 					__infoBox "${1}" 2 "
-Les 2 saisies ne sont pas identiques."
+The 2 inputs are not identical."
 				;;
 			esac
 		fi
@@ -129,15 +131,15 @@ Les 2 saisies ne sont pas identiques."
 
 __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
-    dialog --backtitle "$TITRE" --title "Aide ownCloud" --exit-label "Retour saisie" --textbox  "insert/helpOC" "51" "71"
+    dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
   }
 
   # saise du mot de passe pour un utilisateur donné dans le texte $2
   local reponse="" codeRetour="" nbrItem="" nbrEspace=""
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Utilisateur Linux       :" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW utilisateur Linux    :" 3 2 "$pwFirstuser" 3 28 16 15 1
-    "Admin Base de Données OC: " 5 2 "$userBdD" 5 28 16 15 0 "Mot de passe Admin BdD  : " 7 2 "$pwBdD" 7 28 16 15 1 "Taille max des fichiers :" 9 2 "$fileSize" 9 28 6 5 0 "Stockage externe [O/N]  : " 11 2 "$addStorage" 11 28 2 1 0 "Installation AudioPlayer:" 13 2 "$addAudioPlayer" 13 28 2 1 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:       " 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:    " 3 2 "$pwFirstuser" 3 28 16 15 1
+    "OC Database admin: " 5 2 "$userBdD" 5 28 16 15 0 "Password database admin: " 7 2 "$pwBdD" 7 28 16 15 1 "Max files size: " 9 2 "$fileSize" 9 28 6 5 0 "External storage [Y/N]: " 11 2 "$addStorage" 11 28 2 1 0 "AudioPlayer [Y/N]: " 13 2 "$addAudioPlayer" 13 28 2 1 0)
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
     nbrItem=$(echo $reponse | grep -o '\\' | wc -l)  # -o occurence
@@ -156,7 +158,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
       addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $6 }')
       if [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] || [[ $userBdD == "" ]] || \
         [[ $pwFirstuser == "" ]] || [[ $pwBdD == "" ]] || \
-        [[ ! $addStorage =~ ^[oONn]$ ]] || [[ ! $addAudioPlayer =~ ^[oONn]$ ]]; then
+        [[ ! $addStorage =~ ^[YyNn]$ ]] || [[ ! $addAudioPlayer =~ ^[YyNn]$ ]]; then
         __helpOC
       else
         # renvoie pwFirstuser; userBdD; pwBdD; fileSize; addStorage; addAudioPlayer
@@ -183,21 +185,21 @@ fi
 pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' ${2})
 useradd -m -G sftp -p $pass ${1}
 if [[ $? -ne 0 ]]; then
-	__infoBox "Création utilisateur ruTorrent" 3 "
-Impossible de créer l'utilisateur Linux ${1}
-Erreur sur 'useradd'"
+	__infoBox "Setting-up rutorrent user" 3 "
+Unable to create Linux user ${1}
+'useradd' error"
 	__msgErreurBox
 fi
 sed -i "1 a\bash" /home/${1}/.profile
 
-echo "Utilisateur linux ${1} créé"
+echo "Linux user ${1} created"
 echo
 
 mkdir -p /home/${1}/downloads/watch
 mkdir -p /home/${1}/downloads/.session
 chown -R ${1}:${1} /home/${1}/
 
-echo "Répertoire/sous-répertoires /home/${1} créé"
+echo "Directory/subdirectories /home/${1} created"
 echo
 
 #  partie rtorrent __creaUserRuto------------------------------------------------
@@ -215,7 +217,7 @@ cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/${1}/.rtorrent.rc
 sed -i 's/<username>/'${1}'/g' /home/${1}/.rtorrent.rc
 sed -i 's/scgi_port.*/scgi_port = 127.0.0.1:'$port'/' /home/${1}/.rtorrent.rc
 
-echo "/home/${1}/rtorrent.rc créé"
+echo "/home/${1}/rtorrent.rc created"
 echo
 
 #  fichiers daemon rtorrent
@@ -231,10 +233,10 @@ sed -i '/## false/ a\          usermod -s /bin/false '${1}'' /etc/init.d/rtorren
 systemctl daemon-reload
 service rtorrentd restart
 if [[ $? -eq 0 ]]; then
-	echo "Daemon rtorrent modifié et fonctionne."
+	echo "rtorrent daemon modified and work well."
 	echo
 else
-	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+	dialog --backtitle "$TITRE" --title "Error message" --prgbox "Issues on running rtorrentd: see wiki on github
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
 	exit 1
 fi
@@ -256,7 +258,7 @@ echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > $REPWEB
 chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
 chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
 
-echo "Dossier users/${1} sur ruTorrent crée"
+echo "Directory users/${1} created on ruTorrent"
 echo
 
 __creaUserRutoPasswd ${1} ${2}   # insert/util_apache.sh ne renvoie rien
@@ -276,7 +278,7 @@ if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
 fi
 service sshd restart > /dev/null
-echo "Sécurisation SFTP faite" # seulement accès a /home/${1}
+echo "SFTP security ok" # seulement accès a /home/${1}
 }   #  fin __creaUserRuto
 
 #################################################
@@ -286,20 +288,21 @@ __ssmenuAjoutUtilisateur() {
 local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "$TITRE" --title "Ajouter un utilisateur" --menu "
+  # Create a user:" 22 70 4 \
+	CMD=(dialog --backtitle "$TITRE" --title "Add a user" --menu "
 
-- Un utilisateur ruTorrent ne peut être créé qu'avec un utilisateur Linux
+- A ruTorrent user can only be created with a Linux user
 
- Créer un utilisateur :" 22 70 4 \
+Create a user:" 18 65 2 \
 	1 "Linux + ruTorrent"
-	2 "Liste des utilisateurs")
+	2 "Users list")
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
 		if [[ $typeUser -ne 2 ]]; then
-			__saisieTexteBox "Création d'un utilisateur" "
-Saisissez le nom du nouvel utilisateur$R
-Ni espace, ni caractères spéciaux$N"
+			__saisieTexteBox "Creating a user" "
+Input the name of new user$R
+Neither space nor special characters$N"
 			if [[ $? -eq 1 ]]; then   # 1 si bouton cancel
 				typeUser=""
 			else
@@ -309,20 +312,21 @@ Ni espace, ni caractères spéciaux$N"
 		case $typeUser in
 			1 )  #  créa linux ruto
 				if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
-					__infoBox "Création d'un utilisateur" 2 "
-Il existe déjà un utilisateur $__saisieTexteBox"
+					__infoBox "Creating a user" 2 "
+The $__saisieTexteBox user already exists"
 				else
-					__ouinonBox "Création utilisateur Linux/ruTorrent" "- Le nouvel utilisateur aura un accès SFTP avec son nom et mot de passe, même port que les autres utilisateurs.
-- Il sera limité à son répertoire /home.
-- Pas d'accès ssh$R
-Vous confirmez $__saisieTexteBox comme nouvel utilisateur ?"
+					__ouinonBox "Creating Linux/ruTorrent user" "- The new user will have SFTP access with his/her name and password,
+  same port as all users.
+- His/her access is limited at /home directory.
+- No access to ssh$R
+Confirm $__saisieTexteBox as new user?"
 					if [[ $__ouinonBox -eq 0 ]]; then
-						__saisiePwBox "Création d'un utilisateur ${1}" "
-Saisissez d'un mot de passe utilisateur" 0 0
+						__saisiePwBox "User $__saisieTexteBox setting-up" "
+Input user password" 0 0
 						clear; __creaUserRuto $__saisieTexteBox $__saisiePwBox; sleep 2
-						__infoBox "Création utilisateur Linux/ruTorrent" 3 "Traitement terminé
-Utilisateur $__saisieTexteBox crée
-Mot de passe $__saisiePwBox"
+						__infoBox "Creating Linux/ruTorrent user" 3 "Setting-up completed
+$__saisieTexteBox user created
+Password $__saisiePwBox"
 					fi
 				fi
 			;;
@@ -352,10 +356,10 @@ __suppUserRuto() {
 
   # dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
   rm -r $REPWEB/rutorrent/conf/users/${1}
-  echo "Dossier conf/users/${1} sur ruTorrent supprimé"
+  echo "Directory conf/users/${1} on ruTorrent deleted"
   echo
   rm -r $REPWEB/rutorrent/share/users/${1}
-  echo "Dossier share/users/${1} sur ruTorrent supprimé"
+  echo "Directory share/users/${1} on ruTorrent deleted"
   echo
 
   # modif de rtorrentd.sh (daemon)
@@ -365,10 +369,10 @@ __suppUserRuto() {
   systemctl daemon-reload
   service rtorrentd restart
   if [[ $? -eq 0 ]]; then
-  	echo "rtorrent en daemon modifié et fonctionne."
+  	echo "Daemon rtorrent modified and work well."
   	echo
   else
-  	dialog --backtitle "$TITRE" --title "Message d'erreur" --prgbox "Problème au lancement du service rtorrentd : Consulter le wiki
+  	dialog --backtitle "$TITRE" --title "Error message" --prgbox "Issues on running rtorrentd service: See wiki on github
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
   	__msgErreurBox
   fi
@@ -376,7 +380,7 @@ https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-ch
   rm -r /var/run/screen/S-${1}
   # Suppression du home et suppression user linux (-f le home est root:root)
   userdel -fr ${1}
-  echo "Utilisateur linux et /home/${1} supprimé"
+  echo "Linux user and his/her /home/${1} deleted"
 }  # fin __suppUserRuto
 
 ######################################################
@@ -386,22 +390,24 @@ __ssmenuSuppUtilisateur() {
   local typeUser=""; local codeSortie=1
 
   until [[ 1 -eq 2 ]]; do
-  	CMD=(dialog --backtitle "$TITRE" --title "Supprimer un utilisateur" --menu "Quel type d'utilisateur voulez-vous supprimer ?
+    # Delete a user:" 22 70 4 \
+  	CMD=(dialog --backtitle "$TITRE" --title "Delete a user" --menu "
+What user kind do you want to remove?
 
-  - Si un utilisateur ruTorrent est supprimé, son homonyme Linux
-le sera aussi.
+- If a ruTorrent user is deleted, his Linux namesake
+will also be deleted.
 
-Supprimer un utilisateur :" 22 70 4 \
+Delete a user:" 18 65 2 \
   1 "Linux + ruTorrent"
-  2 "Liste des utilisateurs")
+  2 "Users list")
 
    typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
     if [[ $? -eq 0 ]]; then
       #	 $type
       # filtrer le choix 2 : liste user
       if [[ $typeUser -ne 2 ]]; then
-        __saisieTexteBox "Suppression d'un utilisateur" "
-Saisissez le nom de l'utilisateur :"
+        __saisieTexteBox "Delete a user" "
+Input a user name:"
         if [[ $? -eq 1 ]]; then  # 1 si bouton cancel
   	      typeUser=""
         else
@@ -411,18 +417,18 @@ Saisissez le nom de l'utilisateur :"
   	# $type $userL R $__saisieTexteBox
   	  case $typeUser in
        1)  #   suppression utilisateur Linux/ruto ----------------
-  	      __ouinonBox "Suppression d'un utilisateur Linux" "ATTENTION le répertoire /home
-de l'utilisateur va être supprimé. Vous confirmez la suppression de $__saisieTexteBox ?"
+  	      __ouinonBox "Delete a Linux user" "Warning the user's /home directory
+will be deleted. You confirm removing $__saisieTexteBox?"
   	      if [[ $__ouinonBox -eq 0 ]]; then
   		      if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
       	    #  $ __saisieTexteBox
   			      __suppUserRuto $__saisieTexteBox; sleep 2
-  			      __infoBox "suppression d'un utilisateur Linux" 3 "Traitement terminé
-Utilisateur$R $__saisieTexteBox$N pour Linux/ruTorrent supprimé"
+  			      __infoBox "Delete a Linux user" 3 "Treatment completed
+Linux/ruTorrent user$R $__saisieTexteBox$N deleted"
   		      else
-  			      __infoBox "Suppression d'un utilisateur Linux/ruTorrent" 3 "
-$__saisieTexteBox$R n'est pas un utilisateur Linux/ruTorrent ou$N
-$__saisieTexteBox$R est l'utilisateur principal"
+  			      __infoBox "Delete a Linux/ruTorrent user" 3 "
+$__saisieTexteBox$R is not a Linux/ruTorrent user or$N
+$__saisieTexteBox$R is the main user"
   			      #sortie case $typeUser et if  retour ss menu
   		      fi
   	      fi
@@ -446,23 +452,23 @@ __changePW() {
 local typeUser=""; local user=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "$TITRE" --title "Changer un mot de passe utilisateur" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Change User Password" --menu "
 
 
 
 
-	Quel type d'utilisateur voulez-vous modifier ?" 22 70 4 \
+	What user kind do you want change?" 18 65 3 \
 	1 "Linux"
 	2 "ruTorrent"
-	3 "Liste des utilisateurs")
+	3 "users list")
 
 	typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
 		case $typeUser in
 			1 )   ###  utilisateur Linux
-				__saisieTexteBox "Modification mot de passe" "
-Saisissez un nom d'utilisateur Linux
-Mot de passe Linux valable aussi pour sftp !!!"
+				__saisieTexteBox "Change Password" "
+Input a Linux user name
+Linux password also valid for sftp!!!"
 				if [[ $? -eq 0 ]]; then  # 1 si bouton cancel
 					# user linux
 					clear
@@ -471,34 +477,34 @@ Mot de passe Linux valable aussi pour sftp !!!"
 						passwd $__saisieTexteBox; sortie=$?
 						sleep 2
 						if [[ $sortie -ne 0 ]]; then
-							__infoBox "Saisie mot de passe Linux" 2 "Une erreur c'est produite, mot de passe inchangé."
+							__infoBox "Linux password Inputed" 2 "An error occurred, password unchanged."
 						else
-							__infoBox "Saisie mot de passe Linux" 2 "Modification mot de passe de	 l'utilisateur $__saisieTexteBox
-Traitement terminé"
+							__infoBox "Linux password Inputed" 2 "User password $__saisieTexteBox changed
+Treatment completed"
 						fi
 					else
-						__infoBox "Modification mot de passe" 3 "$__saisieTexteBox n'est pas un utilisateur Linux"
+						__infoBox "Change Password" 3 "$__saisieTexteBox is not a Linux user"
 					fi
 				fi
 			;;
 			[2] )   ###  utilisateur ruTorrent
-				__saisieTexteBox "Modification mot de passe" "
-Saisissez un nom d'utilisateur ruTorrent"
+				__saisieTexteBox "Change Password" "
+Input a ruTorrent user name"
 				if [[ $? -eq 0 ]]; then
 					# user ruTorrent ?
 					__userExist $__saisieTexteBox  # insert/util_apache.sh
 					if [[ $userR -eq 0 ]]; then  # $userR sortie de __userExist 0 ou erreur
-						__saisiePwBox "Modification mot de passe ruTorrent" "Utilisateur $__saisieTexteBox" 4
+						__saisiePwBox "Change Password ruTorrent" "$__saisieTexteBox user" 4
 						clear
 						__changePWRuto $__saisieTexteBox $__saisiePwBox  # insert/util_apache.sh, renvoie $?
 						if [[ $? -ne 0 ]]; then
-							__infoBox "Modification mot de passe" 3 "une erreur c'est produite"
+							__infoBox "Change Password" 3 "An error occurred, password unchanged."
 						else
-							__infoBox "Modification mot de passe" 2 "Modification mot de passe de l'utilisateur $__saisieTexteBox
-Traitement terminé"
+							__infoBox "Change Password" 2 "User password $__saisieTexteBox changed
+Treatment completed"
 						fi
 					else
-						__infoBox "Modification mot de passe" 2 "$__saisieTexteBox n'est pas un utilisateur ruTorrent"
+						__infoBox "Change Password" 2 "$__saisieTexteBox is not a ruTorrent user"
 					fi
 				fi
 			;;
@@ -535,21 +541,21 @@ __vpn() {
 __menu() {
 choixMenu=""
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "$TITRE" --title "Menu principal" --cancel-label "Quitter" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Main menu" --cancel-label "Exit" --menu "
 
- A utiliser après une installation réalisée avec HiwsT
+ To be used after installation with HiwsT
 
- Votre choix :" 22 70 10 \
-	1 "Ajouter un utilisateur" \
-	2 "Modifier un mot de passe utilisateur" \
-	3 "Supprimer un utilisateur" \
-	4 "Lister les utilisateurs existants" \
-	5 "Installer/déinstaller OpenVPN, utilisateurs openVPN" \
-  6 "Installation de ownCloud" \
+ Your choice:" 22 70 10 \
+	1 "Create a user" \
+	2 "Change user password" \
+	3 "Delete a user" \
+	4 "List existing users" \
+	5 "Install/uninstall OpenVPN, a openVPN user" \
+  6 "Install ownCloud" \
 	7 "Firewall" \
-	8 "Relancer rtorrent manuellement" \
-	9 "Diagnostique" \
-	10 "Rebooter le serveur")
+	8 "Restart rtorrent manually" \
+	9 "Diagnostic" \
+	10 "Reboot the server")
 
 	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
@@ -568,41 +574,41 @@ until [[ 1 -eq 2 ]]; do
 			;;
 			5 )  ######### VPN  ###################################
 				__ouinonBox "openVPN" "
-				VPN installé avec le$R script de Angristan$N (MIT  License),
-				avec son aimable autorisation. Merci à lui
+				VPN installed with the$R Angristan script$N (MIT  License),
+				with his kind permission. Thanks to him
 
-				Dépôt github : https://github.com/Angristan/OpenVPN-install
-				Blog de Angristan : https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/
+				github repository: https://github.com/Angristan/OpenVPN-install
+				Angristan's blog: https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/
 
-				Excellent script mettant l'accent sur la sécurité, permettant une installation sans problème
-				sur des serveurs Debian, Ubuntu, CentOS et Arch Linux.
-				Ne pas réinventer la roue (en moins bien), c'est ça l'Open Source
+				Excellent security-enhancing script, allowing trouble-free installation
+				on Debian, Ubuntu, CentOS et Arch Linux servers.
+				Do not reinvent the wheel (less well), that's the Oppen Source
 				$R $BO
-				----------------------------------------------------------------------
-				|  !!! Activer le firewall AVANT d'installer le VPN !!!
-				|  - A la question 'Tell me a name for the client cert'
-				|    donner le nom de l'utilisateur linux au quel est destiné le vpn.
-				|  - Si vous relancer ce script vous pourrez ajouter ou supprimer
-				|    un utilisateur, déinstaller le VPN.
-				|  - Le fichier de configuration client se trouvera dans votre /home
-				----------------------------------------------------------------------$N" 22 100
+				-----------------------------------------------------------------------------------------
+				|  !!! Turn on  the firewall BEFORE installing the VPN !!!
+				|  - To the question 'Tell me a name for the client cert'
+				|    Give the name of the linux user to which the vpn is intended.
+				|  - If you restart this script you can add or remove
+				|    a user, uninstall the VPN.
+				|  - The client configuration file will be located in the corresponding /home.
+				------------------------------------------------------------------------------------------$N" 22 100
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
       6 )  ###################### ownCloud #############################
-        __saisieOCBox "Paramétrage ownCloud" $R"Consultez l'aide$N" 13
+        __saisieOCBox "ownCloud setting" $R"Consult the help$N" 13
 
         . $REPLANCE/insert/util_owncloud.sh
         varLocalhost="localhost"  # pour $I$varLocalhost dans __messageBox
         varOwnCloud="owncloud"
-        __messageBox "Fin d'installation d'ownCloud" "Installation treminée.
-Retrouvez ownCloud sur https://$HOSTNAME/owncloud ou
+        __messageBox "ownCloud install" "Treatment completed.
+Your ownCloud website https://$HOSTNAME/owncloud or
 https://$IP/owncloud
-Accepter la connexion non sécurisée et l'exception pour ce certificat !
+Accept the Self Signed Certificate and the exception for this certificate!
 
-${BO}Notez que $N $I${FIRSTUSER[0]}$N$BO et son mot de passe est votre compte et le compte administrateur d'ownCloud.
-La base de données mysql $varOwnCloud a comme administrateur$N $I$userBdD$N
+${BO}Note that $N $I${FIRSTUSER[0]}$N$BO and her/his password is your account and ownCloud administrator account.
+The administrator of mysql database $varOwnCloud is$N $I$userBdD$N
 
-Ces informations sont ajoutées au fichier $REPUL/HiwsT/RecapInstall.txt"
+This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
         cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
 Pour accéder a votre cloud privé :
@@ -614,19 +620,19 @@ Pour accéder a votre cloud privé :
 EOF
       ;;
 			7 )  #####################  firewall  ############################
-				__messageBox "Firewall et ufw" "
+				__messageBox "Firewall and ufw" "
 
 
-\ZrAttention !!!\ZR le paramétrage suivant ne tient compte que des installations effectuées avec HiwsT" 12 75
+\ZrWarning !!!\Zn The following setting only takes into account the installations execute with HiwsT" 12 75
 
 				. $REPLANCE/insert/util_firewall.sh
 			;;
 			8 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
 
-			 	  Relance
+			 	  Restart
 
-		du daemon rtorrentd" 10 35
+		rtorrentd daemon " 10 35
 				clear
 				service rtorrentd restart
 				service rtorrentd status
@@ -636,7 +642,7 @@ EOF
 				. $REPLANCE/insert/util_diag.sh
 			;;
 			10 )  ###########################  REBOOT  #######################
-				__ouinonBox "$R $BO Reboot système$N"
+				__ouinonBox "$R $BO Server Reboot$N"
 				if [[ $__ouinonBox -eq 0 ]]; then
 					clear
 					sleep 2
@@ -658,7 +664,7 @@ done
 
 if [[ $(id -u) -ne 0 ]]; then
 	echo
-	echo "Ce script nécessite d'être exécuté avec sudo."
+	echo "This script needs to be run with sudo."
 	echo
 	echo "id : "`id`
 	echo
@@ -674,18 +680,18 @@ service apache2 status > /dev/null
 sortieA=$?
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
 	echo
-	echo "Apache2 et nginx sont actifs. Apache2 doit être le serveur http"
-  read -p "Pour continuer [Enter] pour stoper [Ctrl-c] "
+	echo "Apache2 and nginx are active. Apache2 must be the http server"
+  read -p "To continue [Enter] to stop [Ctrl-c] "
 fi
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -ne 0 ]]; then
   echo
-  echo "Vous avez une configuration nginx. Le script utilise apache2"
+  echo "You have a nginx configuration. But this script uses apache2"
   echo
   exit 1
 fi
 if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	echo
-	echo "Ni apache ni nginx ne sont actifs"
+	echo "Neither apache nor nginx are active"
 	echo
 	exit 1
 fi
@@ -703,9 +709,9 @@ nameDistrib=$(lsb_release -si)  # "Debian" ou "Ubuntu"
 # gestion de la sortie de openvpn-install.sh
 
 if [[ ! -z "$ERRVPN" && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
-  __messageBox "Sortie installation openVPN" "
-Code de Sortie : $ERRVPN
-Il y a eu un problème à l'éxécution de openvpn-install"
+  __messageBox "OpenVPN installation output" "
+Exit status: $ERRVPN
+There was a issue running openvpn-install"
         trap - EXIT
 elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et non vide
   # le script d'install copie le fichier *.ovpn dans ~ de l'admin
@@ -724,16 +730,16 @@ elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et n
   #                 si le compte existe                           et si le compte a été manipulé
   if [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ ! -z $NOMCLIENTVPN ]]; then
     msg="
-Code de Sortie : $ERRVPN
-Exécution nominale de openvpn-install$I
-Le fichier $NOMCLIENTVPN.ovpn est dans le répertoire $ici $N"
+Exit status: $ERRVPN
+Rated execution of openvpn-install$I
+The file $NOMCLIENTVPN.ovpn is in directory $ici $N"
   else  # si le compte n'existe plus ou qu'il n'a pas été manipulé
     msg="
-Code de Sortie : $ERRVPN
-Exécution nominale de openvpn-install"
+Exit status: $ERRVPN
+Rated execution of openvpn-install"
   fi
 
-  __messageBox "Sortie installation openVPN" "$msg"
+  __messageBox "OpenVPN installation output" "$msg"
   trap - EXIT
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
 
@@ -744,5 +750,5 @@ __menu
 
 clear
 echo
-echo "Au revoir"
+echo "Au revoir"  # french touch ;)
 echo

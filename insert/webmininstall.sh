@@ -1,10 +1,10 @@
 echo
 echo
 echo
-echo "*************************************************"
-echo "|           Installation de WebMin              |"
-echo "|               soyez patient                   |"
-echo "*************************************************"
+echo "********************************************"
+echo "|           Installing WebMin              |"
+echo "|         This may take a while            |"
+echo "********************************************"
 echo
 echo
 sleep 1
@@ -26,9 +26,9 @@ else
 	__cmd "wget $upDebWebMinU"
 	__cmd "apt-get install -yq /tmp/$debWebMinU"
 fi
-	echo "****************************"
-	echo "|     Paquets installés    |"
-	echo "****************************"
+	echo "***************************"
+	echo "|   Packages Installed    |"
+	echo "***************************"
 	echo
 	sleep 1
 
@@ -38,7 +38,7 @@ headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 if [[ "$headTest" == Document* ]]
 then
 	echo "******************************"
-	echo "|     WebMin fonctionne      |"
+	echo "|     WebMin works well      |"
 	echo "******************************"
 	echo "Accepter l'exception au certificat pour ce site"
 	echo

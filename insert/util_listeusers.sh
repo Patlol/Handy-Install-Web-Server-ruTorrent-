@@ -157,7 +157,7 @@ __listeUtilisateurs() {
 	  echo > /tmp/liste
     ##  chapeau
 	  __traitHt >> /tmp/liste
-	  __miseEnPageD "users Linux" >> /tmp/liste
+	  __miseEnPageD "Linux users" >> /tmp/liste
     if [[ ${#listeVpn[@]} -ne 0 ]]; then
 			__miseEnPageM "ruTorrent" >> /tmp/liste
       __miseEnPageG "VPN" >> /tmp/liste
@@ -189,6 +189,6 @@ __listeUtilisateurs() {
     else
       la=$(($maxElem*2 +18))
     fi
-	  dialog --backtitle "$TITRE" --title "Liste utilisateurs" --textbox  "/tmp/liste" "$ht" "$la"
+	  dialog --backtitle "$TITRE" --title "Users list" --textbox  "/tmp/liste" "$ht" "$la"
 	fi
 }

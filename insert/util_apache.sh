@@ -21,7 +21,7 @@ __creaUserRutoPasswd() {   # appelée par __creaUserRuto   ${1} $userRuto   ${2}
 __suppUserRutoPasswd() {  #  appelée par __suppUserRuto  ${1} $userRuto
   # mot de passe rutorrent
   sed -i "s/^"${1}".*//" $REPAPA2/.htpasswd
-  echo "Mot de passe supprimé"
+  echo "Password deleted"
   echo
 }
 

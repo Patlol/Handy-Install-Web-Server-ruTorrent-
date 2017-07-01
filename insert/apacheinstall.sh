@@ -7,9 +7,9 @@ fi
 __cmd "apt-get install -yq $paquetsWeb"
 echo
 echo "***********************************************"
-echo "|     Paquets necessaires au serveur web      |"
-echo "|                  installés                  |"
-echo "***********************************************"
+echo "|     Packages needed by the web server      |"
+echo "|                 installed                  |"
+echo "**********************************************"
 sleep 1
 
 # config apache
@@ -25,7 +25,7 @@ echo -e "\nServerTokens Prod\nServerSignature Off" >> $REPAPA2/apache2.conf
 
 echo
 echo "***********************************"
-echo "|       Apache2 configuré         |"
+echo "|      Apache2 configured         |"
 echo "***********************************"
 sleep 1
 
@@ -48,13 +48,13 @@ headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
 if [[ "$headTest1" == OK* ]] && [[ "$headTest2" == OK* ]]
 then
 	echo "***********************************************"
-	echo "|        Apache et php fonctionne             |"
+	echo "|        Apache and php work well             |"
 	echo "***********************************************"
 	sleep 1
 	rm $REPWEB/info.php
 else
-	echo "curl -Is http://$IP/info.php/| head -n 1 renvoie $headTest1" >> /tmp/hiwst.log
-	echo "curl -Is http://$IP/| head -n 1 renvoie $headTest2" >> /tmp/hiwst.log
+	echo "curl -Is http://$IP/info.php/| head -n 1 return $headTest1" >> /tmp/hiwst.log
+	echo "curl -Is http://$IP/| head -n 1 return $headTest2" >> /tmp/hiwst.log
 	__msgErreurBox
 fi
 
@@ -72,8 +72,8 @@ sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"r
 a2ensite default-ssl
 __serviceapache2restart
 echo
-echo "******************************************"
-echo "|      Certificat auto signé créé        |"
-echo "******************************************"
+echo "**********************************************"
+echo "|      Self-signed certificate created       |"
+echo "**********************************************"
 sleep 1
 echo

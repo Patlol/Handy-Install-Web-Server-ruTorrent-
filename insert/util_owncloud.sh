@@ -21,11 +21,11 @@ if [[ $nameDistrib = "Ubuntu" ]]; then
   if [[ $? -ne 0 ]]; then
     service php7.0-fpm status
     echo
-    echo "Erreur php !!!"
+    echo "php error!!!"
     exit 1
   else
     echo "********************************"
-    echo "|  redémarrage php (Redis) ok  |"
+    echo "|  php restart (Redis) ok  |"
     echo "********************************"
   fi
 else  # Debian 8.xx
@@ -38,12 +38,12 @@ else  # Debian 8.xx
   if [[ $? -ne 0 ]]; then
     service php5-fpm-fpm status
     echo
-    echo "Erreur php !!!"
+    echo "php error!!!"
     exit 1
   else
-    echo "********************************"
-    echo "|  redémarrage php (cache) ok  |"
-    echo "********************************"
+    echo "****************************"
+    echo "|  php restart (cache) ok  |"
+    echo "****************************"
   fi
 fi
 
@@ -51,21 +51,21 @@ fi
 # install de postfix et mailutils si pas présents
 which mailutils 2>&1 > /dev/null
 if [ $? != 0 ]; then
-  __messageBox "Installation postfix/mailutils" "
-Valider les valeurs proposées par défaut"
+  __messageBox "postfix/mailutils install" "
+Validate the default values"
   apt-get -yq install mailutils postfix
   service postfix reload
   if [[ $? -ne 0 ]]; then
     service postfix status
     echo
-    echo "Erreur postfix !!!"
+    echo "Epostfix error!!!"
     exit 1
   fi
 fi
 
-echo "***************************************"
-echo "|  Installation des paquets terminée  |"
-echo "***************************************"
+echo "*************************"
+echo "|  Packages installed   |"
+echo "*************************"
 
 ################################################################################
 # paramétrage apache
@@ -94,21 +94,21 @@ service apache2 restart
 if [[ $? -ne 0 ]]; then
   service apache2 status
   echo
-  echo "Erreur apache !!!"
+  echo "apache error!!!"
   exit 1
 else
-  echo "********************************"
-  echo "|  Paramétrage apache terminé  |"
-  echo "********************************"
+  echo "**************************"
+  echo "|  apache setting-up ok  |"
+  echo "**************************"
 fi
 
 ################################################################################
 ## création base de données
-echo "***************************************************************************"
-echo "|       Création de la Base de données owncloud et de son admin           |"
-echo "|    Entrez le mot de passe root que vous avez saisi à l'installation     |"
-echo "|         de mySql ou laisser vide si vous n'avez rien saisi              |"
-echo "***************************************************************************"
+echo "************************************************************************"
+echo "|       Creating the owncloud database and its administrator           |"
+echo "|    Enter the root password you entered in the mySql installation     |"
+echo "|         Or leave blank if you have not entered anything              |"
+echo "************************************************************************"
 mysql -tp <<EOF
 CREATE DATABASE IF NOT EXISTS owncloud;
 show databases;
@@ -118,12 +118,12 @@ EOF
 
 if [[ $? -ne 0 ]]; then
   echo
-  echo "Erreur à la création de la base de données owncloud !!!"
+  echo "Error creating the owncloud database!!!"
   exit 1
 else
-  echo "************************************"
-  echo "|  Base de données et admin créés  |"
-  echo "************************************"
+  echo "*****************************************************"
+  echo "|  owncloud database and its administrator created  |"
+  echo "*****************************************************"
 fi
 
 ################################################################################
@@ -133,13 +133,13 @@ fi
 sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name "owncloud"  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser
 if [[ $? -ne 0 ]]; then
   echo
-  echo "Erreur à la finalisation de l'installation"
+  echo "Error in owncloud finalizing the installation"
   echo
   exit 1
 else
   echo "*************************************"
-  echo "|       Installation finalisée      |"
-  echo "|   déclaration BdD et admin-user   |"
+  echo "|       Finalized installation      |"
+  echo "|     Database and admin-user set   |"
   echo "*************************************"
 fi
 
@@ -155,18 +155,18 @@ if [[ $fileSize != "513M" ]]; then
   # https://doc.owncloud.org/server/9.0/admin_manual/issues/code_signing.html#errors et
   # https://stackoverflow.com/questions/35954919/owncloud-9-code-signing-and-htaccess
   sed -i "/);/i 'integrity.check.disabled' => true," $ocpath/config/config.php
-  echo "*************************************"
-  echo "|       upload_max_filesize         |"
-  echo "|   et post_max_size paramétrés     |"
-  echo "| ajout de integrity.check.disabled |"
-  echo "*************************************"
+  echo "**********************************"
+  echo "|      upload_max_filesize       |"
+  echo "|      and post_max_size set     |"
+  echo "|  add integrity.check.disabled  |"
+  echo "**********************************"
 fi
 
 chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ
 
 ################################################################################
 ## partage du rep downloads de l'utilisateur et install audioplayer
-if [[ $addStorage =~ [oO] ]]; then
+if [[ $addStorage =~ [yY] ]]; then
   sudo -u $htuser $ocpath/occ app:enable files_external
   sudo -u $htuser $ocpath/occ files_external:create Downloads \\OC\\Files\\Storage\\Local null::null
   sudo -u $htuser $ocpath/occ files_external:config 1 datadir \/home\/${FIRSTUSER[0]}\/downloads
@@ -180,13 +180,13 @@ if [[ $addStorage =~ [oO] ]]; then
     echo
     sleep 1.5
   else
-    echo "***************************************"
-    echo "|        stockage externe ok          |"
-    echo "| sur /home/${FIRSTUSER[0]}/downloads |"
-    echo "***************************************"
+    echo "**************************************"
+    echo "|    External storage support ok     |"
+    echo "| on /home/${FIRSTUSER[0]}/downloads |"
+    echo "**************************************"
   fi
 fi
-if [[ $addAudioPlayer =~ [oO] ]]; then
+if [[ $addAudioPlayer =~ [yY] ]]; then
   wget https://github.com/Rello/audioplayer/archive/master.zip -O $ocpath/apps/master.zip
   unzip $ocpath/apps/master.zip -d $ocpath/apps/
   mv $ocpath/apps/audioplayer-master  $ocpath/apps/audioplayer
@@ -195,8 +195,8 @@ if [[ $addAudioPlayer =~ [oO] ]]; then
   sudo -u $htuser $ocpath/occ app:enable audioplayer
   if [[ $? -ne 0 ]]; then
     echo
-    echo "Erreur à l'installation de Audio Player"
-    echo "Ne remet pas en cause l'installation de ownCloud"
+    echo "Error Audio Player install"
+    echo "Does not impact owncloud installation"
     echo
     sleep 1.5
   else
@@ -222,13 +222,13 @@ if [[ $addAudioPlayer =~ [oO] ]]; then
     service iwatch restart
     service iwatch status
     if [[ $? -ne 0 ]]; then
-      __messageBox "Installation Audio-player" "Installation réussie
-mais sans iwatch (problème au paramétrage)"
+      __messageBox "Audio-player install" "Successful installation
+but without iwatch (setup issue)"
     else
-    __messageBox "Installation Audio-player" "Installation réussie
-les modifications sur les répertoires owncloud/data/${FIRSTUSER[0]}
-( et /home/${FIRSTUSER[0]}/downloads si stockage externe activé )
-seront mises à jour automatiquement dans Audio-player"
+    __messageBox "Audio-player install" "Successful installation
+Changes to directories owncloud/data/${FIRSTUSER[0]}
+( and /home/${FIRSTUSER[0]}/downloads if External Storage is enabled )
+Will be automatically updated in Audio-player (Thanks to iwatch)"
     fi
     clear
   fi
@@ -242,16 +242,16 @@ sed -i "/);/i 'memcache.local' => '/\OC/\Memcache/\APCu',\n'memcache.locking' =>
 
 ################################################################################
 ## modif des droits
-echo -e "\nCréation de répertoires si nécessaire\n" # "Creating possible missing Directories\n"
+echo -e "\nCreating possible missing Directories\n"
 mkdir -p $ocpath/data
 mkdir -p $ocpath/assets
 mkdir -p $ocpath/updater
 
-echo -e "\nModification des droits\n" # "chmod Files and Directories\n"
+echo -e "\nchmod Files and Directories\n"
 find ${ocpath}/ -type f -print0 | xargs -0 chmod 0640
 find ${ocpath}/ -type d -print0 | xargs -0 chmod 0750
 
-echo -e "\nModification du propriétaire des répertoires\n" # "chown Directories\n"
+echo -e "\nchown Directories\n"
 chown -R ${rootuser}:${htgroup} ${ocpath}/
 chown -R ${htuser}:${htgroup} ${ocpath}/apps/
 chown -R ${htuser}:${htgroup} ${ocpath}/assets/
@@ -262,7 +262,7 @@ chown -R ${htuser}:${htgroup} ${ocpath}/updater/
 
 chmod +x ${ocpath}/occ
 
-echo -e "\nchmod et chown .htaccess\n"
+echo -e "\nchmod and chown .htaccess\n"
 if [ -f ${ocpath}/.htaccess ]
  then
   chmod 0644 ${ocpath}/.htaccess
@@ -274,14 +274,14 @@ if [ -f ${ocpath}/data/.htaccess ]
   chown ${rootuser}:${htgroup} ${ocpath}/data/.htaccess
 fi
 
-echo "*************************"
-echo "|    Droits modifiés    |"
-echo "*************************"
+echo "*************************************"
+echo "|  Permissions and owners modified  |"
+echo "*************************************"
 
 echo
-echo "***************************"
-echo "|  Installation terminée  |"
-echo "***************************"
+echo "****************************"
+echo "|  Installation completed  |"
+echo "****************************"
 
 sleep 2
 

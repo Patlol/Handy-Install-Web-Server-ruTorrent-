@@ -25,8 +25,8 @@ fi
 service sshd restart
 __cmd "service sshd status"
 
-echo "******************************************"
-echo "|             ssh sécurisé               |"
-echo "******************************************"
+echo "****************************************"
+echo "|             ssh secure               |"
+echo "****************************************"
 echo
 sleep 1

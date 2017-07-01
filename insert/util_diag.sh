@@ -2,41 +2,41 @@ clear
 echo
 lsb_release -a
 echo
-echo "Serveur http : $SERVEURHTTP"
+echo "http server:    $SERVEURHTTP"
 echo
 echo "-------------------------------------------------------------------------------"
-echo "RAM : "
-echo "-----"
+echo "RAM: "
+echo "----"
 free -h
 echo
 echo "-------------------------------------------------------------------------------"
-echo "Disques :"
-echo "---------"
+echo "Disks:"
+echo "------"
 df -h
 echo
 echo "-------------------------------------------------------------------------------"
-echo "netstat :"
-echo "---------"
+echo "netstat:"
+echo "--------"
 netstat -tap
 echo
 echo "-------------------------------------------------------------------------------"
-echo "firewall : ufw show listening"
-echo "-----------------------------"
+echo "firewall: ufw show listening"
+echo "----------------------------"
 ufw show listening 2>/dev/null
-[[ $? -ne 0 ]] && echo "ufw n'est pas installé"
+[[ $? -ne 0 ]] && echo "Ufw is not installed"
 echo "-------------------------------------------------------------------------------"
-echo "firewall : ufw status verbose"
-echo "-----------------------------"
+echo "firewall: ufw status verbose"
+echo "----------------------------"
 ufw status verbose 2>/dev/null
-[[ $? -ne 0 ]] && echo "ufw n'est pas installé"
+[[ $? -ne 0 ]] && echo "Ufw is not installed"
 echo "-------------------------------------------------------------------------------"
-echo "apache2 :"
-echo "---------"
+echo "apache2:"
+echo "--------"
 service apache2 status
 echo
 echo "-------------------------------------------------------------------------------"
-echo "php-fpm :"
-echo "---------"
+echo "php-fpm:"
+echo "--------"
 if [[ $nameDistrib == "Ubuntu" ]]; then
   service php7.0-fpm status
 else
@@ -44,31 +44,31 @@ else
 fi
 echo
 echo "-------------------------------------------------------------------------------"
-echo "sshd :"
-echo "------"
+echo "sshd:"
+echo "-----"
 service sshd status
 echo
 echo "-------------------------------------------------------------------------------"
-echo "rtorrentd :"
-echo "-----------"
+echo "rtorrentd:"
+echo "-----/----"
 service rtorrentd status
 echo
 ps aux | grep '.torrent$'
 echo
 echo "-------------------------------------------------------------------------------"
-echo "Utilisateurs :"
-echo "--------------"
+echo "Users:"
+echo "------"
 __listeUtilisateurs "texte"
 cat /tmp/liste
 
 until [[ 1 -eq 2 ]]; do
-  echo "faire défiler vers le haut pour voir le début"
+  echo "Scroll up to see the beginning"
   echo
-  echo -e "\t1) Voir les règles iptables table 'filter'"
-  echo -e "\t2) Voir les règles iptables table 'nat'"
-  echo -e "\t0) Sortir"
+  echo -e "\t1) See iptables rules, 'filter' table"
+  echo -e "\t2) See iptables rules, 'nat' table"
+  echo -e "\t0) Exit"
   echo
-  echo -n "Votre choix (0 1 2) "
+  echo -n "Your choice (0 1 2) "
 	read choixMenu
 	echo
 	case $choixMenu in
@@ -86,7 +86,7 @@ until [[ 1 -eq 2 ]]; do
       echo "------------------------------------------------------------------------"
     ;;
     * )
-      echo "Entrée invalide"
+      echo "Invalid input"
       sleep 1
     ;;
   esac

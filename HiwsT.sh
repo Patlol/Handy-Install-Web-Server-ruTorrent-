@@ -77,16 +77,16 @@ __infoBox() {   # param : titre sleep texte
 }
 
 __msgErreurBox() {
-	__messageBox "$R Message d'erreur $N" "
+	__messageBox "$R Error message $N" "
 
 `cat /tmp/hiwst.log`
 	$R
-Consulter le wiki sur github $N
-https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal
+See the wiki on github $N
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
 
-Le message d'erreur est enregistré dans $I/tmp/trace$N"
-	__ouinonBox "Erreur" "
-Voulez-vous continuer malgré tout ?"
+The error message is stored in $I/tmp/trace$N"
+	__ouinonBox "Error" "
+Do you want continue anyway?"
 	if [[ $__ouinonBox -ne 0 ]]; then exit 1; fi
 }  # fin messageErreur
 
@@ -99,9 +99,9 @@ __saisieTexteBox() {   # param : titre, texte
 			__saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
-			__infoBox "Vérification saisie" 3 "
-Uniquement des caractères alphanumériques
-Entre 2 et 15 caractères"
+			__infoBox "Entry validation" 3 "
+Only alphanumeric characters
+Between 2 and 15 characters"
 		fi
 	done
 }
@@ -109,19 +109,19 @@ Entre 2 et 15 caractères"
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Mot de passe : " 2 4 "" 2 25 25 25 "Resaisissez : " 4 4 "" 4 25 25 25 )
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --nocancel --passwordform "${2}" 0 0 ${3} "Password " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 		if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
 		[[ "$reponse" =~ [\\] ]]; then
       __infoBox "${1}" 2 "
-Le mot de passe ne peut pas contenir d'espace ou de \\."
+The password can't contain spaces or \\."
     else
 	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
 	    pw2=$(echo $reponse | awk -F" " '{ print $2 }')
 			case $pw1 in
 				"" )
 					__infoBox "${1}" 2 "
-Le mot de passe ne peut pas être vide."
+The password can't be empty."
 				;;
 				$pw2 )
 					__saisiePwBox=$pw1
@@ -129,7 +129,7 @@ Le mot de passe ne peut pas être vide."
 				;;
 				* )
 					__infoBox "${1}" 2 "
-Les 2 saisies ne sont pas identiques."
+The 2 inputs are not identical."
 				;;
 			esac
 		fi
@@ -137,7 +137,7 @@ Les 2 saisies ne sont pas identiques."
 }
 
 __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
-  CMD=(dialog --backtitle "$TITRE" --exit-label "Suite de l'installation" --title "${1}" --hline "${3}" --textbox  "${2}" 0 0)
+  CMD=(dialog --backtitle "$TITRE" --exit-label "Continued from installation" --title "${1}" --hline "${3}" --textbox  "${2}" 0 0)
 	("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -174,7 +174,7 @@ __serviceapache2restart() {
 
 if [[ $(id -u) -ne 0 ]]; then
 	echo
-	echo "Ce script nécessite d'être exécuté avec sudo."
+	echo "This script needs to be run with sudo."
 	echo
 	exit 1
 fi
@@ -230,9 +230,9 @@ user=$(id -un)       #  root avec user sudo
 homeDispo=$(df | grep /home | awk -F" " '{ print $4 }')
 rootDispo=$(df | grep  /$ | awk -F" " '{ print $4 }')
 if [ -z "$homeDispo" ]; then
-	info="Vous n'avez pas de partition /home"
+	info="You don't have /home partition"
 else
-  info="Votre partition /home a $(( $homeDispo/1024/1024 )) Go de libre."
+  info="Your /home partition has $(( $homeDispo/1024/1024 )) Go free."
 fi
 
 # portSSH aléatoire
@@ -246,27 +246,27 @@ done
 # ubuntu / debian et bonne version ?
 
 if [ $nameDistrib == "Debian" -a $os_version_M -gt 8 -o $nameDistrib == "Ubuntu" -a $os_version_M -gt 16 ]; then
-	__ouinonBox "Vérification distribution" "
-	Vous utilisez $description
-	Ce script est prévu pour fonctionner sur un serveur Debian 8.xx ou Ubuntu 16.xx
-	Vous risquez d'avoir des problèmes de version à l'installation
-	Voulez-vous continuer ?"
+	__ouinonBox "Distribution check" "
+	You are using $description
+	This script is intended to run on a Debian server 8.xx ou Ubuntu 16.xx
+	You risk having version issues at installation
+	Do you want to continue?"
 	if [[ $__ouinonBox -ne 0 ]]; then	exit 1; fi
 fi
 
 if [ $nameDistrib == "Debian" -a $os_version_M -lt 8 -o $nameDistrib == "Ubuntu" -a $os_version_M -lt 16 ]; then
-	__messageBox "Vérification distribution" "
+	__messageBox "Distribution check" "
 
-	Vous utilisez $description
-	Ce script fonctionne sur un serveur Debian 8.xx ou Ubuntu 16.xx"
+	You are using $description
+	This script is intended to run on a Debian server 8.xx ou Ubuntu 16.xx"
 	exit 1
 fi
 
 if [ $nameDistrib != "Debian" -a $nameDistrib != "Ubuntu" ]; then
-	__messageBox "Vérification distribution" "
+	__messageBox "Distribution check" "
 
-	Vous utilisez $description
-	Ce script fonctionne sur un serveur Debian 8.xx ou Ubuntu 16.xx"
+	You are using $description
+	This script is intended to run on a Debian server 8.xx ou Ubuntu 16.xx"
 	exit 1
 fi
 
@@ -279,19 +279,19 @@ service apache2 stop &> /dev/null
 service nginx stop &> /dev/null
 
 if [[ $serveurHttpN -eq 0 ]] && [[ $serveurHttpA -eq 0 ]]; then
-	__ouinonBox "Serveur http" "
-Vous avez apache2$BO ET$N nginx d'installés !?
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script (apache2)"
+	__ouinonBox "Http server" "
+You have apache2$BO and$N nginx installed!?
+If you continue this script, the existing configuration will be replaced by the script configuration (apache2)"
 	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
 elif [[ $serveurHttpA -eq 0 ]]; then
-	__ouinonBox "Serveur http" "
-Vous avez apache2 d'installer,
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script"
+	__ouinonBox "Http server" "
+You have apache2 installed,
+If you continue this script, the existing configuration will be replaced by the script configuration"
 	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
 elif [[ $serveurHttpN -eq 0 ]]; then
-	__ouinonBox "Serveur http" "
-Vous avez nginx d'installer,
-Si vous continuez ce script, la configuration existante va être remplacée par celle du script (apache2)"
+	__ouinonBox "Http server" "
+You have nginx installed,
+If you continue this script, the existing configuration will be replaced by the script configuration (apache2)"
 	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
 fi
 #--------------------------------------------------------------
@@ -302,92 +302,106 @@ fi
 #    ID, PW, questions
 #############################
 
-__messageBox "$R Avertissement $N" "
+__messageBox "$R Important message $N" "
 
-                              									$I ATTENTION !!! $N
+                               $I WARNING !!! $N
 
- L'utilisation de ce script doit se faire sur un serveur, tel que livré par votre hébergeur.
+ The use of this script must be done on a fresh server
+ as delivered by your host.
 
-$R Une installation quelconque risque d'être endommagée par ce script !!!
- Ne jamais exécuter ce script sur un serveur en production."
+$R Any installation may be damaged by this script!!!
+ Never run this script on a server in production."
 
-__messageBox "Votre système" " $BO
+__messageBox "Your system" " $BO
 
 Distribution :$N $description $BO
 Architecture :$N $arch $BO
-Votre IP     :$N $IP $BO
-Le script tourne sous :$N $user
+Your IP     :$N $IP $BO
+The script runs under:$N $user
 $BO
-Durée du script :$N environ 10mn
+Execution duration:$N about 6mn
 
-Place disponible sur les partitions du disques$BO
-Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
+Amount of disk space available$BO
+Your root partition (/) has $(( $rootDispo/1024/1024 )) Go free.
 $info"  # $info valeur suivant $homeDispo cf. # espace dispo
 
 if [ -z "$homeDispo" ]; then  # /
  	if [ $rootDispo -lt $miniDispoRoot ]; then
-		__infoBox "Avertissement" 4 "
+		__infoBox "Important message" 4 "
 $BO $R
-ATTENTION $N
+WARNING $N
 
-Seulement $R$(( $rootDispo/1024/1024 )) Go$N, sur / pour stocker les fichiers téléchargés"
+Only $R$(( $rootDispo/1024/1024 )) Go$N, on / to store downloaded files"
 	fi
 else  # /home
  	if [ $homeDispo -lt $miniDispoHome ];then
-		__infoBox "Avertissement" 4 "
+		__infoBox "Important message" 4 "
 $BO $R
-ATTENTION $N
+WARNING $N
 
-Seulement $R$(( $homeDispo/1024/1024 )) Go$N, sur /home pour stocker les fichiers téléchargés"
+Only $R$(( $homeDispo/1024/1024 )) Go$N, on /home to store downloaded files"
 	fi
 fi
 
 # utilisateur linux
-__saisieTexteBox "Utilisateur Linux" "
-Vous devez créer un utilisateur spécifique
-Choisir un nom d'utilisateur linux$R
-(ni espace ni \)$N : "
-userLinux=$__saisieTexteBox
-egrep "^$userLinux:" /etc/passwd >/dev/null
-if [[ $? -eq 0 ]]; then
-	__infoBox "Utilisateur Linux" 3 "
-$userLinux existe déjà, choisir un autre nom"
-else
-	__saisiePwBox "Utilisateur Linux" "
-Mot de passe pour l'utilisateur $userLinux :" 4
-	pwLinux=$__saisiePwBox
-fi
-# Rutorrent user
-__saisieTexteBox "Utilisateur ruTorrent" "
+usernameOk=0
+until [[ $usernameOk -ne 0 ]]; do
+	__saisieTexteBox "Linux user" "
+You must create a specific user.
+Choose a linux username$R
+(neither space nor \)$N : "
+	userLinux=$__saisieTexteBox
+	egrep "^$userLinux:" /etc/passwd >/dev/null
+	usernameOk=$?
+	if [[ $usernameOk -eq 0 ]]; then
+		__infoBox "Linux user" 3 "
+	$userLinux already exists, choose another username"
+	fi
+done
+	__saisiePwBox "Linux user" "
+Password for $userLinux:" 4
+pwLinux=$__saisiePwBox
 
-Il est préférable de choisir un nom différent de celui de
-l'utilisateur Linux
-Choisir un nom d'utilisateur ruTorrent$R (ni espace ni \)$N : "
-userRuto=$__saisieTexteBox
-__saisiePwBox "Utilisateur ruTorrent" "
-Mot de passe pour l'utilisateur $userRuto :" 4
+# Rutorrent user
+usernameOk=0
+until [[ $usernameOk -ne 0 ]]; do
+	__saisieTexteBox "ruTorrent user" "
+
+It's more secure to choose a different name
+than the Linux user
+Choose a ruTorrent username$R (neither space nor \)$N: "
+	userRuto=$__saisieTexteBox
+	egrep "^$userRuto:" /etc/passwd >/dev/null
+	usernameOk=$?
+	if [[ $usernameOk -eq 0 ]] && [[ $userRuto != $userLinux ]]; then
+			__infoBox "ruTorrent user" 3 "
+		$userRuto already exists, choose another username"
+	fi
+done
+__saisiePwBox "ruTorrent user" "
+Password for $userRuto:" 4
 pwRuto=$__saisiePwBox
 
 #  webmin
 __ouinonBox "Webmin" "
-Souhaitez-vous installer Webmin ?"
+Would you like to install Webmin?"
 installWebMin=$__ouinonBox
 
 # port ssh
-__ouinonBox "Sécurisation ssh/sftp" "
-Dans le but de sécuriser SSH et SFTP il est proposé de changer le port standard (22) et d'interdire root.
+__ouinonBox "Secure ssh/sftp" "
+In order to secure SSH and SFTP it's proposed to change the standard port (22) and to prohibit root.
  $R
-C'est une mesure de sécurité fortement recommandée.$N
+This is a highly recommended safety measure.$N
 
-L'utilisateur sera $userLinux et le port aléatoire $portSSH$BO ou un port désigné par vous.$N
-Souhaitez-vous appliquer cette modification ?"
+The user will be $userLinux and the random port $portSSH$BO or a port designated by you.$N
+Would you like to apply this change?"
 changePort=$__ouinonBox
 if [ $changePort -eq 0 ]; then
 	choix=0
 	until [ $choix -le $ECHELLE -a $choix -ge $PLANCHER ]; do
-	  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "Port ssh/sftp" --max-input 5 --nocancel --inputbox "
-Le port aléatoire proposé est $I$portSSH$N $BO
-Vous pouvez le modifier entre $PLANCHER et $ECHELLE$N" 0 0 $portSSH)
+	  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "ssh/sftp port" --max-input 5 --nocancel --inputbox "
+The proposed random port is $I$portSSH$N $BO
+You can change it between $PLANCHER and $ECHELLE$N" 0 0 $portSSH)
 	  choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	done
 	portSSH=$choix
@@ -401,41 +415,42 @@ fi
 #  Récapitulatif
 cat << EOF > $REPUL/RecapInstall.txt
 
-Ces informations seront utilisables seulement après la bonne exécution du script.
+This information will be used only after the script has been executed correctly.
 
 Distribution    : $description
 Architecture    : $arch
-Votre IP        : $IP
-Votre host name : $HOSTNAME
+Your IP         : $IP
+Your hostname   : $HOSTNAME
 
 `if [ -z "$homeDispo" ]
 then
-	echo "Vous n'avez pas de partition /home."
+	echo "You haven't /home partition."
 else
-	echo "Votre partition /home a $(( $homeDispo/1024/1024 )) Go de libre."
+	echo "Your /home partition has $(( $homeDispo/1024/1024 )) Go free."
 fi`
-Votre partition root (/) a $(( $rootDispo/1024/1024 )) Go de libre.
-Votre serveur http est $serveurHttp
+Your root (/) partition has $(( $rootDispo/1024/1024 )) Go free.
+Your http server is $serveurHttp
 
-Nom de votre utilisateur accès SSH et SFTP : $userSSH
-Port pour SSh : $portSSH
+Name of user with SSH and SFTP access: $userSSH
+SSh port: $portSSH
 
-Nom de votre utilisateur Linux : $userLinux
+Linux username:           $userLinux
+Password Linux user:      $pwLinux
 
-Nom de votre utilisateur ruTorrent          : $userRuto
-Mot de passe de votre utilisateur ruTorrent : $pwRuto
+ruTorrent username:       $userRuto
+Password ruTorrent user:  $pwRuto
 
 `if [[ $installWebMin -ne 0 ]]
 then
-	echo "Vous ne souhaitez pas installer WebMin"
+	echo "You don't want to install WebMin"
 else
-	echo "Vous souhaitez installer WebMin"
-	echo "L'utilisateur sera "root" avec son mot de passe"
+	echo "You want install WebMin"
+	echo "The user will be "root" with his password"
 fi`
 EOF
 
-__textBox "Récapitulatif de  l'installation" $REPUL/RecapInstall.txt
-__ouinonBox "Installation" "Voulez-vous commencer l'installation ?"
+__textBox "Installation Summary" $REPUL/RecapInstall.txt
+__ouinonBox "Installation" "Do you want start installation?"
 if [ $__ouinonBox -ne 0 ]; then exit 0; fi
 
 
@@ -451,26 +466,26 @@ exec 2>/tmp/trace
 echo
 echo
 echo
-echo "*************************************************"
-echo "|                 Installation                  |"
-echo "*************************************************"
+echo "************************************"
+echo "|           Installation           |"
+echo "************************************"
 echo
 echo
 echo
-echo "***********************************************"
-echo "|              Update système                 |"
-echo "|     Configuration de l'utilisateur linux    |"
-echo "|          Installation des paquets           |"
-echo "***********************************************"
+echo "************************************"
+echo "|           System update          |"
+echo "|     User Linux configuration     |"
+echo "|       Packages installation      |"
+echo "************************************"
 sleep 1
 echo
 
 # upgrade
 __cmd "apt-get update -yq"
 __cmd "apt-get upgrade -yq"
-echo "****************************"
-echo "|  Mise à jour effectuée   |"
-echo "****************************"
+echo "***********************"
+echo "|  Update completed   |"
+echo "***********************"
 sleep 1
 
 ##############################
@@ -479,8 +494,8 @@ sleep 1
 pwCrypt=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
 useradd -m -G adm,dip,plugdev,www-data,sudo -p $pwCrypt $userLinux
 if [[ $? -ne 0 ]]; then
-	__infoBox "Utilisateur Linux" 3 "
-Impossible de créer un utilisateur linux"
+	__infoBox "Linux user" 3 "
+Unable to create linux user"
 	exit 1
 fi
 sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu ok, debian ok après reboot
@@ -499,9 +514,9 @@ mkdir -p /root/.config/mc/
 cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
 
 echo
-echo "********************************"
-echo "|    Utilisateur linux créé    |"
-echo "********************************"
+echo "***************************"
+echo "|   Linux user created    |"
+echo "***************************"
 sleep 1
 echo
 
@@ -523,10 +538,10 @@ fi
 __cmd "apt-get install -yq $paquets"
 
 echo
-echo "****************************************"
-echo "|    Paquets rtorrent et libtorrent    |"
-echo "|              et xmlrpc               |"
-echo "****************************************"
+echo "******************************"
+echo "|    rtorrent, libtorrent    |"
+echo "|    and xmlrpc packages     |"
+echo "******************************"
 echo
 sleep 1
 
@@ -539,9 +554,9 @@ mkdir -p $REPUL/downloads/watch
 mkdir -p $REPUL/downloads/.session
 chown -R $userLinux:$userLinux $REPUL/downloads
 echo
-echo "*********************************************************"
-echo "|   .rtorrent.rc configuré pour l'utilisateur linux     |"
-echo "*********************************************************"
+echo "************************************************"
+echo "|   .rtorrent.rc configured for Linux user     |"
+echo "************************************************"
 sleep 1
 
 # mettre rtorrent en deamon / screen
@@ -562,9 +577,9 @@ sleep 1
 sortie=`pgrep rtorrent`
 if [ -n "$sortie" ]
 then
-	echo "*************************************************"
-	echo "|  rtorrent en daemon fonctionne correctement   |"
-	echo "*************************************************"
+	echo "**************************************"
+	echo "|  rtorrent daemon works correctly   |"
+	echo "**************************************"
 	sleep 1
 else
 	__cmd "ps aux | grep -e '^$userLinux.*rtorrent$'"
@@ -607,9 +622,9 @@ chmod 666 $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
 chown www-data:www-data $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
 
 echo
-echo "*******************************************"
-echo "|    ruTorrent installé et configuré      |"
-echo "*******************************************"
+echo "**********************************************"
+echo "|    ruTorrent installed and configured      |"
+echo "**********************************************"
 sleep 1
 
 # installation de mediainfo et ffmpeg
@@ -625,9 +640,9 @@ else
 	__cmd "apt-get install -yq --force-yes $paquetsMediaU"
 fi
 echo
-echo "****************************************"
-echo "|    mediainfo et ffmpeg installés     |"
-echo "****************************************"
+echo "*****************************************"
+echo "|    mediainfo and ffmpeg installed     |"
+echo "*****************************************"
 sleep 1
 
 ## plugins rutorrent
@@ -658,7 +673,7 @@ echo -e "\n;;\n        [logoff]\n        enabled = yes" >> $REPWEB/rutorrent/plu
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/logoff
 echo
 echo "********************************************"
-echo "|       Plugins ruTorrent installés        |"
+echo "|       ruTorrent plugins installed        |"
 echo "********************************************"
 sleep 1
 
@@ -667,12 +682,12 @@ headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 if [[ "$headTest" == Unauthorized* ]]
 then
 	echo
-	echo "****************************"
-	echo "|  ruTorrent fonctionne    |"
-	echo "****************************"
+	echo "*********************************"
+	echo "|  ruTorrent works correctly    |"
+	echo "*********************************"
 	sleep 1
 else
-	echo "curl -Is http://$IP/rutorrent/| head -n 1 renvoie $headTest" >> /tmp/hiwst.log
+	echo "curl -Is http://$IP/rutorrent/| head -n 1 return $headTest" >> /tmp/hiwst.log
 	__msgErreurBox
 fi
 
@@ -713,82 +728,83 @@ rm -r $REPLANCE
 
 cat << EOF > $REPUL/HiwsT/RecapInstall.txt
 
-Votre système
+Your system
 
 	Distribution    : $description
 	Architecture    : $arch
-	Votre IP        : $IP
-	Votre host name : $HOSTNAME
+	Your IP         : $IP
+	Your hostname   : $HOSTNAME
 
-	Nom de votre utilisateur Linux : $userLinux
+	Linux username  : $userLinux
+	Password        : $pwLinux
 
-Pour accéder à ruTorrent :
+To access ruTorrent:
 	http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
-	ou http(s)://$HOSTNAME/rutorrent
-	En https accepter la connexion non sécurisée et
-	l'exception pour ce certificat !
+	or http(s)://$HOSTNAME/rutorrent
+	With https, accept the Self Signed Certificate and
+	the exception for this certificate!
 
 `if [[ $installWebMin -eq 0 ]]; then
-	echo "Pour accéder à WebMin :"
+	echo "To access WebMin:"
 	echo -e "\thttps://$IP:10000"
-	echo -e "\tou https://$HOSTNAME:10000"
-	echo -e "\tID : root  PW : votre mot de passe root"
-	echo -e "\tAccepter la connexion non sécurisée et"
-	echo -e "\tl'exception pour ce certificat !"
+	echo -e "\tor https://$HOSTNAME:10000"
+	echo -e "\tID : root  PW : your root password"
+	echo -e "\tAccept the Self Signed Certificate and"
+	echo -e "\tthe exception for this certificate!"
 	echo " "
 fi`
-En cas de problème concernant strictement ce script, vous pouvez aller
-Consulter le wiki : https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki
-et poster sur https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues
+In case of issues strictly concerning this script, you can go consult the wiki:
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki
+and post  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues
 
 `if [[ $changePort -eq 0 ]]; then   # ssh sécurisé
-	echo "************************************************"
-	echo "|     ATTENTION le port standard et root       |"
-	echo "|     n'ont plus d'accès en SSH et SFTP        |"
-	echo "************************************************"
+	echo "***********************************************"
+	echo "|      Warning standard port and root         |"
+	echo "|     no longer access to SSH and SFTP        |"
+	echo "***********************************************"
 	echo
-	echo "Pour accéder à votre serveur en ssh :"
-	echo "Depuis linux, sur une console :"
+	echo "To access your server in ssh:"
+	echo "On Linux console:"
 	echo -e "\tssh -p$portSSH  $userLinux@$IP"
-	echo "Depuis windows utiliser PuTTY"
+	echo "On windows use PuTTY"
 
-	echo "Pour accéder aux fichiers via SFTP :"
-	echo -e "\tHôte      : $IP (ou $HOSTNAME)"
-	echo -e "\tPort      : $portSSH"
-	echo -e "\tProtocole : SFTP-SSH File Transfer Peotocol"
-	echo -e "\tAuthentification : normale"
-	echo -e "\tIdentifiant      : $userLinux"
-	echo -e "\tVotre mot de passe pour $userLinux"
+	echo "To access files via SFTP:"
+	echo -e "\tHost          : $IP (ou $HOSTNAME)"
+	echo -e "\tPort          : $portSSH"
+	echo -e "\tProtocol      : SFTP-SSH File Transfer Peotocol"
+	echo -e "\tAuthentication: normale"
+	echo -e "\tLogin         : $userLinux"
+	echo -e "\tYour $userLinux password"
 else   # ssh n'est pas sécurisé
-	echo "Pour accéder à votre serveur en ssh :"
-	echo "Depuis linux, sur une console :"
+	echo "To access your server via ssh:"
+	echo "On Linux console:"
 	echo -e "\tssh root@$IP"
-	echo -e "\tSur la console du serveur 'su $userLinux'"
-	echo "Depuis windows utiliser PuTTY"
+	echo -e "\tOn server console 'su $userLinux'"
+	echo "On windows use PuTTY"
 	echo " "
-	echo "Pour accéder aux fichiers via SFTP :"
-	echo -e "\tHôte      : $IP (ou $HOSTNAME)"
-	echo -e "\tPort      : 22"
-	echo -e "\tProtocole : SFTP-SSH File Transfer Protocol"
-	echo -e "\tAuthentification : normale"
-	echo -e "\tIdentifiant      : root"
+	echo "To access files via SFTP:"
+	echo -e "\tHost          : $IP (ou $HOSTNAME)"
+	echo -e "\tPort          : 22"
+	echo -e "\tProtocol      : SFTP-SSH File Transfer Protocol"
+	echo -e "\tAuthentication: normal"
+	echo -e "\tLogin         : root"
 fi  # ssh pas sécurisé/ sécurisé`
 EOF
 
 # efface la récap 1ère version
 rm $REPUL/RecapInstall.txt
 chmod 400 $REPUL/HiwsT/RecapInstall.txt
-__textBox "Récapitulatif de  l'installation" $REPUL/HiwsT/RecapInstall.txt "Informations sauvegardées dans le fichier RecapInstall.txt"
-__ouinonBox "Fin d'installation" "Utiliser HiwsT-util.sh pour toutes modifications
-Il peut être nécessaire de rebooter pour que tout fonctionne à 100%.
-Voulez-vous rebooter votre serveur maintenat ?"
+__textBox "Installation summary" $REPUL/HiwsT/RecapInstall.txt "Information saved in RecapInstall.txt"
+__ouinonBox "Installation end" "Use HiwsT-util.sh for all modifications
+It may be necessary to reboot for everything work 100%.
+Do you want reboot your server now?"
 if [ $__ouinonBox -eq 0 ]; then
-	__ouinonBox "Fin d'installation" "Reboot :
-Etes-vous sûr ?"
+	__ouinonBox "Installation end" "Reboot :
+Are you sure?"
 	if [ $__ouinonBox -eq 0 ]; then rm -r $REPLANCE; sleep 1; reboot; fi
 fi
 clear
 echo
-echo "Au revoir"
+echo "Au revoir"  # french touch ;)
 echo
 rm -r $REPLANCE
