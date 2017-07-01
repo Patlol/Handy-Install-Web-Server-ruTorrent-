@@ -16,7 +16,7 @@ Install on Debian 8 or Ubuntu 16 server
  - ffmpeg
 - <a href="http://www.webmin.com/">WebMin</a>
 
-![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02 01:07:57.png) ![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02 01:08:15.png)
+![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:07:57.png) ![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:08:15.png)
 # HiwsT-util
 With this utility you can  
 - Create other ruTorrent users and thus share your server.  
@@ -30,7 +30,7 @@ With this utility you can
 - Add a VPN (openVPN)
 - Perform a system diagnosis  
 
-![copie d'écran](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02 01:03:30.png)
+![copie d'écran](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:03:30.png)
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/1)-Home">Wiki</a> in french
 
