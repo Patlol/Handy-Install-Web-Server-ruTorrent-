@@ -523,15 +523,23 @@ done
 ##  ajout vpn, téléchargement du script
 ######################################################
 __vpn() {
+  # $REPInstVpn == $REPLANCE and readonly
   clear
-  if [[ -e $REPLANCE/openvpn-install.sh ]]; then
-    rm $REPLANCE/openvpn-install.sh
+  if [[ -e $REPInstVpn/openvpn-install.sh ]]; then
+    rm $REPInstVpn/openvpn-install.sh
   fi
-  wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh
-  chmod +x $REPLANCE/openvpn-install.sh
+  wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh -O $REPInstVpn/openvpn-install.sh
+  chmod +x $REPInstVpn/openvpn-install.sh
   export ERRVPN="" NOMCLIENTVPN=""
   sed -i "/^#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\nNOMCLIENTVPN=\$CLIENT\ncd $REPInstVpn\n$REPInstVpn\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
-	. $REPLANCE/openvpn-install.sh
+# __myTrap() {
+# ERRVPN=$?
+# NOMCLIENTVPN=$CLIENT
+# cd /home/patrick/Bureau/HiwsT
+# /home/patrick/Bureau/HiwsT/HiwsT-util.sh
+# }
+# trap '__myTrap' EXIT
+. $REPLANCE/openvpn-install.sh
 }
 
 

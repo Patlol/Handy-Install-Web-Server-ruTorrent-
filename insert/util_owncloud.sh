@@ -238,7 +238,7 @@ fi
 ##  Sur config/config.php ajouter à trusted_domains notre IP
 sed -i "/0 => 'localhost',/a 1 => '"$IP"'," $ocpath/config/config.php
 ##  Prise en compte du memcache APCu/Redis
-sed -i "/);/i 'memcache.local' => '/\OC/\Memcache/\APCu',\n'memcache.locking' => '/\OC/\Memcache/\Redis',\n'redis' => array(\n     'host' => 'localhost',\n     'port' => 6379,\n      )," $ocpath/config/config.php
+sed -i "/);/i 'memcache.local' => '\\\OC\\\Memcache\\\APCu',\n'memcache.locking' => '\\\OC\\\Memcache\\\Redis',\n'redis' => array(\n     'host' => 'localhost',\n     'port' => 6379,\n      )," $ocpath/config/config.php
 
 ################################################################################
 ## modif des droits
