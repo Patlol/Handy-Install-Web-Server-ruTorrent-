@@ -1,6 +1,6 @@
 
-None of the 6 entries should contain \ or space.
-The 6 fields are mandatory.
+None of the 7 entries should contain \ or space.
+The 7 fields are mandatory.
 
 Linux user
   Can't be modified.
@@ -28,7 +28,11 @@ Max files size
 
   FORMAT : 1-9[0-9][0-9][0-9]M|G without space
   exemples : 200M 650M 1G 10G ...
-  The default value is 513M
+  Default value: 513M
+
+Data directory localisation
+  The full directory where the cloud files will be stored.
+  Default value: /var/www/owncloud/data
 
 External storage (Recommended for ruTorrent)
   1 characters maximum "y" or "n" Lower case or upper case.

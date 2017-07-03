@@ -135,33 +135,63 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   }
 
   # saise du mot de passe pour un utilisateur donné dans le texte $2
-  local reponse="" codeRetour="" nbrItem="" nbrEspace=""
-  pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""
+  local reponse="" codeRetour="" nbrItem="" nbrEspace="" inputItem="" help="" # champs ou a été actionné le help-button
+  pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
 	until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:       " 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:    " 3 2 "$pwFirstuser" 3 28 16 15 1
-    "OC Database admin: " 5 2 "$userBdD" 5 28 16 15 0 "Password database admin: " 7 2 "$pwBdD" 7 28 16 15 1 "Max files size: " 9 2 "$fileSize" 9 28 6 5 0 "External storage [Y/N]: " 11 2 "$addStorage" 11 28 2 1 0 "AudioPlayer [Y/N]: " 13 2 "$addAudioPlayer" 13 28 2 1 0)
+    # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
+    # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 16 15 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 16 15 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 16 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
     nbrItem=$(echo $reponse | grep -o '\\' | wc -l)  # -o occurence
     nbrEspace=$(echo $reponse | grep [[:space:]] | wc -l) # =1 si 1 ou +ieurs espaces trouvés (1 ligne)
 
-    # bouton "Aide" (help) renvoie code sortie 2 ou les 3 champs n'ont pas été remplis (si nbr d'items >3 il y a des "\" dans la saisie, le séparateur étant "\") ou des espaces ont été saisie
-		if [[ $codeRetour == 2 ]] || [[ $nbrItem -ne 6 ]] || [[ $nbrEspace -ne 0 ]]; then
+
+
+    # bouton "Aide" (help) renvoie code sortie 2 ou les 7 champs n'ont pas été remplis. Si nbr d'items >7 il y a des "\" dans la saisie (le séparateur étant "\") ou des espaces ont été saisie.
+		if [[ $codeRetour == 2 ]]; then
       __helpOC
+      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
+      # format de $reponse : HELP PW Linux user:\qsdf\ddddd\...
+      help=$(echo $reponse | awk -F"\\" '{ print $1 }')
+      pwFirstuser=$(echo $reponse | awk -F"\\" '{ print $2 }')
+      userBdD=$(echo $reponse | awk -F"\\" '{ print $3 }')
+      pwBdD=$(echo $reponse | awk -F"\\" '{ print $4 }')
+      fileSize=$(echo $reponse | awk -F"\\" '{ print $5 }')
+      ocDataDir=$(echo $reponse | awk -F"\\" '{ print $6 }')
+      addStorage=$(echo $reponse | awk -F"\\" '{ print $7 }')
+      addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $8 }')
+      inputItem=$(echo $help | cut -d \  -f 2-) # pour placer le curseur
     else
       # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
+      # format de $reponse : zesfg\zf\azdzad\....
       pwFirstuser=$(echo $reponse | awk -F"\\" '{ print $1 }')
       userBdD=$(echo $reponse | awk -F"\\" '{ print $2 }')
       pwBdD=$(echo $reponse | awk -F"\\" '{ print $3 }')
       fileSize=$(echo $reponse | awk -F"\\" '{ print $4 }')
-      addStorage=$(echo $reponse | awk -F"\\" '{ print $5 }')
-      addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $6 }')
-      if [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] || [[ $userBdD == "" ]] || \
-        [[ $pwFirstuser == "" ]] || [[ $pwBdD == "" ]] || \
-        [[ ! $addStorage =~ ^[YyNn]$ ]] || [[ ! $addAudioPlayer =~ ^[YyNn]$ ]]; then
+      ocDataDir=$(echo $reponse | awk -F"\\" '{ print $5 }')
+      addStorage=$(echo $reponse | awk -F"\\" '{ print $6 }')
+      addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $7 }')
+      if [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] || \
+        [[ $userBdD =~ [[:space:]\\] ]] || [[ $userBdD == "" ]] || \
+        [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ $pwFirstuser == "" ]] || \
+        [[ $pwBdD =~ [[:space:]\\] ]] || [[ $pwBdD == "" ]] || \
+        [[ $ocDataDir =~ [[:space:]\\] ]] || [[ $ocDataDir == "" ]] || \
+        [[ ! $addStorage =~ ^[YyNn]$ ]] || \
+        [[ ! $addAudioPlayer =~ ^[YyNn]$ ]] || \
+        [[ $nbrItem -ne 7 ]] || [[ $nbrEspace -ne 0 ]]
+      then
         __helpOC
+        # vide le champs incriminé et place le curseur
+        [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] && fileSize="513M" && inputItem="Max files size:"
+        [[ $userBdD =~ [[:space:]\\] ]] || [[ $userBdD == "" ]] && userBdD="" && inputItem="OC Database admin:"
+        [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ $pwFirstuser == "" ]] && pwFirstuser="" && inputItem="PW Linux user:"
+        [[ $pwBdD =~ [[:space:]\\] ]] || [[ $pwBdD == "" ]] && pwBdD="" && inputItem="Password database admin:"
+        [[ $ocDataDir =~ [[:space:]\\] ]] || [[ $ocDataDir == "" ]] && ocDataDir="/var/www/owncloud/data" && inputItem="Data directory location:"
+        [[ ! $addStorage =~ ^[YyNn]$ ]] && addStorage="" && inputItem="External storage [Y/N]:"
+        [[ ! $addAudioPlayer =~ ^[YyNn]$ ]] && addAudioPlayer="" && inputItem="AudioPlayer [Y/N]:"
       else
-        # renvoie pwFirstuser; userBdD; pwBdD; fileSize; addStorage; addAudioPlayer
+        # renvoie pwFirstuser; userBdD; pwBdD; fileSize; ocDataDir; addStorage; addAudioPlayer
         break
       fi
     fi
@@ -603,7 +633,7 @@ until [[ 1 -eq 2 ]]; do
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
 			;;
       6 )  ###################### ownCloud #############################
-        __saisieOCBox "ownCloud setting" $R"Consult the help$N" 13
+        __saisieOCBox "ownCloud setting" $R"Consult the help$N" 15   # lignes ss-boite
 
         . $REPLANCE/insert/util_owncloud.sh
         varLocalhost="localhost"  # pour $I$varLocalhost dans __messageBox

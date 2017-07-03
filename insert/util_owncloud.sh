@@ -24,9 +24,9 @@ if [[ $nameDistrib = "Ubuntu" ]]; then
     echo "php error!!!"
     exit 1
   else
-    echo "********************************"
+    echo "****************************"
     echo "|  php restart (Redis) ok  |"
-    echo "********************************"
+    echo "****************************"
   fi
 else  # Debian 8.xx
   wget -nv https://download.owncloud.org/download/repositories/stable/Debian_8.0/Release.key -O Release.key
@@ -130,7 +130,7 @@ fi
 ## finalisation de l'installation remplace la GUI
 # maintenance:install [--database DATABASE] [--database-name DATABASE-NAME] [--database-host DATABASE-HOST] [--database-user DATABASE-USER] [--database-pass [DATABASE-PASS]] [--database-table-prefix [DATABASE-TABLE-PREFIX]] [--admin-user ADMIN-USER] [--admin-pass ADMIN-PASS] [--data-dir DATA-DIR]
 
-sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name "owncloud"  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser
+sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name "owncloud"  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
 if [[ $? -ne 0 ]]; then
   echo
   echo "Error in owncloud finalizing the installation"
