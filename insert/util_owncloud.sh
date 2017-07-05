@@ -24,9 +24,9 @@ if [[ $nameDistrib = "Ubuntu" ]]; then
     echo "php error!!!"
     exit 1
   else
-    echo "****************************"
-    echo "|  php restart (Redis) ok  |"
-    echo "****************************"
+    echo "**************************************"
+    echo "|  php restart (APCu anbd Redis) ok  |"
+    echo "**************************************"
   fi
 else  # Debian 8.xx
   wget -nv https://download.owncloud.org/download/repositories/stable/Debian_8.0/Release.key -O Release.key
@@ -41,9 +41,9 @@ else  # Debian 8.xx
     echo "php error!!!"
     exit 1
   else
-    echo "****************************"
-    echo "|  php restart (cache) ok  |"
-    echo "****************************"
+    echo "*************************************"
+    echo "|  php restart (APCu and Redis) ok  |"
+    echo "*************************************"
   fi
 fi
 
@@ -100,6 +100,12 @@ else
   echo "**************************"
   echo "|  apache setting-up ok  |"
   echo "**************************"
+fi
+################################################################################
+## si $ocDataDir modifié le créer et lui donner le bon proprio
+if [[ ${ocDataDi}r != "/var/www/owncloud/data" ]]; then
+  mkdir -p ${ocDataDir}
+  chown -R ${htuser}:${htgroup} ${ocDataDir}
 fi
 
 ################################################################################
@@ -250,6 +256,14 @@ mkdir -p $ocpath/updater
 echo -e "\nchmod Files and Directories\n"
 find ${ocpath}/ -type f -print0 | xargs -0 chmod 0640
 find ${ocpath}/ -type d -print0 | xargs -0 chmod 0750
+if [[ ${ocDataDi}r != "/var/www/owncloud/data" ]]; then
+  echo -e "\nchown and chmod for new owncloud data directory\n"
+  find ${ocDataDir}/ -type f -print0 | xargs -0 chmod 0640
+  find ${ocDataDir}/ -type d -print0 | xargs -0 chmod 0750
+  ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
+  chmod 750 ${ocDataDirRoot}  # - /data(/)
+  chown ${rootuser}:${htgroup} ${ocDataDirRoot} # - /data(/)
+fi
 
 echo -e "\nchown Directories\n"
 chown -R ${rootuser}:${htgroup} ${ocpath}/
