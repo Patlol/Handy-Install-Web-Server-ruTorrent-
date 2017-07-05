@@ -134,8 +134,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
   }
 
-  # saise du mot de passe pour un utilisateur donné dans le texte $2
-  local reponse="" codeRetour="" nbrItem="" nbrEspace="" inputItem="" help="" # champs ou a été actionné le help-button
+  local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
 	until [[ 1 -eq 2 ]]; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
@@ -143,17 +142,13 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
 		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 16 15 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 16 15 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 16 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
-    nbrItem=$(echo $reponse | grep -o '\\' | wc -l)  # -o occurence
-    nbrEspace=$(echo $reponse | grep [[:space:]] | wc -l) # =1 si 1 ou +ieurs espaces trouvés (1 ligne)
-
-
 
     # bouton "Aide" (help) renvoie code sortie 2 ou les 7 champs n'ont pas été remplis. Si nbr d'items >7 il y a des "\" dans la saisie (le séparateur étant "\") ou des espaces ont été saisie.
 		if [[ $codeRetour == 2 ]]; then
       __helpOC
       # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
       # format de $reponse : HELP PW Linux user:\qsdf\ddddd\...
-      help=$(echo $reponse | awk -F"\\" '{ print $1 }')
+      inputItem=$(echo $reponse | awk -F"\\" '{ print $1 }' | cut -d \  -f 2-) # pour placer le curseur
       pwFirstuser=$(echo $reponse | awk -F"\\" '{ print $2 }')
       userBdD=$(echo $reponse | awk -F"\\" '{ print $3 }')
       pwBdD=$(echo $reponse | awk -F"\\" '{ print $4 }')
@@ -161,7 +156,6 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
       ocDataDir=$(echo $reponse | awk -F"\\" '{ print $6 }')
       addStorage=$(echo $reponse | awk -F"\\" '{ print $7 }')
       addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $8 }')
-      inputItem=$(echo $help | cut -d \  -f 2-) # pour placer le curseur
     else
       # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
       # format de $reponse : zesfg\zf\azdzad\....
@@ -172,28 +166,49 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
       ocDataDir=$(echo $reponse | awk -F"\\" '{ print $5 }')
       addStorage=$(echo $reponse | awk -F"\\" '{ print $6 }')
       addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $7 }')
-      if [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] || \
-        [[ $userBdD =~ [[:space:]\\] ]] || [[ $userBdD == "" ]] || \
-        [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ $pwFirstuser == "" ]] || \
-        [[ $pwBdD =~ [[:space:]\\] ]] || [[ $pwBdD == "" ]] || \
-        [[ $ocDataDir =~ [[:space:]\\] ]] || [[ $ocDataDir == "" ]] || \
-        [[ ! $addStorage =~ ^[YyNn]$ ]] || \
-        [[ ! $addAudioPlayer =~ ^[YyNn]$ ]] || \
-        [[ $nbrItem -ne 7 ]] || [[ $nbrEspace -ne 0 ]]
-      then
+      # vide le champs incriminé et place le curseur
+      if [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ $pwFirstuser == "" ]]; then
         __helpOC
-        # vide le champs incriminé et place le curseur
-        [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] && fileSize="513M" && inputItem="Max files size:"
-        [[ $userBdD =~ [[:space:]\\] ]] || [[ $userBdD == "" ]] && userBdD="" && inputItem="OC Database admin:"
-        [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ $pwFirstuser == "" ]] && pwFirstuser="" && inputItem="PW Linux user:"
-        [[ $pwBdD =~ [[:space:]\\] ]] || [[ $pwBdD == "" ]] && pwBdD="" && inputItem="Password database admin:"
-        [[ $ocDataDir =~ [[:space:]\\] ]] || [[ $ocDataDir == "" ]] && ocDataDir="/var/www/owncloud/data" && inputItem="Data directory location:"
-        [[ ! $addStorage =~ ^[YyNn]$ ]] && addStorage="" && inputItem="External storage [Y/N]:"
-        [[ ! $addAudioPlayer =~ ^[YyNn]$ ]] && addAudioPlayer="" && inputItem="AudioPlayer [Y/N]:"
+        pwFirstuser=""
+        inputItem="PW Linux user:"
+      elif [[ $userBdD =~ [[:space:]\\] ]] || [[ $userBdD == "" ]]; then
+        __helpOC
+        userBdD=""
+        inputItem="OC Database admin:"
+      elif [[ $pwBdD =~ [[:space:]\\] ]] || [[ $pwBdD == "" ]]; then
+        __helpOC
+        pwBdD=""
+        inputItem="Password database admin:"
+      elif [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]]; then
+        __helpOC
+        fileSize="513M"
+        inputItem="Max files size:"
+      elif [[ $ocDataDir =~ [[:space:]\\] ]] || [[ $ocDataDir == "" ]]; then
+        __helpOC
+        ocDataDir="/var/www/owncloud/data"
+        inputItem="Data directory location:"
+      elif [[ ! $addStorage =~ ^[YyNn]$ ]]; then
+        __helpOC
+        addStorage=""
+        inputItem="External storage [Y/N]:"
+      elif [[ ! $addAudioPlayer =~ ^[YyNn]$ ]]; then
+        __helpOC
+        addAudioPlayer=""
+        inputItem="AudioPlayer [Y/N]:"
       else
-        # renvoie pwFirstuser; userBdD; pwBdD; fileSize; ocDataDir; addStorage; addAudioPlayer
         break
       fi
+
+      # if [[ $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] && \
+      #   [[ ! $userBdD =~ [[:space:]\\] ]] && [[ $userBdD != "" ]] && \
+      #   [[ ! $pwFirstuser =~ [[:space:]\\] ]] && [[ $pwFirstuser != "" ]] && \
+      #   [[ ! $pwBdD =~ [[:space:]\\] ]] && [[ $pwBdD != "" ]] && \
+      #   [[ ! $ocDataDir =~ [[:space:]\\] ]] && [[ $ocDataDir != "" ]] && \
+      #   [[ $addStorage =~ ^[YyNn]$ ]] && \
+      #   [[ $addAudioPlayer =~ ^[YyNn]$ ]]; then
+      #   # break renvoie pwFirstuser; userBdD; pwBdD; fileSize; ocDataDir; addStorage; addAudioPlayer
+      #   break
+      # fi
     fi
   done
 }
