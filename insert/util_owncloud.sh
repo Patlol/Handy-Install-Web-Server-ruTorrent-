@@ -256,7 +256,7 @@ mkdir -p $ocpath/updater
 echo -e "\nchmod Files and Directories\n"
 find ${ocpath}/ -type f -print0 | xargs -0 chmod 0640
 find ${ocpath}/ -type d -print0 | xargs -0 chmod 0750
-if [[ ${ocDataDi}r != "/var/www/owncloud/data" ]]; then
+if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   echo -e "\nchown and chmod for new owncloud data directory\n"
   find ${ocDataDir}/ -type f -print0 | xargs -0 chmod 0640
   find ${ocDataDir}/ -type d -print0 | xargs -0 chmod 0750
