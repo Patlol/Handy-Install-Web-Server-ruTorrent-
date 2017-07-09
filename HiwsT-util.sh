@@ -91,7 +91,7 @@ __saisieTexteBox() {   # param : titre, texte
       __saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
-			__infoBox "validation entry" 3 "
+			__infoBox "Validation entry" 3 "
 Only alphanumeric characters
 Between 2 and 15 characters"
 		fi
@@ -133,7 +133,35 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
   }
-
+  __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vérifier
+    local pw1=""; local codeSortie=""; local reponse=""
+  	until [[ 1 -eq 2 ]]; do
+  		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
+  		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+      if [[ $? == 1 ]]; then return 1; fi
+      if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
+        [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
+        __infoBox "${1}" 2 "
+  The password can't contain spaces or \\."
+      else
+  	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
+  			case $pw1 in
+  				"" )
+  					__infoBox "${1}" 2 "
+  The password can't be empty."
+  				;;
+  				${4} )  # password linux or database
+  					break
+  				;;
+  				* )
+  					__infoBox "${1}" 2 "
+  The 2 inputs are not identical."
+  				;;
+  			esac
+  		fi
+  	done
+  }
+  
   local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
 	until [[ 1 -eq 2 ]]; do
@@ -143,7 +171,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
 
-    # bouton "Aide" (help) renvoie code sortie 2 ou les 7 champs n'ont pas été remplis. Si nbr d'items >7 il y a des "\" dans la saisie (le séparateur étant "\") ou des espaces ont été saisie.
+    # bouton "Aide" (help) renvoie code sortie 2
 		if [[ $codeRetour == 2 ]]; then
       __helpOC
       # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
@@ -196,19 +224,10 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
         addAudioPlayer=""
         inputItem="AudioPlayer [Y/N]:"
       else
+        __saisiePwOcBox "Validation password entry" "Linux user password" 2 $pwFirstuser && \
+        __saisiePwOcBox "Validation password entry" "Database admin password" 2 $pwBdD  && \
         break
       fi
-
-      # if [[ $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]] && \
-      #   [[ ! $userBdD =~ [[:space:]\\] ]] && [[ $userBdD != "" ]] && \
-      #   [[ ! $pwFirstuser =~ [[:space:]\\] ]] && [[ $pwFirstuser != "" ]] && \
-      #   [[ ! $pwBdD =~ [[:space:]\\] ]] && [[ $pwBdD != "" ]] && \
-      #   [[ ! $ocDataDir =~ [[:space:]\\] ]] && [[ $ocDataDir != "" ]] && \
-      #   [[ $addStorage =~ ^[YyNn]$ ]] && \
-      #   [[ $addAudioPlayer =~ ^[YyNn]$ ]]; then
-      #   # break renvoie pwFirstuser; userBdD; pwBdD; fileSize; ocDataDir; addStorage; addAudioPlayer
-      #   break
-      # fi
     fi
   done
 }
