@@ -161,13 +161,13 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   		fi
   	done
   }
-  
+
   local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
 	until [[ 1 -eq 2 ]]; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
     # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 16 15 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 16 15 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 16 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 25 25 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 16 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
 
