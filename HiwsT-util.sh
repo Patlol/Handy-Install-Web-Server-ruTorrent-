@@ -129,6 +129,38 @@ The 2 inputs are not identical."
 	done
 }
 
+__saisieBdDBox() { # pour util_listeusers param : titre, texte, nbr ligne sous-boite
+  local reponse="" codeRetour="" repQuery="" tabQuery=""
+  userBdD=""; pwBdD=""
+	until [[ 1 -eq 2 ]]; do
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "name admin MySQL user: " 1 2 "" 1 28 16 16 0 "PW admin MySQL user: " 3 2 "" 3 28 25 25 1)
+		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+    codeRetour=$?
+    if [[ $codeRetour -eq 1 ]]; then return 1; fi
+    userBdD=$(echo $reponse | awk -F"\\" '{ print $1 }')
+    pwBdD=$(echo $reponse | awk -F"\\" '{ print $2 }')
+    repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD)
+    if [[ $repQuery == "" ]]; then
+      __infoBox "${1}" 3 "
+The Name or the password of user is (are) false."
+    else
+  		# liste => tab,  $repQuery : group id group id .....
+  		tabQuery=($(echo $repQuery))
+  		j=0  # $j : 0 1 2 3 ... index nouveau tableau $listeOC ne contenant que les id
+  		     # $i : 1 3 5 ... les id dans $tabQuery,  (($i-1)) le groupe correspondant
+  		for (( i = 1; i < ${#tabQuery[@]}; i++)); do
+  			listeOC[$j]=${tabQuery[$i]}
+  			if [[ ${tabQuery[(($i-1))]} == "admin" ]]; then
+  				listeOC[$j]="[${listeOC[$j]}]"  # entre [] pour l'admin
+  			fi
+  			((j++)); ((i++))
+  		done
+      break
+    fi
+  done
+  return 0
+}
+
 __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
@@ -167,7 +199,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
 	until [[ 1 -eq 2 ]]; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
     # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 25 25 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 16 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 25 25 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
 
@@ -815,9 +847,21 @@ Rated execution of openvpn-install"
   trap - EXIT
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
 
+
+################################################################################
+# si owncloud est installé saise id et pw
+pathOCC=$(find /var -name occ)
+if [[ -n $pathOCC ]]; then
+  __saisieBdDBox "ownCloud MySQL Database", "ownCloud is installed, give me the name and password of the ownCloud database administrator", 3
+  if [[ $? == 1 ]]; then  # si esc sur __saisieBdDBox
+    __infoBox "${1}" 3 "
+You will not be able to see ownCloud users."
+  fi
+fi
+
+
 ################################################################################
 #  boucle menu / sortie
-
 __menu
 
 clear
