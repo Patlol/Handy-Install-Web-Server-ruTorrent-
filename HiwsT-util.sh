@@ -850,7 +850,7 @@ fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
 
 ################################################################################
 # si owncloud est installé saise id et pw
-pathOCC=$(find /var -name occ)
+pathOCC=$(find /var -name occ 2>/dev/null)
 if [[ -n $pathOCC ]]; then
   __saisieBdDBox "ownCloud MySQL Database", "ownCloud is installed, give me the name and password of the ownCloud database administrator", 3
   if [[ $? == 1 ]]; then  # si esc sur __saisieBdDBox
