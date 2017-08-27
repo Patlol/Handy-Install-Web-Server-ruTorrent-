@@ -45,9 +45,36 @@ __listeUtilisateurs() {
 		done
 	fi
 
-	# if users owncloud
-	# if owncloud installed: $listeOC is already populate
-
+	# if owncloud installed
+	pathOCC=$(find /var -name occ 2>/dev/null)
+	if [[ -n $pathOCC ]]; then
+		# use debian script user
+		userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }')
+		pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }')
+		repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD)
+		if [[ $repQuery == "" ]]; then
+			if [[ ${1} != "texte" ]]; then
+	      __infoBox "${1}" 3 "
+	The Name or the password of mysql user is (are) not find."
+			else
+				echo
+				echo "The Name or the password of mysql user is (are) not find."
+				echo
+			fi
+	  else
+  		# liste => tab,  $repQuery : group id group id .....
+  		tabQuery=($(echo $repQuery))
+  		j=0  # $j : 0 1 2 3 ... index nouveau tableau $listeOC ne contenant que les id
+  		     # $i : 1 3 5 ... les id dans $tabQuery,  (($i-1)) le groupe correspondant
+  		for (( i = 1; i < ${#tabQuery[@]}; i++)); do
+  			listeOC[$j]=${tabQuery[$i]}
+  			if [[ ${tabQuery[(($i-1))]} == "admin" ]]; then
+  				listeOC[$j]="[${listeOC[$j]}]"  # entre [] pour l'admin
+  			fi
+  			((j++)); ((i++)) # deux sauts pour i
+  		done
+    fi
+	fi
 	# tableau contenant la longueur (en nbr d'éléments) de chaque tableau ci-dessus
 	tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeVpn[@]} ${#listeOC[@]})
 
