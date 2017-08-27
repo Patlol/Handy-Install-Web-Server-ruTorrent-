@@ -644,8 +644,9 @@ __vpn() {
 ############################
 __menu() {
 choixMenu=""
+item=1
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "$TITRE" --title "Main menu" --cancel-label "Exit" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Main menu" --cancel-label "Exit" --default-item "$item" --menu "
 
  To be used after installation with HiwsT
 
@@ -677,6 +678,17 @@ until [[ 1 -eq 2 ]]; do
 				__listeUtilisateurs
 			;;
 			5 )  ######### VPN  ###################################
+        if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]; then
+          __ouinonBox "openVPN" "$R$BO  Turn ON the firewall BEFORE
+  installing the VPN !!!$N"
+          if [[ $__ouinonBox -eq 0 ]]; then
+            item=7
+            continue
+            #. $REPLANCE/insert/util_firewall.sh
+          else
+            continue
+          fi
+        fi
 				__ouinonBox "openVPN" "
 				VPN installed with the$R Angristan script$N (MIT  License),
 				with his kind permission. Thanks to him
@@ -689,14 +701,14 @@ until [[ 1 -eq 2 ]]; do
 				Do not reinvent the wheel (less well), that's the Oppen Source
 				$R $BO
 				-----------------------------------------------------------------------------------------
-				|  !!! Turn on  the firewall BEFORE installing the VPN !!!
 				|  - To the question 'Tell me a name for the client cert'
 				|    Give the name of the linux user to which the vpn is intended.
 				|  - If you restart this script you can add or remove
 				|    a user, uninstall the VPN.
-				|  - The client configuration file will be located in the corresponding /home.
+				|  - The configuration file will be located in the corresponding /home if his name exist.
 				------------------------------------------------------------------------------------------$N" 22 100
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
+        item=1
 			;;
       6 )  ###################### ownCloud #############################
         __saisieOCBox "ownCloud setting" $R"Consult the help$N" 15   # lignes ss-boite
@@ -730,6 +742,7 @@ EOF
 \ZrWarning !!!\Zn The following setting only takes into account the installations execute with HiwsT" 12 75
 
 				. $REPLANCE/insert/util_firewall.sh
+        if [[ $item -eq 7 ]]; then item=5; fi # si on vient de openvpn on y retourne
 			;;
 			8 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
