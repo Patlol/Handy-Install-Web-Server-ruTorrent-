@@ -645,11 +645,12 @@ __menu() {
 choixMenu=""
 item=1
 until [[ 1 -eq 2 ]]; do
+  # /!\ 7) doit être firewall (retour test openvpn)
 	CMD=(dialog --backtitle "$TITRE" --title "Main menu" --cancel-label "Exit" --default-item "$item" --menu "
 
  To be used after installation with HiwsT
 
- Your choice:" 22 70 10 \
+ Your choice:" 22 70 11 \
 	1 "Create a user" \
 	2 "Change user password" \
 	3 "Delete a user" \
@@ -657,9 +658,10 @@ until [[ 1 -eq 2 ]]; do
 	5 "Install/uninstall OpenVPN, a openVPN user" \
   6 "Install ownCloud" \
 	7 "Firewall" \
-	8 "Restart rtorrent manually" \
-	9 "Diagnostic" \
-	10 "Reboot the server")
+  8 "Install phpMyAdmin" \
+	9 "Restart rtorrent manually" \
+	10 "Diagnostic" \
+	11 "Reboot the server")
 
 	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
@@ -677,8 +679,8 @@ until [[ 1 -eq 2 ]]; do
 				__listeUtilisateurs
 			;;
 			5 )  ######### VPN  ###################################
-        if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]; then
-          __ouinonBox "openVPN" "$R$BO  Turn ON the firewall BEFORE
+        if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]  && [[ ! -e /etc/openvpn/server.conf ]]; then
+          __ouinonBox "Install openVPN" "$R$BO  Turn ON the firewall BEFORE
   installing the VPN !!!$N"
           if [[ $__ouinonBox -eq 0 ]]; then
             item=7
@@ -750,7 +752,19 @@ EOF
 				. $REPLANCE/insert/util_firewall.sh
         if [[ $item -eq 7 ]]; then item=5; fi # si on vient de openvpn on y retourne
 			;;
-			8 )  ########################  Relance rtorrent  ######################
+      8 )  ########################  phpMyAdmin  #####################
+        pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
+        if [[ -n $pathPhpMyAdmin ]]; then
+          __infoBox "Install phpMyAdmin" 3 "
+  phpMyAdmin is already installed
+          "
+          continue
+        fi
+        clear
+        apt-get update && apt-get -yq install phpMyAdmin
+        sleep 2
+      ;;
+			9 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
 
 			 	  Restart
@@ -761,10 +775,10 @@ EOF
 				service rtorrentd status
 				sleep 3
 			;;
-			9 )  ################# Diagnostiques ###############################
+			10 )  ################# Diagnostiques ###############################
 				. $REPLANCE/insert/util_diag.sh
 			;;
-			10 )  ###########################  REBOOT  #######################
+			11 )  ###########################  REBOOT  #######################
 				__ouinonBox "$R $BO Server Reboot$N"
 				if [[ $__ouinonBox -eq 0 ]]; then
 					clear
