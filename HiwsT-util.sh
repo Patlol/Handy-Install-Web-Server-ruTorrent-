@@ -63,8 +63,7 @@ __messageBox() {   # param : titre texte
 }
 
 __infoBox() {   # param : titre sleep texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
-			("${CMD[@]}" 2>&1 >/dev/tty)
+			dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0
 }
 
 __msgErreurBox() {
@@ -711,6 +710,13 @@ until [[ 1 -eq 2 ]]; do
         item=1
 			;;
       6 )  ###################### ownCloud #############################
+        pathOCC=$(find /var -name occ 2>/dev/null)
+	      if [[ -n $pathOCC ]]; then
+          __infoBox "Install ownCloud" 3 "
+  ownCloud is already installed
+          "
+          continue
+        fi
         __saisieOCBox "ownCloud setting" $R"Consult the help$N" 15   # lignes ss-boite
 
         . $REPLANCE/insert/util_owncloud.sh
