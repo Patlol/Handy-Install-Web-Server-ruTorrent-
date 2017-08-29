@@ -128,38 +128,6 @@ The 2 inputs are not identical."
 	done
 }
 
-# __saisieBdDBox() { # pour util_listeusers param : titre, texte, nbr ligne sous-boite
-#   local reponse="" codeRetour="" repQuery="" tabQuery=""
-#   userBdD=""; pwBdD=""
-# 	until [[ 1 -eq 2 ]]; do
-# 		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --separator "\\" --insecure --mixedform "${2}" 0 0 ${3} "name admin MySQL user: " 1 2 "" 1 28 16 16 0 "PW admin MySQL user: " 3 2 "" 3 28 25 25 1)
-# 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
-#     codeRetour=$?
-#     if [[ $codeRetour -eq 1 ]]; then return 1; fi
-#     userBdD=$(echo $reponse | awk -F"\\" '{ print $1 }')
-#     pwBdD=$(echo $reponse | awk -F"\\" '{ print $2 }')
-#     repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD)
-#     if [[ $repQuery == "" ]]; then
-#       __infoBox "${1}" 3 "
-# The Name or the password of user is (are) false."
-#     else
-#   		# liste => tab,  $repQuery : group id group id .....
-#   		tabQuery=($(echo $repQuery))
-#   		j=0  # $j : 0 1 2 3 ... index nouveau tableau $listeOC ne contenant que les id
-#   		     # $i : 1 3 5 ... les id dans $tabQuery,  (($i-1)) le groupe correspondant
-#   		for (( i = 1; i < ${#tabQuery[@]}; i++)); do
-#   			listeOC[$j]=${tabQuery[$i]}
-#   			if [[ ${tabQuery[(($i-1))]} == "admin" ]]; then
-#   				listeOC[$j]="[${listeOC[$j]}]"  # entre [] pour l'admin
-#   			fi
-#   			((j++)); ((i++))
-#   		done
-#       break
-#     fi
-#   done
-#   return 0
-# }
-
 __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
@@ -630,8 +598,8 @@ __vpn() {
 # __myTrap() {
 # ERRVPN=$?
 # NOMCLIENTVPN=$CLIENT
-# cd /home/patrick/Bureau/HiwsT
-# /home/patrick/Bureau/HiwsT/HiwsT-util.sh
+# cd /home/<username>/HiwsT
+# /home/<username>/HiwsT/HiwsT-util.sh
 # }
 # trap '__myTrap' EXIT
 . $REPLANCE/openvpn-install.sh
@@ -642,10 +610,9 @@ __vpn() {
 ##  Menu principal
 ############################
 __menu() {
-choixMenu=""
-item=1
+local choixMenu=""; local item=1
 until [[ 1 -eq 2 ]]; do
-  # /!\ 7) doit être firewall (retour test openvpn)
+  # /!\ 7) doit être firewall (retour test openvpn avec $item)
 	CMD=(dialog --backtitle "$TITRE" --title "Main menu" --cancel-label "Exit" --default-item "$item" --menu "
 
  To be used after installation with HiwsT
@@ -679,13 +646,13 @@ until [[ 1 -eq 2 ]]; do
 				__listeUtilisateurs
 			;;
 			5 )  ######### VPN  ###################################
+        # si firewall off et vpn pas installé
         if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]  && [[ ! -e /etc/openvpn/server.conf ]]; then
           __ouinonBox "Install openVPN" "$R$BO  Turn ON the firewall BEFORE
   installing the VPN !!!$N"
           if [[ $__ouinonBox -eq 0 ]]; then
-            item=7
+            item=7  # menu Firewall
             continue
-            #. $REPLANCE/insert/util_firewall.sh
           else
             continue
           fi
@@ -709,7 +676,7 @@ until [[ 1 -eq 2 ]]; do
 				|  - The configuration file will be located in the corresponding /home if his name exist.
 				------------------------------------------------------------------------------------------$N" 22 100
 				if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
-        item=1
+        item=1  # menu : Create a user
 			;;
       6 )  ###################### ownCloud #############################
         pathOCC=$(find /var -name occ 2>/dev/null)
@@ -750,7 +717,7 @@ EOF
 \ZrWarning !!!\Zn The following setting only takes into account the installations execute with HiwsT" 12 75
 
 				. $REPLANCE/insert/util_firewall.sh
-        if [[ $item -eq 7 ]]; then item=5; fi # si on vient de openvpn on y retourne
+        if [[ $item -eq 7 ]]; then item=5; fi # menu : si on vient de openvpn on y retourne
 			;;
       8 )  ########################  phpMyAdmin  #####################
         pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
@@ -760,9 +727,7 @@ EOF
           "
           continue
         fi
-        clear
-        apt-get update && apt-get -yq install phpMyAdmin
-        sleep 2
+        . $REPLANCE/insert/util_phpmyadmin.sh
       ;;
 			9 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
@@ -858,6 +823,7 @@ elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et n
     mv /home/${FIRSTUSER[0]}/$NOMCLIENTVPN.ovpn /home/$NOMCLIENTVPN/
     chown $NOMCLIENTVPN:$NOMCLIENTVPN /home/$NOMCLIENTVPN/$NOMCLIENTVPN.ovpn
     ici="/home/$NOMCLIENTVPN"
+  # si l'home a ce nom n'existe pas
   elif [[ -e /etc/openvpn/easy-rsa/pki/private/$NOMCLIENTVPN.key ]] && [[ ! -z "$NOMCLIENTVPN" ]]; then
     chown ${FIRSTUSER[0]}:${FIRSTUSER[0]} /home/${FIRSTUSER[0]}/$NOMCLIENTVPN.ovpn
     ici="/home/${FIRSTUSER[0]}"
@@ -879,19 +845,6 @@ Rated execution of openvpn-install"
   __messageBox "OpenVPN installation output" "$msg"
   trap - EXIT
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
-
-
-################################################################################
-# # si owncloud est installé saise id et pw
-# pathOCC=$(find /var -name occ 2>/dev/null)
-# if [[ -n $pathOCC ]]; then
-#   __saisieBdDBox "ownCloud MySQL Database", "ownCloud is installed, give me the name and password of the ownCloud database administrator", 3
-#   if [[ $? == 1 ]]; then  # si esc sur __saisieBdDBox
-#     __infoBox "${1}" 3 "
-# You will not be able to see ownCloud users."
-#   fi
-# fi
-
 
 ################################################################################
 #  boucle menu / sortie
