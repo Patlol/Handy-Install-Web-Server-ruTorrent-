@@ -60,8 +60,7 @@ __trap() {  # pour exit supprime NOPASSWD et info.php
 }
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 1
-	CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}"  --yesno "
-${2}" 0 0 )
+	CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}"  --yesno "${2}" 0 0 )
 	choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	__ouinonBox=$?
 }    #  fin ouinon

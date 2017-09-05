@@ -58,7 +58,7 @@ Validate the default values"
   if [[ $? -ne 0 ]]; then
     service postfix status
     echo
-    echo "Epostfix error!!!"
+    echo "Postfix error!!!"
     exit 1
   fi
 fi

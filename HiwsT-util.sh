@@ -14,11 +14,10 @@
 
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
-readonly REPLANCE=$(echo `pwd`)
+readonly REPLANCE=$(pwd)
 readonly REPInstVpn=$REPLANCE
 readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
 readonly HOSTNAME=$(hostname -f)
-SERVEURHTTP=""
 # Tableau des utilisateurs principaux 0=linux 1=rutorrent
 if [[ ! -e $REPLANCE/firstusers ]]; then
   echo
@@ -131,7 +130,8 @@ The 2 inputs are not identical."
 __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
-  }
+  }  # fin __helpOC()
+
   __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vérifier
     local pw1=""; local codeSortie=""; local reponse=""
   	until [[ 1 -eq 2 ]]; do
@@ -159,8 +159,9 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   			esac
   		fi
   	done
-  }
+  }  # fin __saisiePwOcBox()
 
+  ## debut __saisieOCBox()
   local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
 	until [[ 1 -eq 2 ]]; do
@@ -227,9 +228,9 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
         __saisiePwOcBox "Validation password entry" "Database admin password" 2 $pwBdD  && \
         break
       fi
-    fi
-  done
-}
+    fi  # fin $codeRetour == 2
+  done  # fin until infinie
+}  # fin __saisieOCBox()
 
 ################################################################################
 #       Fonctions principales
@@ -798,8 +799,7 @@ if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	exit 1
 fi
 
-#  chargement des f() apache
-SERVEURHTTP="apache2"
+#  chargement des f() apache et liste users
 . $REPLANCE/insert/util_apache.sh
 . $REPLANCE/insert/util_listeusers.sh
 

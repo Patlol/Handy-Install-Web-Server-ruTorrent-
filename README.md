@@ -29,6 +29,7 @@ With this utility you can
 - Add a firewall
 - Add a VPN (openVPN)
 - Add ownCloud
+- Add phpMyAdmin
 - Perform a system diagnosis  
 
 ![copie d'écran](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:03:30.png)
