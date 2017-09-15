@@ -15,11 +15,6 @@ echo "------"
 df -h
 echo
 echo "-------------------------------------------------------------------------------"
-echo "netstat:"
-echo "--------"
-netstat -tap
-echo
-echo "-------------------------------------------------------------------------------"
 echo "firewall: ufw show listening"
 echo "----------------------------"
 ufw show listening 2>/dev/null
@@ -50,7 +45,7 @@ service sshd status
 echo
 echo "-------------------------------------------------------------------------------"
 echo "rtorrentd:"
-echo "-----/----"
+echo "----------"
 service rtorrentd status
 echo
 ps aux | grep '.torrent$'
@@ -66,6 +61,7 @@ until [[ 1 -eq 2 ]]; do
   echo
   echo -e "\t1) See iptables rules, 'filter' table"
   echo -e "\t2) See iptables rules, 'nat' table"
+  echo -e "\t3) netstat -tap"
   echo -e "\t0) Exit"
   echo
   echo -n "Your choice (0 1 2) "
@@ -84,6 +80,15 @@ until [[ 1 -eq 2 ]]; do
       echo "------------------------------------------------------------------------"
       iptables -t nat -n -L
       echo "------------------------------------------------------------------------"
+    ;;
+    3 )
+      echo
+      "-------------------------------------------------------------------------------"
+      echo "netstat:"
+      echo "--------"
+      netstat -tap
+      "-------------------------------------------------------------------------------"
+      echo
     ;;
     * )
       echo "Invalid input"
