@@ -1,6 +1,7 @@
 
 clear
-apt-get update && apt-get -yq install phpMyAdmin
+apt-get update
+cmd="apt-get -yq install phpmyadmin"; $cmd || __msgErreurBox "$cmd" $?
 if [[ $? ]]; then
 	echo "***************************"
 	echo "|   Packages Installed    |"
@@ -16,14 +17,6 @@ if [[ $? ]]; then
 		echo
 		sleep 3
 	else
-		msgErreur=$(echo "curl -Is http://$IP/phpmyadmin | head -n 1 renvoie $headTest")
-		echo "$msgErreur" >> /tmp/hiwst.log
-		__messageBox "Install phpMyAdmin" $msgErreur
+		__msgErreurBox "curl -Is http://$IP/phpmyadmin | head -n 1 | awk -F\" \" '{ print $2 }' renvoie '$headTest'" "http $headTest"
 	fi
-else
-	echo "************************************"
-	echo "|   Error in installing packages   |"
-	echo "************************************"
-	echo
-	sleep 3
 fi

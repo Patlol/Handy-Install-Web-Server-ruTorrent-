@@ -55,8 +55,13 @@ readonly N="\Zn"   # retour à la normale
 #       Fonctions utilitaires
 ######################################
 
-__trap() {  # pour exit supprime NOPASSWD et info.php
+__trap() {  # pour exit supprime info.php et affiche dernier message d'erreur
 	if [ -e $REPWEB/info.php ]; then rm $REPWEB/info.php; fi
+	if [ -s /tmp/trace.log ]; then
+    echo "/tmp/trace.log:"
+    echo
+    cat /tmp/trace.log
+  fi
 }
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 1
@@ -66,7 +71,7 @@ __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -75,18 +80,26 @@ __infoBox() {   # param : titre sleep texte
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
-__msgErreurBox() {
-	__messageBox "$R Error message $N" "
-
-`cat /tmp/hiwst.log`
-	$R
+__msgErreurBox() {   # param : commande, N° erreur
+  local msgErreur; local ref=$(caller 0)
+  err=$2
+	msgErreur="------------------\n"
+	msgErreur+="Line N°$ref\n$BO$R$1$N \nError N° $R$err$N\n"
+	trace=$(cat /tmp/trace)
+	msgErreur+="$trace\n"
+	msgErreur+="------------------\n"
+  :>/tmp/trace
+	__messageBox "$R Error message$N" "$msgErreur	$R
 See the wiki on github $N
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
-
-The error message is stored in $I/tmp/trace$N"
+The error message is stored in $I/tmp/trace.log$N"
 	__ouinonBox "Error" "
 Do you want continue anyway?"
-	if [[ $__ouinonBox -ne 0 ]]; then exit 1; fi
+	if [[ $__ouinonBox -ne 0 ]]; then exit $err; fi
+	echo -e $msgErreur > /tmp/hiwst.log
+	sed -i '/------------------/d' /tmp/hiwst.log
+	sed -r 's/(\\Zb)|(\\Z1)|(\\Zn)//g' </tmp/hiwst.log >>/tmp/trace.log
+  return $err
 }  # fin messageErreur
 
 __saisieTexteBox() {   # param : titre, texte
@@ -140,29 +153,12 @@ __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
 	("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
-__cmd() {
-  local msgErreur
-  $*
-  err=$?
-  if [[ $err -ne 0 ]]; then
-    msgErreur="$BO$R$*$N \nerreur N° $R$err$N"
-		echo "------------------" >> /tmp/hiwst.log
-    echo -e $msgErreur" " >> /tmp/hiwst.log
-		tail --lines=16 /tmp/trace >> /tmp/hiwst.log
-    echo "------------------" >> /tmp/hiwst.log
-    tail --lines=16 /tmp/trace
-		__msgErreurBox
-		:>/tmp/hiwst.log  # ràz
-    return 1
-  else
-		:>/tmp/hiwst.log
-    return 0
-  fi
-}
-__serviceapache2restart() {
-	service apache2 restart
-	__cmd "service apache2 status"
-}   #  fin __serviceapache2restart()
+__servicerestart() {
+	service $1 restart
+	codeSortie=$?
+	cmd="service $1 status"; $cmd || __msgErreurBox "$cmd" $?
+	return $codeSortie
+}   #  fin __servicerestart()
 
 
 ###############################################################
@@ -318,7 +314,7 @@ Architecture :$N $arch $BO
 Your IP     :$N $IP $BO
 The script runs under:$N $user
 $BO
-Execution duration:$N about 6mn
+Execution duration:$N about 8mn
 
 Amount of disk space available$BO
 Your root partition (/) has $(( $rootDispo/1024/1024 )) Go free.
@@ -412,7 +408,7 @@ fi
 
 
 #  Récapitulatif
-cat << EOF > $REPUL/RecapInstall.txt
+cat << EOF > $REPLANCE/RecapInstall.txt
 
 This information will be used only after the script has been executed correctly.
 
@@ -428,7 +424,10 @@ else
 	echo "Your /home partition has $(( $homeDispo/1024/1024 )) Go free."
 fi`
 Your root (/) partition has $(( $rootDispo/1024/1024 )) Go free.
-Your http server is $serveurHttp
+
+At the end of the installation:
+
+Your http server will be $serveurHttp
 
 Name of user with SSH and SFTP access: $userSSH
 SSh port: $portSSH
@@ -448,7 +447,7 @@ else
 fi`
 EOF
 
-__textBox "Installation Summary" $REPUL/RecapInstall.txt
+__textBox "Installation Summary" $REPLANCE/RecapInstall.txt
 __ouinonBox "Installation" "Do you want start installation?"
 if [ $__ouinonBox -ne 0 ]; then exit 0; fi
 
@@ -458,10 +457,12 @@ if [ $__ouinonBox -ne 0 ]; then exit 0; fi
 ############################################
 
 clear
-## gestion des erreurs stderr par __cmd()
-:>/tmp/trace
-:>/tmp/hiwst.log
-exec 2>/tmp/trace
+## gestion des erreurs stderr par __msgErreurBox()
+:>/tmp/trace # fichier d'erreur temporaire
+:>/tmp/trace.log  # messages d'erreur
+:>/tmp/hiwst.log  # fichier temporaire msg pour __msgErreurBox
+exec 3>&2 2>/tmp/trace
+trap "__trap" EXIT # supprime info.php et affiche le dernier message d'erreur
 echo
 echo
 echo
@@ -480,8 +481,8 @@ sleep 1
 echo
 
 # upgrade
-__cmd "apt-get update -yq"
-__cmd "apt-get upgrade -yq"
+cmd="apt-get update -yq"; $cmd ||  __msgErreurBox "$cmd" $?
+cmd="apt-get upgrade -yq"; $cmd ||  __msgErreurBox "$cmd" $?
 echo "***********************"
 echo "|  Update completed   |"
 echo "***********************"
@@ -500,14 +501,13 @@ fi
 sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu ok, debian ok après reboot
 echo $userLinux > $REPLANCE/firstusers
 readonly REPUL="/home/$userLinux"
-trap "__trap" EXIT # supprime nopasswd et info.php en cas d'exit
-__cmd "usermod -aG www-data $userLinux"
+cmd="usermod -aG www-data $userLinux"; $cmd ||  __msgErreurBox "$cmd" $?
 
 ## config mc (installé dans apacheinstall)
 # config mc user
 mkdir -p $REPUL/.config/mc/
 cp $REPLANCE/fichiers-conf/mc_panels.ini $REPUL/.config/mc/panels.ini
-chown R $userLinux:$userLinux $REPUL/.config/
+chown -R $userLinux:$userLinux $REPUL/.config/
 # config mc root
 mkdir -p /root/.config/mc/
 cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
@@ -534,7 +534,7 @@ if [[ $nameDistrib == "Debian" ]]; then
 else
 	paquets=$paquetsRtoU
 fi
-__cmd "apt-get install -yq $paquets"
+cmd="apt-get install -yq $paquets"; $cmd || __msgErreurBox "$cmd" $?
 
 echo
 echo "******************************"
@@ -570,7 +570,7 @@ ln -s /etc/init.d/rtorrentd.sh  /etc/rc4.d/S99rtorrentd.sh
 ln -s /etc/init.d/rtorrentd.sh  /etc/rc5.d/S99rtorrentd.sh
 ln -s /etc/init.d/rtorrentd.sh  /etc/rc6.d/K01rtorrentd.sh
 systemctl daemon-reload
-service rtorrentd start
+__servicerestart "rtorrentd"
 #-----------------------------------------------------------------
 sleep 1
 sortie=`pgrep rtorrent`
@@ -581,7 +581,7 @@ then
 	echo "**************************************"
 	sleep 1
 else
-	__cmd "ps aux | grep -e '^$userLinux.*rtorrent$'"
+	cmd="ps aux | grep -e '^$userLinux.*rtorrent$'"; $cmd || __msgErreurBox "$cmd" $?
 fi
 
 
@@ -595,7 +595,7 @@ fi
 # téléchargement
 mkdir $REPWEB/source
 cd $REPWEB/source
-__cmd "wget https://github.com/Novik/ruTorrent/archive/master.zip"
+cmd="wget https://github.com/Novik/ruTorrent/archive/master.zip"; $cmd || __msgErreurBox "$cmd" $?
 unzip -o master.zip
 mv -f ruTorrent-master $REPWEB/rutorrent
 chown -R www-data:www-data $REPWEB/rutorrent
@@ -632,11 +632,11 @@ if [[ $nameDistrib == "Debian" ]]; then
 	echo $sourceMediaD >> /etc/apt/sources.list
 	chmod 644 /etc/apt/sources.list
 	apt-get update -yq
-	__cmd "apt-get install -yq --force-yes deb-multimedia-keyring"
+	cmd="apt-get install -yq --force-yes deb-multimedia-keyring"; $cmd || __msgErreurBox "$cmd" $?
 	apt-get update -yq
-	__cmd "apt-get install -y --force-yes $paquetsMediaD"
+	cmd="apt-get install -y --force-yes $paquetsMediaD"; $cmd || __msgErreurBox "$cmd" $?
 else
-	__cmd "apt-get install -yq --force-yes $paquetsMediaU"
+	cmd="apt-get install -yq --force-yes $paquetsMediaU"; $cmd || __msgErreurBox "$cmd" $?
 fi
 echo
 echo "*****************************************"
@@ -661,8 +661,8 @@ chown -R www-data:www-data $REPWEB/rutorrent/conf
 # Ajouter le plugin log-off
 
 cd $REPWEB/rutorrent/plugins
-__cmd "wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz"
-tar -zxf logoff-1.3.tar.gz
+cmd="wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz"; $cmd || __msgErreurBox "$cmd" $?
+cmd="tar -zxf logoff-1.3.tar.gz"; $cmd || __msgErreurBox "$cmd" $?
 
 # action pro Qwant
 sed -i "s|\(\$logoffURL.*\)|\$logoffURL = \"https://www.qwant.com/\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
@@ -686,18 +686,16 @@ then
 	echo "*********************************"
 	sleep 1
 else
-	echo "curl -Is http://$IP/rutorrent/| head -n 1 return $headTest" >> /tmp/hiwst.log
-	__msgErreurBox
+	__msgErreurBox "curl -Is http://$IP/rutorrent/| head -n 1 | awk -F\" \" '{ print $3 }' return '$headTest'" "http $headTest"
 fi
 
 #######################################################
 #             installation de WebMin                  #
 #######################################################
 
-if [[ $installWebMin -eq 0 ]]
-then
-. $REPLANCE/insert/webmininstall.sh
-fi   # Webmin
+if [[ $installWebMin -eq 0 ]]; then
+	. $REPLANCE/insert/webmininstall.sh
+fi
 
 ########################################
 #            sécuriser ssh             #
@@ -715,8 +713,8 @@ echo $userRuto >> $REPUL/HiwsT/firstusers
 chown root:root $REPUL/HiwsT/firstusers
 chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
 
-## copie dans $REPUL/HiwsT les fichiers log et trace
-cp -t $REPUL/HiwsT /tmp/hiwst.log /tmp/trace
+## copie dans $REPUL/HiwsT le fichiers log d'erreurs
+cp -t $REPUL/HiwsT /tmp/trace.log
 rm -r $REPLANCE
 
 
@@ -791,7 +789,6 @@ fi  # ssh pas sécurisé/ sécurisé`
 EOF
 
 # efface la récap 1ère version
-rm $REPUL/RecapInstall.txt
 chmod 400 $REPUL/HiwsT/RecapInstall.txt
 __textBox "Installation summary" $REPUL/HiwsT/RecapInstall.txt "Information saved in RecapInstall.txt"
 __ouinonBox "Installation end" "Use HiwsT-util.sh for all modifications
@@ -806,4 +803,3 @@ clear
 echo
 echo "Au revoir"  # french touch ;)
 echo
-rm -r $REPLANCE

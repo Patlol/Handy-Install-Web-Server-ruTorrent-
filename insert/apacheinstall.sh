@@ -4,7 +4,7 @@ if [[ $nameDistrib == "Debian" ]]; then
 else
 	paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
 fi
-__cmd "apt-get install -yq $paquetsWeb"
+cmd="apt-get install -yq $paquetsWeb"; $cmd || __msgErreurBox "$cmd" $?
 echo
 echo "***********************************************"
 echo "|     Packages needed by the web server      |"
@@ -37,7 +37,7 @@ sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
 cp $REPAPA2/sites-available/000-default.conf $REPAPA2/sites-available/000-default.conf.old
 cp $REPLANCE/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
 sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
-__serviceapache2restart
+__servicerestart "apache2"
 
 # vérif bon fonctionnement apache et php
 echo "<?php phpinfo(); ?>" >$REPWEB/info.php
@@ -52,12 +52,11 @@ then
 	echo "***********************************************"
 	sleep 1
 	rm $REPWEB/info.php
-else
-	echo "curl -Is http://$IP/info.php/| head -n 1 return $headTest1" >> /tmp/hiwst.log
-	echo "curl -Is http://$IP/| head -n 1 return $headTest2" >> /tmp/hiwst.log
-	__msgErreurBox
+elif [[ "$headTest1" != OK* ]]; then
+	__msgErreurBox "curl -Is http://$IP/info.php/| head -n 1 | awk -F\" \" '{ print $3 }' return '$headTest1'" "http $headTest1"
+elif [[ "$headTest2" != OK* ]]; then
+	__msgErreurBox "curl -Is http://$IP/| head -n 1 | awk -F\" \" '{ print $3 }' return '$headTest2'" "http $headTest2"
 fi
-
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess
 
 ## création certificat ---------------------------------------------------------
@@ -70,7 +69,7 @@ cp $REPAPA2/sites-available/default-ssl.conf $REPAPA2/sites-available/default-ss
 sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" $REPAPA2/sites-available/default-ssl.conf
 
 a2ensite default-ssl
-__serviceapache2restart
+__servicerestart "apache2"
 echo
 echo "**********************************************"
 echo "|      Self-signed certificate created       |"

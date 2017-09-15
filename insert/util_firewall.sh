@@ -15,7 +15,8 @@ fi
 # ufw si pas installé, installer
 which ufw 2>&1 > /dev/null
 if [ $? != 0 ]; then
-apt-get update && apt-get -yq install ufw
+apt-get update
+cmd="apt-get -yq install ufw"; $cmd || __msgErreurBox "$cmd" $?
 clear
 fi
 
@@ -33,7 +34,8 @@ until false ; do
   echo -e "\t6) See rules IPTABLES 'nat' table (for openVPN)"
   echo -e "\t0) Exit"
   echo
-	read -p "Your choice (0 1 2 3 4 5 6) " choixMenu
+  echo -n "Your choice (0 1 2 3 4 5 6) "
+	read choixMenu
 	echo
 
   case $choixMenu in
@@ -59,7 +61,8 @@ until false ; do
       echo -e "\t1) Add the rules above"
       echo -e "\t2) Back to menu"
       until false ; do
-        read -p "Your choice (1 2) " choixMenu1
+        echo -n "Your choice (1 2) "
+        read choixMenu1
         case $choixMenu1 in
           1 )
             ufw disable
@@ -100,7 +103,8 @@ until false ; do
         echo -e "\t1) Remove the above rules"
         echo -e "\t2) Back to menu"
         until false ; do
-          read -p "Your choice (1 2) " choixMenu2
+          echo -n "Your choice (1 2) "
+          read choixMenu2
           case $choixMenu2 in
             1 )
               ufw --force reset

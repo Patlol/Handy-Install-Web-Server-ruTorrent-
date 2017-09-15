@@ -18,7 +18,7 @@
 __listeUtilisateurs() {
 	local listeL; local listeR; local listeVpn
 	# les différents tableaux : utilisateurs linux, ruto, vpn et oc
-	listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`)
+	listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`) || __msgErreurBox "listeL=(`cat /etc/passwd | grep -P \"(:0:)|(:10[0-9]{2}:)\" | awk -F\":\" '{ print $1 }'`)" $?
 	# encadrement utilisateur principal
   for (( i = 0; i < ${#listeL[@]}; i++ )); do
     if [[ "${listeL[i]}" == "${FIRSTUSER[0]}" ]]; then
@@ -26,7 +26,7 @@ __listeUtilisateurs() {
     fi
   done
 
-  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`)
+  listeR=(`cat $REPAPA2/.htpasswd | awk -F":" '{ print $1 }'`) || __msgErreurBox "listeR=(`cat $REPAPA2/.htpasswd | awk -F\":\" '{ print $1 }'`)" $?
 	# encadrement utilisateur principal
   for (( i = 0; i < ${#listeR[@]}; i++ )); do
     if [[ "${listeR[i]}" == "${FIRSTUSER[1]}" ]]; then
@@ -49,9 +49,9 @@ __listeUtilisateurs() {
 	pathOCC=$(find /var -name occ 2>/dev/null)
 	if [[ -n $pathOCC ]]; then
 		# use debian script user
-		userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }')
-		pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }')
-		repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD)
+		userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
+		pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?
+		repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
 		if [[ $repQuery == "" ]]; then
 			if [[ ${1} != "texte" ]]; then
 	      __infoBox "${1}" 3 "
@@ -206,7 +206,7 @@ __listeUtilisateurs() {
 		printf $tab"\n"
 	}
 
-  echo > /tmp/liste
+  :> /tmp/liste
 	##  chapeau partie commune
 	__traitHt >> /tmp/liste
 	__miseEnPageD "Linux users" >> /tmp/liste

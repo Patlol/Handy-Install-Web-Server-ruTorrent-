@@ -16,7 +16,8 @@ readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
 readonly REPInstVpn=$REPLANCE
-readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
+# pas readonly pour IP car modifié dans openvpninstall
+IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
 readonly HOSTNAME=$(hostname -f)
 # Tableau des utilisateurs principaux 0=linux 1=rutorrent
 if [[ ! -e $REPLANCE/firstusers ]]; then
@@ -57,7 +58,7 @@ ${2}" 0 0 )
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -65,13 +66,27 @@ __infoBox() {   # param : titre sleep texte
 			dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0
 }
 
-__msgErreurBox() {
-	__messageBox "Error message" "
+__msgErreurBox() {   # param : commande, N° erreur
+  local msgErreur; local ref=$(caller 0)
+  err=$2
+	msgErreur="------------------\n"
+	msgErreur+="Line N°$ref\n$BO$R$1$N \nError N° $R$err$N\n"
+	trace=$(cat /tmp/trace)
+	msgErreur+="$trace\n"
+	msgErreur+="------------------\n"
+  :>/tmp/trace
+	__messageBox "$R Error message$N" "$msgErreur	$R
+See the wiki on github $N
+https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
 
-	See the wiki on github
-
-  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
-	exit 1
+The error message is stored in $I/tmp/trace.log$N"
+  echo -e $msgErreur > /tmp/hiwst.log
+  sed -i '/------------------/d' /tmp/hiwst.log
+  sed -r 's/(\\Zb)|(\\Z1)|(\\Zn)//g' </tmp/hiwst.log >>/tmp/trace.log
+	__ouinonBox "Error" "
+Do you want continue anyway?"
+  if [[ $__ouinonBox -ne 0 ]]; then exit $err; fi
+  return $err
 }  # fin messageErreur
 
 __saisieTexteBox() {   # param : titre, texte
@@ -82,7 +97,7 @@ __saisieTexteBox() {   # param : titre, texte
 		codeRetour=$?
 
 		if [ $codeRetour == 2 ]; then  # bouton "liste" (help) renvoie code sortie 2
-			__listeUtilisateurs
+			cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
  			# l'appelle de la f() boucle jusqu'à code sortie == 0
 		elif [ $codeRetour == 1 ]; then return 1
 		elif [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
@@ -94,6 +109,14 @@ Only alphanumeric characters
 Between 2 and 15 characters"
 		fi
 	done
+}
+
+__trap() {  # pour exit supprime affiche la dernière erreur
+  if [ -s /tmp/trace.log ]; then
+    echo "/tmp/trace.log:"
+    echo
+    cat /tmp/trace.log
+  fi
 }
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
@@ -232,6 +255,13 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   done  # fin until infinie
 }  # fin __saisieOCBox()
 
+__servicerestart() {
+	service $1 restart
+  codeSortie=$?
+	cmd="service $1 status"; $cmd || __msgErreurBox "$cmd" $?
+  return $codeSortie
+}   #  fin __servicerestart()
+
 ################################################################################
 #       Fonctions principales
 ########################################
@@ -295,14 +325,10 @@ sed -i '/## bash/ a\          usermod -s \/bin\/bash '${1}'' /etc/init.d/rtorren
 sed -i '/## screen/ a\          su --command="screen -dmS '${1}'-rtd rtorrent" "'${1}'"' /etc/init.d/rtorrentd.sh
 sed -i '/## false/ a\          usermod -s /bin/false '${1}'' /etc/init.d/rtorrentd.sh
 systemctl daemon-reload
-service rtorrentd restart
+__servicerestart "rtorrentd "
 if [[ $? -eq 0 ]]; then
 	echo "rtorrent daemon modified and work well."
 	echo
-else
-	dialog --backtitle "$TITRE" --title "Error message" --prgbox "Issues on running rtorrentd: see wiki on github
-https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
-	exit 1
 fi
 #  fin partie rtorrent  __creaUserRuto-----------------------------------------
 
@@ -341,8 +367,10 @@ sed -i 's|^Subsystem sftp /usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_conf
 if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
 fi
-service sshd restart > /dev/null
-echo "SFTP security ok" # seulement accès a /home/${1}
+__servicerestart "sshd"
+if [[ $? -eq 0 ]]; then
+  echo "SFTP security ok" # seulement accès a /home/${1}
+fi
 }   #  fin __creaUserRuto
 
 #################################################
@@ -387,7 +415,8 @@ Confirm $__saisieTexteBox as new user?"
 					if [[ $__ouinonBox -eq 0 ]]; then
 						__saisiePwBox "User $__saisieTexteBox setting-up" "
 Input user password" 0 0
-						clear; __creaUserRuto $__saisieTexteBox $__saisiePwBox; sleep 2
+						clear;
+            cmd="__creaUserRuto $__saisieTexteBox $__saisiePwBox"; $cmd || __msgErreurBox "$cmd" $?
 						__infoBox "Creating Linux/ruTorrent user" 3 "Setting-up completed
 $__saisieTexteBox user created
 Password $__saisiePwBox"
@@ -395,7 +424,7 @@ Password $__saisiePwBox"
 				fi
 			;;
 			2 )
-				__listeUtilisateurs
+				cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 		esac
 	else  # === si sortie du menu -ne 0
@@ -414,7 +443,7 @@ __suppUserRuto() {
  clear
   # suppression du user allowed dans sshd_config
   sed -i 's/'${1}' //' /etc/ssh/sshd_config
-  service sshd restart
+  __servicerestart "sshd"
 
   __suppUserRutoPasswd ${1}
 
@@ -431,14 +460,10 @@ __suppUserRuto() {
   rm /etc/init/${1}-rtorrent.conf
 
   systemctl daemon-reload
-  service rtorrentd restart
+  __servicerestart "rtorrentd"
   if [[ $? -eq 0 ]]; then
   	echo "Daemon rtorrent modified and work well."
   	echo
-  else
-  	dialog --backtitle "$TITRE" --title "Error message" --prgbox "Issues on running rtorrentd service: See wiki on github
-https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal" "ps aux | grep -e '^${1}.*rtorrent$'" 8 98
-  	__msgErreurBox
   fi
   # suppression fichier témoin de screen
   rm -r /var/run/screen/S-${1}
@@ -486,7 +511,7 @@ will be deleted. You confirm removing $__saisieTexteBox?"
   	      if [[ $__ouinonBox -eq 0 ]]; then
   		      if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
       	    #  $ __saisieTexteBox
-  			      __suppUserRuto $__saisieTexteBox; sleep 2
+  			      cmd="__suppUserRuto $__saisieTexteBox"; $cmd || __msgErreurBox "$cmd" $?
   			      __infoBox "Delete a Linux user" 3 "Treatment completed
 Linux/ruTorrent user$R $__saisieTexteBox$N deleted"
   		      else
@@ -498,7 +523,7 @@ $__saisieTexteBox$R is the main user"
   	      fi
         ;;
         2)
-  	      __listeUtilisateurs
+  	      cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
         ;;
       #  fin $ __saisieTexteBox
   	  esac
@@ -538,12 +563,12 @@ Linux password also valid for sftp!!!"
 					clear
 					egrep "^$__saisieTexteBox:" /etc/passwd >/dev/null
 					if [[ $? -eq 0 ]]; then
-						passwd $__saisieTexteBox; sortie=$?
-						sleep 2
-						if [[ $sortie -ne 0 ]]; then
-							__infoBox "Linux password Inputed" 2 "An error occurred, password unchanged."
+            __saisiePwBox "Change Password Linux" "$__saisieTexteBox user" 4
+            echo "$__saisieTexteBox:$__saisiePwBox" | chpasswd
+						if [[ $? -ne 0 ]]; then
+							__infoBox "Change Linux password" 2 "An error occurred, password unchanged."
 						else
-							__infoBox "Linux password Inputed" 2 "User password $__saisieTexteBox changed
+							__infoBox "Change Linux password" 2 "User password $__saisieTexteBox changed
 Treatment completed"
 						fi
 					else
@@ -562,9 +587,9 @@ Input a ruTorrent user name"
 						clear
 						__changePWRuto $__saisieTexteBox $__saisiePwBox  # insert/util_apache.sh, renvoie $?
 						if [[ $? -ne 0 ]]; then
-							__infoBox "Change Password" 3 "An error occurred, password unchanged."
+							__infoBox "Change ruTorrent Password" 3 "An error occurred, password unchanged."
 						else
-							__infoBox "Change Password" 2 "User password $__saisieTexteBox changed
+							__infoBox "Change ruTorrent Password" 2 "User password $__saisieTexteBox changed
 Treatment completed"
 						fi
 					else
@@ -573,7 +598,7 @@ Treatment completed"
 				fi
 			;;
 			[3] )
-				__listeUtilisateurs
+				cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 		esac
 	else
@@ -587,12 +612,12 @@ done
 ##  ajout vpn, téléchargement du script
 ######################################################
 __vpn() {
-  # $REPInstVpn == $REPLANCE and readonly
+  # $REPInstVpn is == $REPLANCE and readonly
   clear
   if [[ -e $REPInstVpn/openvpn-install.sh ]]; then
     rm $REPInstVpn/openvpn-install.sh
   fi
-  wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh -O $REPInstVpn/openvpn-install.sh
+  cmd="wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh -O $REPInstVpn/openvpn-install.sh"; $cmd || __msgErreurBox "$cmd" $?
   chmod +x $REPInstVpn/openvpn-install.sh
   export ERRVPN="" NOMCLIENTVPN=""
   sed -i "/^#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\nNOMCLIENTVPN=\$CLIENT\ncd $REPInstVpn\n$REPInstVpn\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
@@ -603,6 +628,8 @@ __vpn() {
 # /home/<username>/HiwsT/HiwsT-util.sh
 # }
 # trap '__myTrap' EXIT
+## supprimer la redirection de sterr
+exec 2>&3 3>&-  # permettre l'affichage des read -p qui passe par sterr ?
 . $REPLANCE/openvpn-install.sh
 }
 
@@ -638,13 +665,13 @@ until [[ 1 -eq 2 ]]; do
 				__ssmenuAjoutUtilisateur
 			;;
 			2 )
-				__changePW
+				cmd="__changePW"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 			3 ) ################# supprimer utilisateur  ############################
-				__ssmenuSuppUtilisateur
+				cmd="__ssmenuSuppUtilisateur"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 			4 )  ################# liste utilisateurs #######################
-				__listeUtilisateurs
+				cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 			5 )  ######### VPN  ###################################
         # si firewall off et vpn pas installé
@@ -737,9 +764,11 @@ EOF
 
 		rtorrentd daemon " 10 35
 				clear
-				service rtorrentd restart
-				service rtorrentd status
-				sleep 3
+        __servicerestart "rtorrentd"
+        if [[ $? -eq 0 ]]; then
+          service rtorrentd status
+				  sleep 3
+        fi
 			;;
 			10 )  ################# Diagnostiques ###############################
 				. $REPLANCE/insert/util_diag.sh
@@ -784,7 +813,8 @@ sortieA=$?
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
 	echo
 	echo "Apache2 and nginx are active. Apache2 must be the http server"
-  read -p "To continue [Enter] to stop [Ctrl-c] "
+  echo -n "To continue [Enter] to stop [Ctrl-c] "
+  read
 fi
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -ne 0 ]]; then
   echo
@@ -847,6 +877,15 @@ Rated execution of openvpn-install"
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
 
 ################################################################################
+#  gestion errueurs
+trap "__trap" EXIT
+
+## gestion des erreurs stderr par __msgErreurBox()
+:>/tmp/trace # fichier temporaire msg d'erreur
+:>/tmp/trace.log # fichier msg d'erreur
+:>/tmp/hiwst.log # fichier temporaire msg pour __msgErreurBox
+exec 3>&2 2>/tmp/trace
+
 #  boucle menu / sortie
 __menu
 

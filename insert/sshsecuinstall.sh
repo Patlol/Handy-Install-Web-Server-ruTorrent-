@@ -22,8 +22,7 @@ else
 	sed -i 's/UseDNS.*//' /etc/ssh/sshd_config
 	echo -e "UseDNS no\nAllowUsers root" >> /etc/ssh/sshd_config
 fi
-service sshd restart
-__cmd "service sshd status"
+__servicerestart "sshd"
 
 echo "****************************************"
 echo "|             ssh secure               |"

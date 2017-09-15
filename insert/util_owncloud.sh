@@ -16,14 +16,10 @@ if [[ $nameDistrib = "Ubuntu" ]]; then
   apt-key add - < ./Release.key
   sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/xUbuntu_16.04/ /' >> /etc/apt/sources.list.d/owncloud.list"
   apt-get update
-  apt-get -yq install mysql-server php7.0-gd php7.0-mysql php7.0-intl php-imagick php-apcu apcupsd php-redis redis-server owncloud   # owncloud pour installation complette avec ttes les dépendances.
-  service php7.0-fpm restart
-  if [[ $? -ne 0 ]]; then
-    service php7.0-fpm status
-    echo
-    echo "php error!!!"
-    exit 1
-  else
+  # paquet "owncloud" pour installation complette avec ttes les dépendances
+  cmd="apt-get -yq install mysql-server php7.0-gd php7.0-mysql php7.0-intl php-imagick php-apcu apcupsd php-redis redis-server owncloud"; $cmd || __msgErreurBox "$cmd" $?
+  __servicerestart "php7.0-fpm"
+  if [[ $? -eq 0 ]]; then
     echo "**************************************"
     echo "|  php restart (APCu anbd Redis) ok  |"
     echo "**************************************"
@@ -34,13 +30,8 @@ else  # Debian 8.xx
   sh -c "echo 'deb http://download.owncloud.org/download/repositories/stable/Debian_8.0/ /' > /etc/apt/sources.list.d/owncloud.list"
   apt-get update
   apt-get -yq install php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server owncloud
-  service php5-fpm restart
-  if [[ $? -ne 0 ]]; then
-    service php5-fpm-fpm status
-    echo
-    echo "php error!!!"
-    exit 1
-  else
+  __servicerestart "php5-fpm"
+  if [[ $? -eq 0 ]]; then
     echo "*************************************"
     echo "|  php restart (APCu and Redis) ok  |"
     echo "*************************************"
@@ -55,11 +46,11 @@ if [ $? != 0 ]; then
 Validate the default values"
   apt-get -yq install mailutils postfix
   service postfix reload
-  if [[ $? -ne 0 ]]; then
-    service postfix status
-    echo
-    echo "Postfix error!!!"
-    exit 1
+  __servicerestart "postfix"
+  if [[ $? -eq 0 ]]; then
+    echo "**************************"
+    echo "|    postfix start ok    |"
+    echo "**************************"
   fi
 fi
 
@@ -89,14 +80,8 @@ a2enmod mime
 # ==> man-in-the-middle attacks https://79.137.33.190/owncloud/index.php/settings/help?mode=admin
 sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
 
-service apache2 reload
-service apache2 restart
-if [[ $? -ne 0 ]]; then
-  service apache2 status
-  echo
-  echo "apache error!!!"
-  exit 1
-else
+__servicerestart "apache2"
+if [[ $? -eq 0 ]]; then
   echo "**************************"
   echo "|  apache setting-up ok  |"
   echo "**************************"
@@ -298,7 +283,3 @@ echo "|  Installation completed  |"
 echo "****************************"
 
 sleep 2
-
-# debug :
-# apt-get install phpmyadmin
-# service php7.0-fpm status
