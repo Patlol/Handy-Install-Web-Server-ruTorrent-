@@ -5,7 +5,7 @@ _ruTorrent multiuser and Apache2_
 ### We no longer offer Cakebox and nginx:
 ### * :warning: Cakebox is DEPRECATED :warning: <a href="https://github.com/cakebox/cakebox">see here</a> and <a href="https://github.com/cakebox/cakebox/issues/216">here</a> :warning:  
 
-Install on Debian 8 or Ubuntu 16 server
+Install on Debian 8 and 9 or Ubuntu 16 server
 - apache
 - php
 - rtorrent
@@ -26,9 +26,9 @@ With this utility you can
  - Block the new user has his /home from sftp  
  - Prohibits new user access via ssh  
 - Change passwords
-- Add a firewall
+- Add a firewall (ufw)
 - Add a VPN (openVPN)
-- Add ownCloud
+- Add ownCloud 10.0.2 (optionally with Audioplayer and External storage)
 - Add phpMyAdmin
 - Perform a system diagnosis  
 
