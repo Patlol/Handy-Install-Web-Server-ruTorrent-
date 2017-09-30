@@ -1,6 +1,8 @@
 # installation des paquets
-if [[ $nameDistrib == "Debian" ]]; then
-	paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD
+if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
+	paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD8
+elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
+	paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebD9
 else
 	paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
 fi
@@ -53,9 +55,9 @@ then
 	sleep 1
 	rm $REPWEB/info.php
 elif [[ "$headTest1" != OK* ]]; then
-	__msgErreurBox "curl -Is http://$IP/info.php/| head -n 1 | awk -F\" \" '{ print $3 }' return '$headTest1'" "http $headTest1"
+	__msgErreurBox "curl -Is http://\$IP/info.php/| head -n 1 | awk -F\" \" '{ print \$3 }' return '$headTest1'" "http $headTest1"
 elif [[ "$headTest2" != OK* ]]; then
-	__msgErreurBox "curl -Is http://$IP/| head -n 1 | awk -F\" \" '{ print $3 }' return '$headTest2'" "http $headTest2"
+	__msgErreurBox "curl -Is http://\$IP/| head -n 1 | awk -F\" \" '{ print \$3 }' return '$headTest2'" "http $headTest2"
 fi
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess
 

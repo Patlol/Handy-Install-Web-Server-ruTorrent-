@@ -1,7 +1,14 @@
 
 clear
 apt-get update
-cmd="apt-get -yq install phpmyadmin"; $cmd || __msgErreurBox "$cmd" $?
+
+if [[ $nameDistrib == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
+  cmd="apt-get -yq install mariadb-server phpmyadmin"; $cmd || __msgErreurBox "$cmd" $?
+elif [[ $nameDistrib == "Debian" ]] && [[ $os_version_M -eq 9 ]]; then
+  cmd="apt-get -yq install mariadb-server phpmyadmin"; $cmd || __msgErreurBox "$cmd" $?
+else  # Ubuntu
+  cmd="apt-get -yq install mariadb-server phpmyadmin"; $cmd || __msgErreurBox "$cmd" $?
+fi
 if [[ $? ]]; then
 	echo "***************************"
 	echo "|   Packages Installed    |"

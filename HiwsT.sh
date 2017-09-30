@@ -9,16 +9,25 @@
 ##################################################
 #     variables install paquets Ubuntu/Debian
 ##################################################
-#  Debian
+#  Debian 8
 # liste sans serveur http
-paquetsWebD="mc nano aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
+paquetsWebD8="mc nano aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
 
-paquetsRtoD="xmlrpc-api-utils libtorrent14 rtorrent"
+paquetsRtoD8="xmlrpc-api-utils libtorrent14 rtorrent"
 
-sourceMediaD="deb http://www.deb-multimedia.org jessie main non-free"
-paquetsMediaD="mediainfo ffmpeg"
+sourceMediaD8="deb http://www.deb-multimedia.org jessie main non-free"
+paquetsMediaD8="mediainfo ffmpeg"
 
-# Ubuntu
+#  Debian 9 stretch
+# liste sans serveur http - autoconf build-essential comerr-dev libcloog-ppl-dev libcppunit-dev libcurl4-openssl-dev libncurses5-dev libxml2-dev libsigc++-2.0-dev libperl-dev libssl-dev php7.0-dev  manpages-dev
+paquetsWebD9="mc nano aptitude ca-certificates curl cfv dtach htop irssi libcurl3 libterm-readline-gnu-perl libtool ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev manpages libfile-fcntllock-perl bzip2 xz-utils geoip-database libltdl-dev libxml-sax-expat-perl xml-core unar"
+
+paquetsRtoD9="xmlrpc-api-utils libtorrent19 rtorrent"
+
+# sourceMediaD9="deb http://www.deb-multimedia.org stretch main non-free" sur les repository standards
+paquetsMediaD9="mediainfo ffmpeg"
+
+# Ubuntu 16
 # liste sans serveur http
 paquetsWebU="mc nano aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-dev php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
 
@@ -209,11 +218,7 @@ fi
 
 
 arch=$(uname -m)
-interface=ifconfig | grep "Ethernet" | awk -F" " '{ print $1 }'
-# pas tjs eth0 ... ou interface=$(ip -o -4 addr | grep $IP | awk '{print $2}')
-# ou ip -o -4 link | grep ether (ou BROADCAST)
-# 2: eth0: <BROADCAST,MULTI ... link/ether fa:1 ...
-readonly IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
+readonly IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 distrib=$(cat /etc/issue | awk -F"\\" '{ print $1 }')
 nameDistrib=$(lsb_release -si)  # Debian ou Ubuntu
 os_version=$(lsb_release -sr)   # 18 , 8.041 ...
@@ -240,29 +245,29 @@ done
 
 # ubuntu / debian et bonne version ?
 
-if [ $nameDistrib == "Debian" -a $os_version_M -gt 8 -o $nameDistrib == "Ubuntu" -a $os_version_M -gt 16 ]; then
+if [[ $nameDistrib == "Debian" && $os_version_M -gt 9 ]] || [[ $nameDistrib == "Ubuntu" && $os_version_M -gt 16 ]]; then
 	__ouinonBox "Distribution check" "
 	You are using $description
-	This script is intended to run on a Debian server 8.xx ou Ubuntu 16.xx
+	This script is intended to run on a Debian server 8.xx/9.xx ou Ubuntu 16.xx
 	You risk having version issues at installation
 	Do you want to continue?"
-	if [[ $__ouinonBox -ne 0 ]]; then	exit 1; fi
+	if [[ $__ouinonBox -ne 0 ]]; then	clear; exit 1; fi
 fi
 
-if [ $nameDistrib == "Debian" -a $os_version_M -lt 8 -o $nameDistrib == "Ubuntu" -a $os_version_M -lt 16 ]; then
+if [[ $nameDistrib == "Debian" && $os_version_M -lt 8 ]] || [[ $nameDistrib == "Ubuntu" && $os_version_M -lt 16 ]]; then
 	__messageBox "Distribution check" "
 
 	You are using $description
-	This script is intended to run on a Debian server 8.xx ou Ubuntu 16.xx"
-	exit 1
+	This script is intended to run on a Debian server 8.xx/9.xx ou Ubuntu 16.xx"
+	clear; exit 1
 fi
 
-if [ $nameDistrib != "Debian" -a $nameDistrib != "Ubuntu" ]; then
+if [[ $nameDistrib != "Debian" && $nameDistrib != "Ubuntu" ]]; then
 	__messageBox "Distribution check" "
 
 	You are using $description
-	This script is intended to run on a Debian server 8.xx ou Ubuntu 16.xx"
-	exit 1
+	This script is intended to run on a Debian server 8.xx/9.xx ou Ubuntu 16.xx"
+	clear; exit 1
 fi
 
 # Vérif serveur hhtp
@@ -393,10 +398,11 @@ Would you like to apply this change?"
 changePort=$__ouinonBox
 if [ $changePort -eq 0 ]; then
 	choix=0
-	until [ $choix -le $ECHELLE -a $choix -ge $PLANCHER ]; do
+	until [[ $choix -le $ECHELLE && $choix -ge $PLANCHER ]] || [[ $choix -eq 22 ]]; do
 	  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "ssh/sftp port" --max-input 5 --nocancel --inputbox "
 The proposed random port is $I$portSSH$N $BO
-You can change it between $PLANCHER and $ECHELLE$N" 0 0 $portSSH)
+You can change it between $PLANCHER and $ECHELLE$N
+Or the default port 22. The ssh user is $userLinux" 0 0 $portSSH)
 	  choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 	done
 	portSSH=$choix
@@ -529,8 +535,10 @@ echo
 #           installation rtorrent          #
 ############################################
 # téléchargement rtorrent libtorrent xmlrpc
-if [[ $nameDistrib == "Debian" ]]; then
-	paquets=$paquetsRtoD
+if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
+	paquets=$paquetsRtoD8
+elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
+	paquets=$paquetsRtoD9
 else
 	paquets=$paquetsRtoU
 fi
@@ -627,14 +635,16 @@ echo "**********************************************"
 sleep 1
 
 # installation de mediainfo et ffmpeg
-if [[ $nameDistrib == "Debian" ]]; then
+if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
 	chmod 777 /etc/apt/sources.list
-	echo $sourceMediaD >> /etc/apt/sources.list
+	echo $sourceMediaD8 >> /etc/apt/sources.list
 	chmod 644 /etc/apt/sources.list
 	apt-get update -yq
 	cmd="apt-get install -yq --force-yes deb-multimedia-keyring"; $cmd || __msgErreurBox "$cmd" $?
 	apt-get update -yq
-	cmd="apt-get install -y --force-yes $paquetsMediaD"; $cmd || __msgErreurBox "$cmd" $?
+	cmd="apt-get install -y --force-yes $paquetsMediaD8"; $cmd || __msgErreurBox "$cmd" $?
+elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
+	cmd="apt-get install -yq $paquetsMediaD9"; $cmd || __msgErreurBox "$cmd" $?
 else
 	cmd="apt-get install -yq --force-yes $paquetsMediaU"; $cmd || __msgErreurBox "$cmd" $?
 fi
@@ -797,9 +807,10 @@ Do you want reboot your server now?"
 if [ $__ouinonBox -eq 0 ]; then
 	__ouinonBox "Installation end" "Reboot :
 Are you sure?"
-	if [ $__ouinonBox -eq 0 ]; then rm -r $REPLANCE; sleep 1; reboot; fi
+	if [ $__ouinonBox -eq 0 ]; then sleep 1; reboot; fi
 fi
 clear
 echo
 echo "Au revoir"  # french touch ;)
 echo
+exit 0

@@ -17,7 +17,7 @@ readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
 readonly REPInstVpn=$REPLANCE
 # pas readonly pour IP car modifié dans openvpninstall
-IP=$(ifconfig $interface 2>/dev/null | grep 'inet ad' | awk -F: '{ printf $2 }' | awk '{ printf $1 }')
+IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 readonly HOSTNAME=$(hostname -f)
 # Tableau des utilisateurs principaux 0=linux 1=rutorrent
 if [[ ! -e $REPLANCE/firstusers ]]; then
@@ -325,7 +325,7 @@ sed -i '/## bash/ a\          usermod -s \/bin\/bash '${1}'' /etc/init.d/rtorren
 sed -i '/## screen/ a\          su --command="screen -dmS '${1}'-rtd rtorrent" "'${1}'"' /etc/init.d/rtorrentd.sh
 sed -i '/## false/ a\          usermod -s /bin/false '${1}'' /etc/init.d/rtorrentd.sh
 systemctl daemon-reload
-__servicerestart "rtorrentd "
+__servicerestart "rtorrentd"
 if [[ $? -eq 0 ]]; then
 	echo "rtorrent daemon modified and work well."
 	echo
@@ -360,9 +360,9 @@ usermod -s /bin/false ${1}
 chown root:root /home/${1}
 chmod 0755 /home/${1}
 
-# modif sshd.config  -------------------------------------------------------
+# modif sshd_config  -------------------------------------------------------
 sed -i 's/AllowUsers.*/& '${1}'/' /etc/ssh/sshd_config
-sed -i 's|^Subsystem sftp /usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_config   # commente
+sed -i 's|^Subsystem.*sftp.*/usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_config   # commente
 # pour bloquer les utilisateurs supplémentaires
 if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
 	echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
@@ -834,8 +834,15 @@ fi
 . $REPLANCE/insert/util_listeusers.sh
 
 ################################################################################
-#  debian ou ubuntu ?  pour ownCloud
+#  debian ou ubuntu et version  pour ownCloud et diag
 nameDistrib=$(lsb_release -si)  # "Debian" ou "Ubuntu"
+os_version=$(lsb_release -sr)   # 18 , 8.041 ...
+os_version_M=$(echo $os_version | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')  # version majeur 18, 8 ...
+if [[ $nameDistrib == "Ubuntu" ]] || [[ $nameDistrib == "Debian" && $os_version_M == 9 ]]; then
+  readonly PHPVER="php7.0-fpm"
+else
+  readonly PHPVER="php5-fpm"
+fi
 
 ################################################################################
 # gestion de la sortie de openvpn-install.sh

@@ -8,24 +8,25 @@ echo "********************************************"
 echo
 echo
 sleep 1
-# paquets debian
-upDebWebMinD="http://prdownloads.sourceforge.net/webadmin/webmin_1.830_all.deb"
+# paquets debian 8
+upDebWebMinD="http://prdownloads.sourceforge.net/webadmin/webmin_1.850_all.deb"
 paquetWebMinD="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
-debWebMinD="webmin_1.830_all.deb"
-# paquets ubuntu
-upDebWebMinU="http://www.webmin.com/download/deb/webmin-current.deb"
-debWebMinU="webmin-current.deb"
+debWebMinD="webmin_1.850_all.deb"
+# paquets debian 9
+upDebWebMinD9="http://prdownloads.sourceforge.net/webadmin/webmin_1.850_all.deb"
+paquetWebMinD9="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
+debWebMinD9="webmin_1.850_all.deb"
+# paquets ubuntu 16
+upDebWebMinU="http://prdownloads.sourceforge.net/webadmin/webmin_1.850_all.deb" # "http://www.webmin.com/download/deb/webmin-current.deb"
+paquetWebMinU="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
+debWebMinU="webmin_1.850_all.deb" # "webmin-current.deb"
 
 cd /tmp
+# idem pour les 3 distrib
+	cmd="wget $upDebWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
+	cmd="apt-get -f install -y $paquetWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
+	cmd="dpkg --install $debWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 
-if [[ $nameDistrib == "Debian" ]]; then
-	cmd="wget $upDebWebMinD"; $cmd || __msgErreurBox "$cmd" $?
-	cmd="apt-get -f install -y $paquetWebMinD"; $cmd || __msgErreurBox "$cmd" $?
-	cmd="dpkg --install $debWebMinD"; $cmd || __msgErreurBox "$cmd" $?
-else
-	cmd="wget $upDebWebMinU"; $cmd || __msgErreurBox "$cmd" $?
-	cmd="apt-get install -yq /tmp/$debWebMinU"; $cmd || __msgErreurBox "$cmd" $?
-fi
 	echo "***************************"
 	echo "|   Packages Installed    |"
 	echo "***************************"

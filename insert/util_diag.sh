@@ -32,11 +32,7 @@ echo
 echo "-------------------------------------------------------------------------------"
 echo "php-fpm:"
 echo "--------"
-if [[ $nameDistrib == "Ubuntu" ]]; then
-  service php7.0-fpm status
-else
-  service php5-fpm status
-fi
+service $PHPVER status
 echo
 echo "-------------------------------------------------------------------------------"
 echo "sshd:"
