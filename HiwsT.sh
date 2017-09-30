@@ -282,17 +282,17 @@ if [[ $serveurHttpN -eq 0 ]] && [[ $serveurHttpA -eq 0 ]]; then
 	__ouinonBox "Http server" "
 You have apache2$BO and$N nginx installed!?
 If you continue this script, the existing configuration will be replaced by the script configuration (apache2)"
-	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
+	if [[ $__ouinonBox -eq 1 ]]; then clear; exit 1; fi
 elif [[ $serveurHttpA -eq 0 ]]; then
 	__ouinonBox "Http server" "
 You have apache2 installed,
 If you continue this script, the existing configuration will be replaced by the script configuration"
-	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
+	if [[ $__ouinonBox -eq 1 ]]; then clear; exit 1; fi
 elif [[ $serveurHttpN -eq 0 ]]; then
 	__ouinonBox "Http server" "
 You have nginx installed,
 If you continue this script, the existing configuration will be replaced by the script configuration (apache2)"
-	if [[ $__ouinonBox -eq 1 ]]; then exit 1; fi
+	if [[ $__ouinonBox -eq 1 ]]; then clear; exit 1; fi
 fi
 #--------------------------------------------------------------
 
@@ -790,7 +790,7 @@ else   # ssh n'est pas sécurisé
 	echo "On windows use PuTTY"
 	echo " "
 	echo "To access files via SFTP:"
-	echo -e "\tHost          : $IP (ou $HOSTNAME)"
+	echo -e "\tHost          : $IP (or $HOSTNAME)"
 	echo -e "\tPort          : 22"
 	echo -e "\tProtocol      : SFTP-SSH File Transfer Protocol"
 	echo -e "\tAuthentication: normal"
@@ -798,7 +798,7 @@ else   # ssh n'est pas sécurisé
 fi  # ssh pas sécurisé/ sécurisé`
 EOF
 
-# efface la récap 1ère version
+# écrase la récap 1ère version et le répertoire de scripts dans root
 chmod 400 $REPUL/HiwsT/RecapInstall.txt
 __textBox "Installation summary" $REPUL/HiwsT/RecapInstall.txt "Information saved in RecapInstall.txt"
 __ouinonBox "Installation end" "Use HiwsT-util.sh for all modifications

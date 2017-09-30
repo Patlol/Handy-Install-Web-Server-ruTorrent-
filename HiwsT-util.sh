@@ -270,7 +270,7 @@ __servicerestart() {
 ##  création utilisateur ruTorrent Linux
 ############################################
 __creaUserRuto () {
-	# echo " param : ${1} ${2}"
+	# param : ${1} name user ${2} pw user"
 egrep "^sftp" /etc/group > /dev/null
 if [[ $? -ne 0 ]]; then
 	addgroup sftp
