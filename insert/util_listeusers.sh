@@ -51,7 +51,11 @@ __listeUtilisateurs() {
 		# use debian script user
 		userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
 		pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?
-		repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+		if [[ -z $pwBdD ]]; then
+			repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+		else
+			repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+		fi
 		if [[ $repQuery == "" ]]; then
 			if [[ ${1} != "texte" ]]; then
 	      __infoBox "${1}" 3 "
