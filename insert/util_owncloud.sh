@@ -1,6 +1,5 @@
 clear
 
-readonly ocpath='/var/www/owncloud'
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
@@ -172,7 +171,7 @@ if [[ $addStorage =~ [yY] ]]; then
   else
     echo "**************************************"
     echo "|    External storage support ok     |"
-    echo "| on /home/${FIRSTUSER[0]}/downloads |"
+    echo "|  on /home/${FIRSTUSER[0]}/downloads  |"
     echo "**************************************"
     sleep 1.5
   fi
@@ -221,14 +220,19 @@ Changes to directories owncloud/data/${FIRSTUSER[0]}
 ( and /home/${FIRSTUSER[0]}/downloads if External Storage is enabled )
 Will be automatically updated in Audio-player (Thanks to iwatch)"
     fi
-    # clear
   fi
 fi
 
 ################################################################################
 ##  Sur config/config.php ajouter à trusted_domains notre IP
 ##  Après maintenance:install si non config.php n'existe pas
+##  domaines approuvés IP + noms de domaine
 sed -i "/0 => 'localhost'/a 1 => '"$IP"'," $ocpath/config/config.php
+serverName=$(cat $REPAPA2/sites-available/000-default.conf | egrep "^ServerName" | awk -F" " '{print $2}')
+if [[ $serverName != "" ]]; then   # Si nom de domaine
+  serverNameAlias="www."$serverName
+  sed -i "/1 => '"$IP"'/a\ 2 => '"$serverName"',\n 3 => '"$serverNameAlias"', "  $ocpath/config/config.php
+fi
 ##  Prise en compte du memcache APCu/Redis
 sed -i "/);/i 'memcache.local' => '\\\OC\\\Memcache\\\APCu',\n'memcache.locking' => '\\\OC\\\Memcache\\\Redis',\n'redis' => array(\n     'host' => 'localhost',\n     'port' => 6379,\n      )," $ocpath/config/config.php
 
@@ -280,7 +284,7 @@ echo "|  Permissions and owners modified  |"
 echo "*************************************"
 
 echo
-echo -n "            "; sudo -u $htuser $ocpath/occ -V
+echo -n "      "; sudo -u $htuser $ocpath/occ -V
 echo "****************************"
 echo "|  Installation completed  |"
 echo "****************************"

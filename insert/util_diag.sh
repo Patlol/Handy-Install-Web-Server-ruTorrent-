@@ -4,7 +4,16 @@ lsb_release -a
 echo
 echo "http server:    $SERVEURHTTP"
 echo
-echo "-------------------------------------------------------------------------------"
+echo "IP: $IP"
+echo "Host Name: $HOSTNAME"
+serverName=$(cat $REPAPA2/sites-available/000-default.conf | egrep "^ServerName" | awk -F" " '{print $2}')
+if [[ $serverName != "" ]]; then   # Si nom de domaine
+  echo "Domain name: $serverName"
+  echo
+  echo "Certificates ssl"
+  certbot certificates
+fi
+echo
 echo "RAM: "
 echo "----"
 free -h
@@ -58,9 +67,12 @@ until [[ 1 -eq 2 ]]; do
   echo -e "\t1) See iptables rules, 'filter' table"
   echo -e "\t2) See iptables rules, 'nat' table"
   echo -e "\t3) netstat -tap"
+  echo -e "\t4) netstat -tap"
+  echo -e "\t   ESTABLISHED LISTEN SYN_SENT SYN_RECV"
+  echo -e "\t   CONNECTING CONNECTED SYN_RECV"
   echo -e "\t0) Exit"
   echo
-  echo -n "Your choice (0 1 2) "
+  echo -n "Your choice (0 1 2 3 4) "
 	read choixMenu
 	echo
 	case $choixMenu in
@@ -78,13 +90,18 @@ until [[ 1 -eq 2 ]]; do
       echo "------------------------------------------------------------------------"
     ;;
     3 )
-      echo
-      "-------------------------------------------------------------------------------"
+      echo "------------------------------------------------------------------------"
       echo "netstat:"
       echo "--------"
       netstat -tap
-      "-------------------------------------------------------------------------------"
-      echo
+      echo "------------------------------------------------------------------------"
+    ;;
+    4 )
+      echo "------------------------------------------------------------------------"
+      echo "netstat:"
+      echo "--------"
+      netstat -tap | egrep "ESTABLISHED | LISTEN | SYN_SENT |SYN_RECV | CONNECTING | CONNECTED | SYN_RECV"
+      echo "------------------------------------------------------------------------"
     ;;
     * )
       echo "Invalid input"

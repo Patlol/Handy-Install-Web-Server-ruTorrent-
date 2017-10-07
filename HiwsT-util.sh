@@ -16,6 +16,7 @@ readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
 readonly REPInstVpn=$REPLANCE
+readonly ocpath='/var/www/owncloud'
 # pas readonly pour IP car modifié dans openvpninstall
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 readonly HOSTNAME=$(hostname -f)
@@ -254,6 +255,24 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
     fi  # fin $codeRetour == 2
   done  # fin until infinie
 }  # fin __saisieOCBox()
+
+__saisieDomaineBox() {  # param : titre, texte
+  until [[ 1 -eq 2 ]]; do
+		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --inputbox "${2}" 0 0)
+		__saisieDomaineBox1=$("${CMD[@]}" 2>&1 >/dev/tty)
+		if [[ $? == 1 ]]; then return 1; fi  # bouton cancel
+		if [[ "$__saisieDomaineBox1" =~ ^([[:digit:]a-z\.-]+\.[a-z\.]{2,6})$ ]] && \
+			 [[ $(echo $__saisieDomaineBox1 | egrep "^w{3}\.") == "" ]]; then
+				__saisieDomaineBox2="www."$__saisieDomaineBox1
+				break
+		else
+			__infoBox "Entry validation" 3 "
+Enter a valid domain name.
+Only unaccented alphanumeric characters,
+without http(s):// and www."
+		fi
+	done
+}  #  fin __saisieDomaineBox()
 
 __servicerestart() {
 	service $1 restart
@@ -640,12 +659,11 @@ exec 2>&3 3>&-  # permettre l'affichage des read -p qui passe par sterr ?
 __menu() {
 local choixMenu=""; local item=1
 until [[ 1 -eq 2 ]]; do
-  # /!\ 7) doit être firewall (retour test openvpn avec $item)
+  # /!\ 7) doit être firewall (retour test openvpn avec $item) et openvpn 5)
 	CMD=(dialog --backtitle "$TITRE" --title "Main menu" --cancel-label "Exit" --default-item "$item" --menu "
-
  To be used after installation with HiwsT
 
- Your choice:" 22 70 11 \
+ Your choice:" 22 70 12 \
 	1 "Create a user" \
 	2 "Change user password" \
 	3 "Delete a user" \
@@ -653,10 +671,11 @@ until [[ 1 -eq 2 ]]; do
 	5 "Install/uninstall OpenVPN, a openVPN user" \
   6 "Install ownCloud" \
 	7 "Firewall" \
-  8 "Install phpMyAdmin" \
-	9 "Restart rtorrent manually" \
-	10 "Diagnostic" \
-	11 "Reboot the server")
+  8 "Add domain name & Install free cert Let's Encrypt"
+  9 "Install phpMyAdmin" \
+	10 "Restart rtorrent manually" \
+	11 "Diagnostic" \
+	12 "Reboot the server")
 
 	choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 	if [[ $? -eq 0 ]]; then
@@ -747,7 +766,28 @@ EOF
 				. $REPLANCE/insert/util_firewall.sh
         if [[ $item -eq 7 ]]; then item=5; fi # menu : si on vient de openvpn on y retourne
 			;;
-      8 )  ########################  phpMyAdmin  #####################
+      8 )  #################  domain & letsencrypt ###################
+        which certbot 2>&1 > /dev/null
+        if [ $? -eq 0 ]; then
+          __infoBox "Domain & Let's Encrypt" 3 "
+  Let's Encrypt Certificates is already installed
+          "
+          continue
+        fi
+        __saisieDomaineBox "Domain name registration" "
+If you have provided a domain name for ${IP}/ruTorrent /ownCloud...,
+${R}AND${N} the DNS servers are uptodate, enter here your domain name.
+
+This domain will be used for the ${BO}Apache${N} and ${BO}Let's Encrypt${N} (free ssl certificate) configuration.
+
+Example: ${I}my.domain-name.co.uk${N} or ${I}22my-22domaine.22name.commmm${N} etc. ...
+
+${R}Do not enter www. or http:// the two domains ${BO}www.mydomainname.com${N} and ${BO}mydomainname.com${N} will be automatically used${N}"
+        if [[ $? -eq 0 ]]; then   # not cancel
+          . $REPLANCE/insert/util_letsencrypt.sh
+        fi
+      ;;
+      9 )  ########################  phpMyAdmin  #####################
         pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
         if [[ -n $pathPhpMyAdmin ]]; then
           __infoBox "Install phpMyAdmin" 3 "
@@ -757,7 +797,7 @@ EOF
         fi
         . $REPLANCE/insert/util_phpmyadmin.sh
       ;;
-			9 )  ########################  Relance rtorrent  ######################
+			10 )  ########################  Relance rtorrent  ######################
 				__infoBox "Message" 1 "
 
 			 	  Restart
@@ -770,10 +810,10 @@ EOF
 				  sleep 3
         fi
 			;;
-			10 )  ################# Diagnostiques ###############################
+			11 )  ################# Diagnostiques ###############################
 				. $REPLANCE/insert/util_diag.sh
 			;;
-			11 )  ###########################  REBOOT  #######################
+			12 )  ###########################  REBOOT  #######################
 				__ouinonBox "$R $BO Server Reboot$N"
 				if [[ $__ouinonBox -eq 0 ]]; then
 					clear
@@ -829,6 +869,7 @@ if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 	exit 1
 fi
 
+SERVEURHTTP="Apache2"
 #  chargement des f() apache et liste users
 . $REPLANCE/insert/util_apache.sh
 . $REPLANCE/insert/util_listeusers.sh
