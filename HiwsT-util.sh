@@ -297,7 +297,7 @@ echo "Directory/subdirectories /home/${1} created"
 echo
 
 #  partie rtorrent __creaUserRuto------------------------------------------------
-# incrémenter le port, écrir le fichier témoin
+# incrémenter le port scgi, écrir le fichier témoin
 if [ -e $REPWEB/rutorrent/conf/scgi_port ]; then
 	port=$(cat $REPWEB/rutorrent/conf/scgi_port)
 else 	port=5000
@@ -309,7 +309,7 @@ echo $port > $REPWEB/rutorrent/conf/scgi_port
 # rtorrent.rc
 cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/${1}/.rtorrent.rc
 sed -i 's/<username>/'${1}'/g' /home/${1}/.rtorrent.rc
-sed -i 's/scgi_port.*/scgi_port = 127.0.0.1:'$port'/' /home/${1}/.rtorrent.rc
+sed -i 's/<port>/'$port'/' /home/${1}/.rtorrent.rc  #  port scgi
 
 echo "/home/${1}/rtorrent.rc created"
 echo
@@ -664,7 +664,7 @@ until [[ 1 -eq 2 ]]; do
 			1 )  ################ ajouter user  ################################
 				__ssmenuAjoutUtilisateur
 			;;
-			2 )
+			2 ) ################# modifier pw utilisateur  ############################
 				cmd="__changePW"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 			3 ) ################# supprimer utilisateur  ############################
@@ -806,9 +806,9 @@ fi
 ################################################################################
 # apache vs nginx ?
 
-service nginx status > /dev/null
+service nginx status  > /dev/null 2>&1
 sortieN=$?  # 0 actif, 1 erreur == inactif
-service apache2 status > /dev/null
+service apache2 status > /dev/null 2>&1
 sortieA=$?
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
 	echo

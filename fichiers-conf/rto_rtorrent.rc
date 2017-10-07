@@ -17,55 +17,75 @@
         #
         # maximum number of simultaneous uploads per torrent
         # throttle.max_uploads.set = 30
-        max_uploads = 30
-
+        ## max_uploads = 30
+        ##
+        throttle.max_uploads.set = 30
+        ##
         # maximum and minimum number of peers to connect to per torrent
         # throttle.min_peers.normal.set = 40
         # throttle.max_peers.normal.set = 100
-        min_peers = 40
-        max_peers = 100
-
+        ## min_peers = 40
+        ## max_peers = 100
+        ##
+        throttle.min_peers.normal.set = 40
+        throttle.max_peers.normal.set = 100
+        ##
         # same as above but for seeding completed torrents (-1 = same as downloading)
         # throttle.min_peers.seed.set = 25
         # throttle.max_peers.seed.set = 60
-        min_peers_seed = 25
-        max_peers_seed = 60
-
+        ## min_peers_seed = 25
+        ## max_peers_seed = 60
+        ##
+        throttle.min_peers.seed.set = 10
+        throttle.max_peers.seed.set = 50
+        ##
         # tracker_numwant = -1
         trackers.numwant.set = -1
 
         # check hash for finished torrents. might be useful until the bug is
         # fixed that causes lack of diskspace not to be properly reported
         # pieces.hash.on_completion.set = yes
-        check_hash = yes
-
+        ## check_hash = yes
+        ##
+        pieces.hash.on_completion.set = yes
+        ##
         # default directory to save the downloaded torrents
         # directory.default.set = /home/<username>/downloads
-        directory = /home/<username>/downloads
-
+        ## directory = /home/<username>/downloads
+        ##
+        directory.default.set = /home/<username>/downloads
+        ##
         # default session directory. make sure you don't run multiple instances
         # of rtorrent using the same session directory
         # perhaps using a relative path?
         # session.path.set = /home/<username>/downloads/.session
-        session = /home/<username>/downloads/.session
-
-
+        ## session = /home/<username>/downloads/.session
+        ##
+        session.path.set = /home/<username>/downloads/.session
+        ##
         # Connection Settings
         #
         # port range to use for listening
         # network.port_range.set = 55950-56000
-        port_range = 55950-56000
-
+        ## port_range = 55950-56000
+        ##
+        network.port_range.set = 55950-56000
+        ##
         # start opening ports at a random position within the port range
         # network.port_random.set = yes
-        port_random = yes
-
+        ## port_random = yes
+        ##
+        network.port_random.set = yes
+        ##
         # global upload and download rate in KiB. "0" for unlimited
         # throttle.global_up.max_rate.set_kb = 0
         # throttle.global_down.max_rate.set_kb = 0
-        upload_rate = 0
-        download_rate = 0
-
+        ## upload_rate = 0
+        ## download_rate = 0
+        ##
+        throttle.global_down.max_rate.set_kb = 0
+        throttle.global_up.max_rate.set_kb = 0
+        ##
         # max mapped memory
         # nb does not refer to physical memory
         # max_memory_usage = 3500M
@@ -87,17 +107,23 @@
         # the default is "off". for DHT to work, a session directory must be defined
         #
         # dht.mode.set = disable
-        dht = disable
-
+        ## dht = disable
+        ##
+        dht.mode.set = auto
+        ##
         # UDP port to use for DHT.
         #
         # dht_port = 6881
         # dht.port.set = 6881
-
+        ##
+        dht.port.set = 6881
+        ##
         # enable peer exchange (for torrents not marked private)
         # protocol.pex.set = no
-        peer_exchange = no
-
+        ## peer_exchange = no
+        ##
+        protocol.pex.set = yes
+        ##
         # the IP address reported to the tracker
         # network.local_address.set = rakshasa.no
         # network.local_address.set = 127.0.0.1
@@ -118,8 +144,10 @@
 
 
         # close torrents when diskspace is low. */
-        schedule = low_diskspace,5,60,close_low_diskspace=100M
-
+        ## schedule = low_diskspace,5,60,close_low_diskspace=100M
+        ##
+        schedule2 = low_diskspace,5,60,close_low_diskspace=100M
+        ##
         # stop torrents when reaching upload ratio in percent,
         # when also reaching total upload in bytes, or when
         # reaching final upload ratio in percent
@@ -136,8 +164,10 @@
         # on_finished = move_complete,"execute=mv,-u,$d.get_base_path=,/home/<username>/downloads/complete/ ;d.set_directory=/home/<username>/downloads/complete/"
 
         # network.scgi.open_port = 127.0.0.1:5000
-        scgi_port = 127.0.0.1:5000
-
+        ## scgi_port = 127.0.0.1:5000
+        ##
+        network.scgi.open_port = 127.0.0.1:<port>
+        ##
         # alternative calls to bind and IP that should handle dynamic IP's
         # schedule = ip_tick,0,1800,ip=rakshasa
         # schedule = bind_tick,0,1800,bind=rakshasa
@@ -150,9 +180,10 @@
         # plaintext to RC4 encryption after the encrypted handshake
         #
         # protocol.encryption.set =
-        encryption = allow_incoming,enable_retry,prefer_plaintext
-
-
+        ## encryption = allow_incoming,enable_retry,prefer_plaintext
+        ##
+        protocol.encryption.set = allow_incoming,try_outgoing,enable_retry
+        ##
         # Advanced Settings
         #
         # do not modify the following parameters unless you know what you're doing
@@ -241,3 +272,11 @@
         # qwerty | azerty | qwertz | dvorak
         # key_layout = dvorak
         # keys.layout.set = dvorak
+
+## Logging:
+##   Levels = critical error warn notice info debug
+##   Groups = connection_* dht_* peer_* rpc_* storage_* thread_* tracker_* torrent_*
+##
+##   log.execute=/tmp/exec.log
+##   log.open_file = "log",/tmp/rtorrent.log
+##   log.add_output = "debug","log"

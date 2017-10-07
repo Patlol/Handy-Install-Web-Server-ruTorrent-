@@ -189,7 +189,8 @@ clear
 #########################################
 
 # Complèter la localisation (vps)
-lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{print $1 }')
+lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{ print $1 }')
+lang=$(echo $lang | awk -F" " '{ print $1 }')  # debian 9
 export LANGUAGE=$lang
 export LANG=$lang
 export LC_ALL=$lang
@@ -665,7 +666,7 @@ cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/
 cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
 sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'$userLinux'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
-
+ 
 chown -R www-data:www-data $REPWEB/rutorrent/conf
 
 # Ajouter le plugin log-off
