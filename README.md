@@ -25,10 +25,19 @@ With this utility you can
  - Block the new user has his /home/download from rutorrent  
  - Block the new user has his /home from sftp  
  - Prohibits new user access via ssh  
-- Change passwords
+- Delete user Linux / ruTorrent and its directories
+- Change passwords Linux / ruTorrent
 - Add a firewall (ufw)
+- Add Let's Encrypt certificate
+  - Takes the domain name into apache, ownCloud
+  - Creates a certificate with Lets Encrypt / certbot
+  - Modifies the certificate on the WebMin server
+  - Adds a cron task to renew certificate
 - Add a VPN (openVPN)
+  - Install / uninstall
+  - Creates / remove new user
 - Add ownCloud 10.0.2 (optionally with Audioplayer and External storage)
+  - With app external storage (for torrents downloaded) and Audioplayer
 - Add phpMyAdmin
 - Perform a system diagnosis  
 
