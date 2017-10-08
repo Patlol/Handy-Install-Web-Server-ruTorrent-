@@ -56,7 +56,6 @@ __servicerestart "apache2"
 if [[ -e /etc/webmin ]]; then
   repWebmin="/etc/webmin"
   cp $repWebmin/miniserv.conf $repWebmin/miniserv.conf-dist
-  sed -i -e "s/no_ssl2=1/no_ssl2=/" -e "s/no_ssl3=1/no_ssl3=/" -e "s/no_tls1=1/no_tls1=/" $repWebmin/miniserv.conf
   sed -i "s|keyfile=/etc/webmin/miniserv.pem|keyfile=/etc/letsencrypt/live/"$__saisieDomaineBox1"/privkey.pem|" $repWebmin/miniserv.conf
   echo -e "extracas=\ncipher_list_def=1\nssl_redirect=0\ncertfile=/etc/letsencrypt/live/$__saisieDomaineBox1/cert.pem\nno_tls1_2=" >> $repWebmin/miniserv.conf
 
