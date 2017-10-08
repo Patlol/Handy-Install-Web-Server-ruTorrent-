@@ -89,20 +89,36 @@ else
   echo "*********************************************"
   echo "|    Renewing all existing certificates     |"
   echo "|       it's ok. We add on cron task        |"
-  echo "|   The cert are renewing all the 30 days   |"
+  echo "|   The cert are renewing all the 60 days   |"
   echo "*********************************************"
   echo
   sleep 1
   sed -i 's/# renew_before_expiry = 30 days/renew_before_expiry = 30 days/' /etc/letsencrypt/renewal/$__saisieDomaineBox1.conf
-  chmod 755 $REPLANCE/insert/letsencrypt-cron.sh
-  cp $REPLANCE/insert/letsencrypt-cron.sh /etc/cron.daily/letsencrypt-cron.sh
+  cp $REPLANCE/insert/letsencrypt-cron.sh /etc/letsencrypt/letsencrypt-cron.sh
+  chmod 755 /etc/letsencrypt/letsencrypt-cron.sh
+  cp $REPLANCE/fichiers-conf/letsencrypt-hiwst
   __servicerestart "cron"
-  if [[ $? -eq 0 ]]; then
+  codeSortie1=$?
+  cp $REPLANCE/fichiers-conf/letsencrypt-rotate /etc/logrotate.d/letsencrypt-rotate
+  logrotate -f /etc/logrotate.conf
+  codeSortie2=$(( $? + $codeSortie1 ))
+  if [[ $codeSortie2 -eq 0 ]]; then
     echo
-    echo "********************"
-    echo "|   cron task ok   |"
-    echo "********************"
+    echo "****************************************"
+    echo "|         Renew cron task and          |"
+    echo "|  logrotate of letsencrypt-cron.log   |"
+    echo "|                 ok                   |"
+    echo "****************************************"
     echo
+  else
+    echo
+    echo "****************************************"
+    echo "|         WARNING ! Issue on           |"
+    echo "|       Renew cron task and/or         |"
+    echo "|  logrotate of letsencrypt-cron.log   |"
+    echo "****************************************"
+    echo
+    sleep 2
   fi
 fi
 sleep 3

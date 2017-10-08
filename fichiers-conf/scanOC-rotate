@@ -1,0 +1,10 @@
+/var/log/owncloud.log {
+    #Rotation mensuelle
+    monthly
+
+    #Faire 6 rotations par mois = 1 log par 5 jours
+    rotate 6
+
+    #ne pas générer d'erreur
+    missingok
+}

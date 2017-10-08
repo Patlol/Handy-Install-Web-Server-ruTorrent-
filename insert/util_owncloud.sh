@@ -220,6 +220,25 @@ Changes to directories owncloud/data/${FIRSTUSER[0]}
 ( and /home/${FIRSTUSER[0]}/downloads if External Storage is enabled )
 Will be automatically updated in Audio-player (Thanks to iwatch)"
     fi
+    ## logrotate
+    cp $REPLANCE/fichiers-conf/scanOC-rotate /etc/logrotate.d/scanOC-rotate
+    logrotate -f /etc/logrotate.conf
+    if [[ $? -eq 0 ]]; then
+      echo
+      echo "*********************************"
+      echo "|   rotate of owncloud.log ok   |"
+      echo "*********************************"
+      echo
+      sleep 1
+    else
+      echo
+      echo "****************************************"
+      echo "|              WARNING !               |"
+      echo "|   issue on rotate of owncloud.log    |"
+      echo "****************************************"
+      echo
+      sleep 2
+    fi
   fi
 fi
 
