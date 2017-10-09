@@ -1,10 +1,10 @@
 /var/log/letsencrypt/letsencrypt-cron.log {
-    #Rotation mensuelle
-    monthly
-
-    #Faire 4 rotations par mois = 1 log par semaine
+    # Rotation hebdo
+    weekly
+    # 4 rotations conservées
     rotate 4
-
-    #ne pas générer d'erreur
+    # ne pas générer d'erreur
     missingok
+    # ne pas exécuter si vide
+    notifempty
 }
