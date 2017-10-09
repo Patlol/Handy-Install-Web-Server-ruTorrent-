@@ -36,6 +36,7 @@ declare -ar FIRSTUSER  # -r readonly
 readonly REPUL="/home/${FIRSTUSER[0]}"
 # dialog param --backtitle --aspect --colors
 readonly TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - openVPN - ownCloud"
+readonly TIMEOUT=20  # __messageBox
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -59,12 +60,8 @@ ${2}" 0 0 )
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --msgbox "${2}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --timeout $TIMEOUT --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
-}
-
-__infoBox() {   # param : titre sleep texte
-			dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0
 }
 
 __msgErreurBox() {   # param : commande, N° erreur
@@ -105,7 +102,7 @@ __saisieTexteBox() {   # param : titre, texte
       __saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
-			__infoBox "Validation entry" 3 "
+			__messageBox "Validation entry" "
 Only alphanumeric characters
 Between 2 and 15 characters"
 		fi
@@ -128,14 +125,14 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
 
     if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
       [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
-      __infoBox "${1}" 2 "
+      __messageBox "${1}" "
 The password can't contain spaces or \\."
     else
 	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
 	    pw2=$(echo $reponse | awk -F" " '{ print $2 }')
 			case $pw1 in
 				"" )
-					__infoBox "${1}" 2 "
+					__messageBox "${1}" "
 The password can't be empty."
 				;;
 				$pw2 )
@@ -143,7 +140,7 @@ The password can't be empty."
 					break
 				;;
 				* )
-					__infoBox "${1}" 2 "
+					__messageBox "${1}" "
 The 2 inputs are not identical."
 				;;
 			esac
@@ -164,20 +161,20 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
       if [[ $? == 1 ]]; then return 1; fi
       if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
         [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
-        __infoBox "${1}" 2 "
+        __messageBox "${1}" "
   The password can't contain spaces or \\."
       else
   	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
   			case $pw1 in
   				"" )
-  					__infoBox "${1}" 2 "
+  					__messageBox "${1}" "
   The password can't be empty."
   				;;
   				${4} )  # password linux or database
   					break
   				;;
   				* )
-  					__infoBox "${1}" 2 "
+  					__messageBox "${1}" "
   The 2 inputs are not identical."
   				;;
   			esac
@@ -258,20 +255,27 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
 
 __saisieDomaineBox() {  # param : titre, texte
   until [[ 1 -eq 2 ]]; do
-		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --inputbox "${2}" 0 0)
-		__saisieDomaineBox1=$("${CMD[@]}" 2>&1 >/dev/tty)
-		if [[ $? == 1 ]]; then return 1; fi  # bouton cancel
-		if [[ "$__saisieDomaineBox1" =~ ^([[:digit:]a-z\.-]+\.[a-z\.]{2,6})$ ]] && \
-			 [[ $(echo $__saisieDomaineBox1 | egrep "^w{3}\.") == "" ]]; then
-				__saisieDomaineBox2="www."$__saisieDomaineBox1
-				break
-		else
-			__infoBox "Entry validation" 3 "
+    until [[ 1 -eq 2 ]]; do
+  		CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --inputbox "${2}" 0 0)
+  		__saisieDomaineBox1=$("${CMD[@]}" 2>&1 >/dev/tty)
+  		if [[ $? == 1 ]]; then return 1; fi  # bouton cancel
+  		if [[ "$__saisieDomaineBox1" =~ ^([[:digit:]a-z\.-]+\.[a-z\.]{2,})$ ]] && \
+  			 [[ $(echo $__saisieDomaineBox1 | egrep "^w{3}\.") == "" ]]; then
+  				__saisieDomaineBox2="www."$__saisieDomaineBox1
+  				break
+  		else
+  			__messageBox "Entry validation" "
 Enter a valid domain name.
 Only unaccented alphanumeric characters,
 without http(s):// and www."
-		fi
-	done
+  		fi
+  	done
+    __ouinonBox "Confirmation" "The domain names concerned are well:
+    ${R}$__saisieDomaineBox1${N}
+    and
+    ${R}$__saisieDomaineBox2${N}"
+    if [[ $__ouinonBox -eq 0 ]]; then break; fi
+  done
 }  #  fin __saisieDomaineBox()
 
 __servicerestart() {
@@ -298,7 +302,7 @@ fi
 pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' ${2})
 useradd -m -G sftp -p $pass ${1}
 if [[ $? -ne 0 ]]; then
-	__infoBox "Setting-up rutorrent user" 3 "
+	__messageBox "Setting-up rutorrent user" "
 Unable to create Linux user ${1}
 'useradd' error"
 	__msgErreurBox
@@ -400,7 +404,7 @@ local typeUser=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
   # Create a user:" 22 70 4 \
-	CMD=(dialog --backtitle "$TITRE" --title "Add a user" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Add a user" --cancel-label "Exit" --menu "
 
 - A ruTorrent user can only be created with a Linux user
 
@@ -423,7 +427,7 @@ Neither space nor special characters$N"
 		case $typeUser in
 			1 )  #  créa linux ruto
 				if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
-					__infoBox "Creating a user" 2 "
+					__messageBox "Creating a user" "
 The $__saisieTexteBox user already exists"
 				else
 					__ouinonBox "Creating Linux/ruTorrent user" "- The new user will have SFTP access with his/her name and password,
@@ -436,7 +440,7 @@ Confirm $__saisieTexteBox as new user?"
 Input user password" 0 0
 						clear;
             cmd="__creaUserRuto $__saisieTexteBox $__saisiePwBox"; $cmd || __msgErreurBox "$cmd" $?
-						__infoBox "Creating Linux/ruTorrent user" 3 "Setting-up completed
+						__messageBox "Creating Linux/ruTorrent user" "Setting-up completed
 $__saisieTexteBox user created
 Password $__saisiePwBox"
 					fi
@@ -446,7 +450,7 @@ Password $__saisiePwBox"
 				cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
 			;;
 		esac
-	else  # === si sortie du menu -ne 0
+	else  # === si sortie du menu $? -ne 0
 		break
 	fi
 done
@@ -499,7 +503,7 @@ __ssmenuSuppUtilisateur() {
 
   until [[ 1 -eq 2 ]]; do
     # Delete a user:" 22 70 4 \
-  	CMD=(dialog --backtitle "$TITRE" --title "Delete a user" --menu "
+  	CMD=(dialog --backtitle "$TITRE" --title "Delete a user" --cancel-label "Exit" --menu "
 What user kind do you want to remove?
 
 - If a ruTorrent user is deleted, his Linux namesake
@@ -531,10 +535,10 @@ will be deleted. You confirm removing $__saisieTexteBox?"
   		      if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
       	    #  $ __saisieTexteBox
   			      cmd="__suppUserRuto $__saisieTexteBox"; $cmd || __msgErreurBox "$cmd" $?
-  			      __infoBox "Delete a Linux user" 3 "Treatment completed
+  			      __messageBox "Delete a Linux user" "Treatment completed
 Linux/ruTorrent user$R $__saisieTexteBox$N deleted"
   		      else
-  			      __infoBox "Delete a Linux/ruTorrent user" 3 "
+  			      __messageBox "Delete a Linux/ruTorrent user" "
 $__saisieTexteBox$R is not a Linux/ruTorrent user or$N
 $__saisieTexteBox$R is the main user"
   			      #sortie case $typeUser et if  retour ss menu
@@ -560,7 +564,7 @@ __changePW() {
 local typeUser=""; local user=""; local codeSortie=1
 
 until [[ 1 -eq 2 ]]; do
-	CMD=(dialog --backtitle "$TITRE" --title "Change User Password" --menu "
+	CMD=(dialog --backtitle "$TITRE" --title "Change User Password" --cancel-label "Exit" --menu "
 
 
 
@@ -585,13 +589,13 @@ Linux password also valid for sftp!!!"
             __saisiePwBox "Change Password Linux" "$__saisieTexteBox user" 4
             echo "$__saisieTexteBox:$__saisiePwBox" | chpasswd
 						if [[ $? -ne 0 ]]; then
-							__infoBox "Change Linux password" 2 "An error occurred, password unchanged."
+							__messageBox "Change Linux password" "An error occurred, password unchanged."
 						else
-							__infoBox "Change Linux password" 2 "User password $__saisieTexteBox changed
+							__messageBox "Change Linux password" "User password $__saisieTexteBox changed
 Treatment completed"
 						fi
 					else
-						__infoBox "Change Password" 3 "$__saisieTexteBox is not a Linux user"
+						__messageBox "Change Password" "$__saisieTexteBox is not a Linux user"
 					fi
 				fi
 			;;
@@ -606,13 +610,13 @@ Input a ruTorrent user name"
 						clear
 						__changePWRuto $__saisieTexteBox $__saisiePwBox  # insert/util_apache.sh, renvoie $?
 						if [[ $? -ne 0 ]]; then
-							__infoBox "Change ruTorrent Password" 3 "An error occurred, password unchanged."
+							__messageBox "Change ruTorrent Password" "An error occurred, password unchanged."
 						else
-							__infoBox "Change ruTorrent Password" 2 "User password $__saisieTexteBox changed
+							__messageBox "Change ruTorrent Password" "User password $__saisieTexteBox changed
 Treatment completed"
 						fi
 					else
-						__infoBox "Change Password" 2 "$__saisieTexteBox is not a ruTorrent user"
+						__messageBox "Change Password" "$__saisieTexteBox is not a ruTorrent user"
 					fi
 				fi
 			;;
@@ -728,7 +732,7 @@ until [[ 1 -eq 2 ]]; do
       6 )  ###################### ownCloud #############################
         pathOCC=$(find /var -name occ 2>/dev/null)
 	      if [[ -n $pathOCC ]]; then
-          __infoBox "Install ownCloud" 3 "
+          __messageBox "Install ownCloud" "
   ownCloud is already installed
           "
           continue
@@ -769,7 +773,7 @@ EOF
       8 )  #################  domain & letsencrypt ###################
         which certbot 2>&1 > /dev/null
         if [ $? -eq 0 ]; then
-          __infoBox "Domain & Let's Encrypt" 3 "
+          __messageBox "Domain & Let's Encrypt" "
   Let's Encrypt Certificates is already installed
           "
           continue
@@ -790,7 +794,7 @@ ${R}Do not enter www. or http:// the two domains ${BO}www.mydomainname.com${N} a
       9 )  ########################  phpMyAdmin  #####################
         pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
         if [[ -n $pathPhpMyAdmin ]]; then
-          __infoBox "Install phpMyAdmin" 3 "
+          __messageBox "Install phpMyAdmin" "
   phpMyAdmin is already installed
           "
           continue
@@ -798,7 +802,7 @@ ${R}Do not enter www. or http:// the two domains ${BO}www.mydomainname.com${N} a
         . $REPLANCE/insert/util_phpmyadmin.sh
       ;;
 			10 )  ########################  Relance rtorrent  ######################
-				__infoBox "Message" 1 "
+				__messageBox "Message" "
 
 			 	  Restart
 

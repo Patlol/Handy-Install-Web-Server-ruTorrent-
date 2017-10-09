@@ -49,6 +49,7 @@ readonly miniDispoHome=313524224   # 299 Go disponible sur disque
 readonly serveurHttp="apache2"
 # dialog param --backtitle --aspect --colors
 readonly TITRE="HiwsT : Installation rtorrent - ruTorrent"
+readonly TIMEOUT=20  # __messageBox
 readonly RATIO=12
 readonly R="\Z1"
 readonly BK="\Z0"  # black
@@ -80,12 +81,7 @@ __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 
 }    #  fin ouinon
 
 __messageBox() {   # param : titre texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --msgbox "${2}" 0 0)
-			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
-}
-
-__infoBox() {   # param : titre sleep texte
-			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --sleep ${2} --infobox "${3}" 0 0)
+			CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --timeout $TIMEOUT --msgbox "${2}" 0 0)
 			choix=$("${CMD[@]}" 2>&1 >/dev/tty)
 }
 
@@ -120,7 +116,7 @@ __saisieTexteBox() {   # param : titre, texte
 			__saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
 			break
 		else
-			__infoBox "Entry validation" 3 "
+			__messageBox "Entry validation" "
 Only alphanumeric characters
 Between 2 and 15 characters"
 		fi
@@ -134,14 +130,14 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
 		reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 		if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
 		[[ "$reponse" =~ [\\] ]]; then
-      __infoBox "${1}" 2 "
+      __messageBox "${1}" "
 The password can't contain spaces or \\."
     else
 	    pw1=$(echo $reponse | awk -F" " '{ print $1 }')
 	    pw2=$(echo $reponse | awk -F" " '{ print $2 }')
 			case $pw1 in
 				"" )
-					__infoBox "${1}" 2 "
+					__messageBox "${1}" "
 The password can't be empty."
 				;;
 				$pw2 )
@@ -149,7 +145,7 @@ The password can't be empty."
 					break
 				;;
 				* )
-					__infoBox "${1}" 2 "
+					__messageBox "${1}" "
 The 2 inputs are not identical."
 				;;
 			esac
@@ -328,7 +324,7 @@ $info"  # $info valeur suivant $homeDispo cf. # espace dispo
 
 if [ -z "$homeDispo" ]; then  # /
  	if [ $rootDispo -lt $miniDispoRoot ]; then
-		__infoBox "Important message" 4 "
+		__messageBox "Important message" "
 $BO $R
 WARNING $N
 
@@ -336,7 +332,7 @@ Only $R$(( $rootDispo/1024/1024 )) Go$N, on / to store downloaded files"
 	fi
 else  # /home
  	if [ $homeDispo -lt $miniDispoHome ];then
-		__infoBox "Important message" 4 "
+		__messageBox "Important message" "
 $BO $R
 WARNING $N
 
@@ -355,7 +351,7 @@ Choose a linux username$R
 	egrep "^$userLinux:" /etc/passwd >/dev/null
 	usernameOk=$?
 	if [[ $usernameOk -eq 0 ]]; then
-		__infoBox "Linux user" 3 "
+		__messageBox "Linux user" "
 	$userLinux already exists, choose another username"
 	fi
 done
@@ -375,7 +371,7 @@ Choose a ruTorrent username$R (neither space nor \)$N: "
 	egrep "^$userRuto:" /etc/passwd >/dev/null
 	usernameOk=$?
 	if [[ $usernameOk -eq 0 ]] && [[ $userRuto != $userLinux ]]; then
-			__infoBox "ruTorrent user" 3 "
+			__messageBox "ruTorrent user" "
 		$userRuto already exists, choose another username"
 	fi
 done
@@ -501,7 +497,7 @@ sleep 1
 pwCrypt=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
 useradd -m -G adm,dip,plugdev,www-data,sudo -p $pwCrypt $userLinux
 if [[ $? -ne 0 ]]; then
-	__infoBox "Linux user" 3 "
+	__messageBox "Linux user" "
 Unable to create linux user"
 	exit 1
 fi
@@ -666,7 +662,7 @@ cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/
 cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
 
 sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'$userLinux'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
- 
+
 chown -R www-data:www-data $REPWEB/rutorrent/conf
 
 # Ajouter le plugin log-off

@@ -58,7 +58,7 @@ __listeUtilisateurs() {
 		fi
 		if [[ $repQuery == "" ]]; then
 			if [[ ${1} != "texte" ]]; then
-	      __infoBox "${1}" 3 "
+	      __messageBox "${1}" "
 	The Name or the password of mysql user is (are) not find."
 			else
 				echo
