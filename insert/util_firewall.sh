@@ -6,22 +6,22 @@ portSSH=$(cat /etc/ssh/sshd_config | grep ^Port | awk -F" " '{print$2}')
 
 if [ $portSSH -eq 0 ]; then
   __messageBox "ssh port Error" "
-The ssh port can not be found in /etc/ssh/sshd_config
-Unable to install the firewall without blocking ssh acces!!!
-See the wiki :  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
+    The ssh port can not be found in /etc/ssh/sshd_config
+    Unable to install the firewall without blocking ssh acces!!!
+    See the wiki :  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/Si-quelque-chose-se-passe-mal"
   exit 1
 fi
 
 # ufw si pas installé, installer
 which ufw 2>&1 > /dev/null
 if [ $? != 0 ]; then
-apt-get update
-cmd="apt-get -yq install ufw"; $cmd || __msgErreurBox "$cmd" $?
-clear
+  apt-get update
+  cmd="apt-get -yq install ufw"; $cmd || __msgErreurBox "$cmd" $?
+  clear
 fi
 
 # menu
-until false ; do
+until [[ false ]] ; do
   echo
   echo "Do you want"
   echo -e "\t1) List/Add and enable basic rules with ufw"
@@ -35,11 +35,11 @@ until false ; do
   echo -e "\t0) Exit"
   echo
   echo -n "Your choice (0 1 2 3 4 5 6) "
-	read choixMenu
-	echo
+  read choixMenu
+  echo
 
   case $choixMenu in
-		0 )
+    0 )
       break
     ;;
     1 )  #  Lister/Ajouter et activer les règles minimums
@@ -48,8 +48,6 @@ until false ; do
       echo "Accept port $portSSH/tcp Chain INPUT (port ssh)"
       echo "Accept port 80 Chain INPUT (http)"
       echo "Accept port 443 Chain INPUT (https)"
-      # echo "Accept port 445 Chain INPUT"
-      # echo "Accept port 25/tcp Chain INPUT"
       echo "Accept the ports range 55950:56000/tcp Chain INPUT (rtorrent)"
       echo "Accept the ports range 55950:56000/udp Chain INPUT (rtorrent)"
       echo "Accept port 10000/tcp Chain INPUT (Webmin)"
@@ -60,7 +58,7 @@ until false ; do
       echo "Do you want"
       echo -e "\t1) Add the rules above"
       echo -e "\t2) Back to menu"
-      until false ; do
+      until [[ false ]] ; do
         echo -n "Your choice (1 2) "
         read choixMenu1
         case $choixMenu1 in
@@ -102,7 +100,7 @@ until false ; do
         echo "Do you want"
         echo -e "\t1) Remove the above rules"
         echo -e "\t2) Back to menu"
-        until false ; do
+        until [[ false ]] ; do
           echo -n "Your choice (1 2) "
           read choixMenu2
           case $choixMenu2 in

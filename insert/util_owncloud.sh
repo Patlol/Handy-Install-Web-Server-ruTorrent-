@@ -31,18 +31,18 @@ a2enmod mime
 a2enmod proxy_fcgi setenvif
 
 __servicerestart $PHPVER
-  if [[ $? -eq 0 ]]; then
-    echo "**************************************"
-    echo "|  php restart (APCu anbd Redis) ok  |"
-    echo "**************************************"
-    sleep 1.5
-  fi
+if [[ $? -eq 0 ]]; then
+  echo "**************************************"
+  echo "|  php restart (APCu anbd Redis) ok  |"
+  echo "**************************************"
+  sleep 1.5
+fi
 ################################################################################
 # install de postfix et mailutils si pas présents
 which mailutils 2>&1 > /dev/null
 if [ $? != 0 ]; then
   __messageBox "postfix/mailutils install" "
-Validate the default values"
+    Validate the default values"
   cmd="apt-get -yq install mailutils postfix"; $cmd || __msgErreurBox "$cmd" $?
   service postfix reload
   __servicerestart "postfix"
@@ -138,7 +138,7 @@ fi
 #  supprime l'integrity check    sed -i 's/  php_value memory_limit 512M/# php_value memory_limit 512M/g' $ocpath/.htaccess
 if [[ $fileSize != "513M" ]]; then
   sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
-         -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess
+    -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess
 
   # pour éviter "Il y a eu des problèmes à la vérification d’intégrité du code."
   # https://doc.owncloud.org/server/9.0/admin_manual/issues/code_signing.html#errors et
@@ -212,13 +212,13 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
 
     __servicerestart "iwatch"
     if [[ $? -ne 0 ]]; then
-      __messageBox "Audio-player install" "Successful installation
-but without iwatch (setup issue)"
+      __messageBox "Audio-player install" " Successful installation
+        but without iwatch (setup issue)"
     else
-    __messageBox "Audio-player install" "Successful installation
-Changes to directories owncloud/data/${FIRSTUSER[0]}
-( and /home/${FIRSTUSER[0]}/downloads if External Storage is enabled )
-Will be automatically updated in Audio-player (Thanks to iwatch)"
+      __messageBox "Audio-player install" " Successful installation
+        Changes to directories owncloud/data/${FIRSTUSER[0]}
+        ( and /home/${FIRSTUSER[0]}/downloads if External Storage is enabled )
+        Will be automatically updated in Audio-player (Thanks to iwatch)"
     fi
     ## logrotate
     cp $REPLANCE/fichiers-conf/scanOC-rotate /etc/logrotate.d/scanOC-rotate
@@ -286,13 +286,11 @@ chown -R ${htuser}:${htgroup} ${ocpath}/updater/
 chmod +x ${ocpath}/occ
 
 echo -e "\nchmod and chown .htaccess\n"
-if [ -f ${ocpath}/.htaccess ]
- then
+if [ -f ${ocpath}/.htaccess ]; then
   chmod 0644 ${ocpath}/.htaccess
   chown ${rootuser}:${htgroup} ${ocpath}/.htaccess
 fi
-if [ -f ${ocpath}/data/.htaccess ]
- then
+if [ -f ${ocpath}/data/.htaccess ]; then
   chmod 0644 ${ocpath}/data/.htaccess
   chown ${rootuser}:${htgroup} ${ocpath}/data/.htaccess
 fi
@@ -310,4 +308,4 @@ echo "****************************"
 
 sleep 2
 # why i don't know, but necessary, the first restart is not enough
-if [[ $(pgrep iwatch) -ne 0 ]]; then service restart iwatch; fi
+if [[ $(pgrep iwatch) -ne 0 ]]; then __servicerestart "iwatch"; fi

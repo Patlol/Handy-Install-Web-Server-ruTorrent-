@@ -53,7 +53,7 @@ echo "rtorrentd:"
 echo "----------"
 service rtorrentd status
 echo
-ps aux | grep '.torrent$'
+ps -aux | grep '.torrent$'
 echo
 echo "-------------------------------------------------------------------------------"
 echo "Users:"
@@ -61,7 +61,7 @@ echo "------"
 __listeUtilisateurs "texte"
 cat /tmp/liste
 
-until [[ 1 -eq 2 ]]; do
+until [[ false ]]; do
   echo "Scroll up to see the beginning"
   echo
   echo -e "\t1) See iptables rules, 'filter' table"
@@ -73,10 +73,10 @@ until [[ 1 -eq 2 ]]; do
   echo -e "\t0) Exit"
   echo
   echo -n "Your choice (0 1 2 3 4) "
-	read choixMenu
-	echo
-	case $choixMenu in
-		0 )
+  read choixMenu
+  echo
+  case $choixMenu in
+    0 )
       break
     ;;
     1 )

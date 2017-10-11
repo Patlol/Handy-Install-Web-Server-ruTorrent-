@@ -32,10 +32,10 @@ case $1 in
                 __go
         ;;
         stop)
-                if [ "$(ps aux | grep -e '.*rtorrent$' -c)" != 0  ]; then
+                if [ "$(ps -aux | grep -e '.*rtorrent$' -c)" != 0  ]; then
                 {
                         echo "Shutting down rtorrent... "
-                        kill `ps aux | grep -e '.*SCREEN.*rtorrent$' | awk -F" " '{print $2}'`
+                        kill `ps -aux | grep -e '.*SCREEN.*rtorrent$' | awk -F" " '{print $2}'`
                         echo "Terminated"
                 }
                 else
@@ -46,10 +46,10 @@ case $1 in
                 fi
         ;;
         restart)
-                if [ "$(ps aux | grep -e '.*rtorrent$' -c)" != 0  ]; then
+                if [ "$(ps -aux | grep -e '.*rtorrent$' -c)" != 0  ]; then
                 {
                         echo "Shutting down rtorrent... "
-                        kill `ps aux | grep -e '.*SCREEN.*rtorrent$' | awk -F" " '{print $2}'`
+                        kill `ps -aux | grep -e '.*SCREEN.*rtorrent$' | awk -F" " '{print $2}'`
                         __go
                 }
                 else

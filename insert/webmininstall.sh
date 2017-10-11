@@ -23,27 +23,26 @@ debWebMinU="webmin_1.850_all.deb" # "webmin-current.deb"
 
 cd /tmp
 # idem pour les 3 distrib
-	cmd="wget $upDebWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
-	cmd="apt-get -f install -y $paquetWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
-	cmd="dpkg --install $debWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
+cmd="wget $upDebWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
+cmd="apt-get -f install -y $paquetWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
+cmd="dpkg --install $debWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 
-	echo "***************************"
-	echo "|   Packages Installed    |"
-	echo "***************************"
-	echo
-	sleep 1
+echo "***************************"
+echo "|   Packages Installed    |"
+echo "***************************"
+echo
+sleep 1
 
 
 headTest=`curl -Is http://$IP:10000 | head -n 1`
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ "$headTest" == Document* ]]
-then
-	echo "******************************"
-	echo "|     WebMin works well      |"
-	echo "******************************"
-	echo "Accepter l'exception au certificat pour ce site"
-	echo
-	sleep 1
+if [[ "$headTest" == Document* ]]; then
+  echo "******************************"
+  echo "|     WebMin works well      |"
+  echo "******************************"
+  echo "Accepter l'exception au certificat pour ce site"
+  echo
+  sleep 1
 else
-	__msgErreurBox "curl -Is http://$IP:10000 | head -n 1 | awk -F\" \" '{ print $3 }' renvoie '$headTest'" "http $headTest"
+  __msgErreurBox "curl -Is http://$IP:10000 | head -n 1 | awk -F\" \" '{ print $3 }' renvoie '$headTest'" "http $headTest"
 fi
