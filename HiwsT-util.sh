@@ -20,7 +20,7 @@ readonly ocpath='/var/www/owncloud'
 # pas readonly pour IP car modifié dans openvpninstall
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 readonly HOSTNAME=$(hostname -f)
-# Tableau des utilisateurs principaux 0=linux 1=rutorrent
+# Tableau des utilisateurs principaux 0=linux, 1=rutorrent, owncloud dans oc db
 if [[ ! -e $REPLANCE/firstusers ]]; then
   echo; echo "The file \"firstusers\" is not available"; echo
   exit 2
@@ -59,7 +59,7 @@ ${2}" 0 0 )
 
 __messageBox() {   # param : titre texte
   local argTimeOut
-  if [[ ${3} == "" ]]; then
+  if [[ -z ${3} ]]; then
     argTimeOut="--timeout $TIMEOUT"
   fi
   CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --trim --cr-wrap $argTimeOut --msgbox "${2}" 0 0)
@@ -91,7 +91,7 @@ __msgErreurBox() {   # param : commande, N° erreur
 
 __saisieTexteBox() {   # param : titre, texte
   local codeRetour=""
-  until [[ false ]]; do
+  until false; do
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --help-button --help-label "Users list" --max-input 15 --inputbox "${2}" 0 0)
     __saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
     codeRetour=$?
@@ -120,7 +120,7 @@ __trap() {  # pour exit supprime affiche la dernière erreur
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
-  until [[ false ]]; do
+  until false; do
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password: " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
     reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
@@ -159,7 +159,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
 
   __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vérifier
     local pw1=""; local codeSortie=""; local reponse=""
-    until [[ false ]]; do
+    until false; do
       CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
       reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
       if [[ $? == 1 ]]; then return 1; fi
@@ -192,7 +192,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   ## debut __saisieOCBox()
   local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
-  until [[ false ]]; do
+  until false; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
     # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 25 25 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
@@ -223,15 +223,15 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
       addStorage=$(echo $reponse | awk -F"\\" '{ print $6 }')
       addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $7 }')
       # vide le champs incriminé et place le curseur
-      if [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ $pwFirstuser == "" ]]; then
+      if [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ -z $pwFirstuser ]]; then
         __helpOC
         pwFirstuser=""
         inputItem="PW Linux user:"
-      elif [[ $userBdD =~ [[:space:]\\] ]] || [[ $userBdD == "" ]]; then
+      elif [[ $userBdD =~ [[:space:]\\] ]] || [[ -z $userBdD ]]; then
         __helpOC
         userBdD=""
         inputItem="OC Database admin:"
-      elif [[ $pwBdD =~ [[:space:]\\] ]] || [[ $pwBdD == "" ]]; then
+      elif [[ $pwBdD =~ [[:space:]\\] ]] || [[ -z $pwBdD ]]; then
         __helpOC
         pwBdD=""
         inputItem="Password database admin:"
@@ -239,7 +239,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
         __helpOC
         fileSize="513M"
         inputItem="Max files size:"
-      elif [[ $ocDataDir =~ [[:space:]\\] ]] || [[ $ocDataDir == "" ]]; then
+      elif [[ $ocDataDir =~ [[:space:]\\] ]] || [[ -z $ocDataDir ]]; then
         __helpOC
         ocDataDir="/var/www/owncloud/data"
         inputItem="Data directory location:"
@@ -261,8 +261,8 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
 }  # fin __saisieOCBox()
 
 __saisieDomaineBox() {  # param : titre, texte
-  until [[ false ]]; do
-    until [[ false ]]; do
+  until false; do
+    until false; do
       CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --inputbox "${2}" 0 0)
       __saisieDomaineBox1=$("${CMD[@]}" 2>&1 >/dev/tty)
       if [[ $? == 1 ]]; then return 1; fi  # bouton cancel
@@ -300,107 +300,7 @@ __servicerestart() {
 ############################################
 ##  création utilisateur ruTorrent Linux
 ############################################
-__creaUserRuto () {
-  # param : ${1} name user ${2} pw user"
-  local codeSortie
-  egrep "^sftp" /etc/group > /dev/null
-  if [[ $? -ne 0 ]]; then
-    addgroup sftp
-  fi
-
-  pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' ${2})
-  useradd -m -G sftp -p $pass ${1}
-  codeSortie=$?
-  if [[ $codeSortie -ne 0 ]]; then
-    __messageBox "Setting-up rutorrent user" "
-      Unable to create Linux user ${1}
-      'useradd' error"
-    __msgErreurBox "useradd -m -G sftp -p $pass ${1}" $codeSortie
-  fi
-  sed -i "1 a\bash" /home/${1}/.profile
-
-  echo "Linux user ${1} created"; echo
-
-  mkdir -p /home/${1}/downloads/watch
-  mkdir -p /home/${1}/downloads/.session
-  chown -R ${1}:${1} /home/${1}/
-
-  echo "Directory/subdirectories /home/${1} created"; echo
-
-  #  partie rtorrent __creaUserRuto------------------------------------------------
-  # incrémenter le port scgi, écrir le fichier témoin
-  if [ -e $REPWEB/rutorrent/conf/scgi_port ]; then
-    port=$(cat $REPWEB/rutorrent/conf/scgi_port)
-  else
-    port=5000
-  fi
-
-  let "port += 1"
-  echo $port > $REPWEB/rutorrent/conf/scgi_port
-
-  # rtorrent.rc
-  cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/${1}/.rtorrent.rc
-  sed -i 's/<username>/'${1}'/g' /home/${1}/.rtorrent.rc
-  sed -i 's/<port>/'$port'/' /home/${1}/.rtorrent.rc  #  port scgi
-
-  echo "/home/${1}/rtorrent.rc created"; echo
-
-  #  fichiers daemon rtorrent
-  #  créer rtorrent.conf
-  cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/${1}-rtorrent.conf
-  chmod u+rwx,g+rwx,o+rx  /etc/init/${1}-rtorrent.conf
-  sed -i 's/<username>/'${1}'/g' /etc/init/${1}-rtorrent.conf
-
-  #  rtorrentd.sh modifié   il faut redonner aux users bash
-  sed -i '/## bash/ a\          usermod -s \/bin\/bash '${1}'' /etc/init.d/rtorrentd.sh
-  sed -i '/## screen/ a\          su --command="screen -dmS '${1}'-rtd rtorrent" "'${1}'"' /etc/init.d/rtorrentd.sh
-  sed -i '/## false/ a\          usermod -s /bin/false '${1}'' /etc/init.d/rtorrentd.sh
-  systemctl daemon-reload
-  __servicerestart "rtorrentd"
-  if [[ $? -eq 0 ]]; then
-    echo "rtorrent daemon modified and work well."; echo
-  fi
-  #  fin partie rtorrent  __creaUserRuto-----------------------------------------
-
-  #  partie rutorrent -----------------------------------------------------------
-  # dossier conf/users/userRuto
-  mkdir -p $REPWEB/rutorrent/conf/users/${1}
-  cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/${1}
-  cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/${1}/config.php
-  sed -i -e 's/<port>/'$port'/' -e 's/<username>/'${1}'/' $REPWEB/rutorrent/conf/users/${1}/config.php
-  chown -R www-data:www-data $REPWEB/rutorrent/conf/users/${1}
-
-  # déactivation du plugin linkcakebox
-  mkdir -p $REPWEB/rutorrent/share/users/${1}/torrents
-  mkdir $REPWEB/rutorrent/share/users/${1}/settings
-  chmod -R 777 $REPWEB/rutorrent/share/users/${1}
-  echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
-  chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
-  chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
-
-  echo "Directory users/${1} created on ruTorrent"; echo
-
-  __creaUserRutoPasswd ${1} ${2}   # insert/util_apache.sh ne renvoie rien
-
-  # modif pour sftp / sécu sftp __creaUserRuto  ---------------------------------
-  # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
-  usermod -s /bin/false ${1}
-  # pour interdire de sortir de /home/user  en sftp
-  chown root:root /home/${1}
-  chmod 0755 /home/${1}
-
-  # modif sshd_config  -------------------------------------------------------
-  sed -i 's/AllowUsers.*/& '${1}'/' /etc/ssh/sshd_config
-  sed -i 's|^Subsystem.*sftp.*/usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_config   # commente
-  # pour bloquer les utilisateurs supplémentaires
-  if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
-    echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
-  fi
-  __servicerestart "sshd"
-  if [[ $? -eq 0 ]]; then
-    echo "SFTP security ok" # seulement accès a /home/${1}
-  fi
-}   #  fin __creaUserRuto
+. $REPLANCE/insert/util_crea-rutorrent-user.sh
 
 #################################################
 ##  ajout utilisateur sous menu et traitements
@@ -408,7 +308,7 @@ __creaUserRuto () {
 __ssmenuAjoutUtilisateur() {
 local typeUser=""; local codeSortie=1
 
-until [[ false ]]; do
+until false; do
   # Create a user:" 22 70 4 \
   CMD=(dialog --backtitle "$TITRE" --title "Add a user" --trim --cr-wrap --cancel-label "Exit" --menu "
 
@@ -467,37 +367,7 @@ done
 #####################################################
 ##  Suppression d'un utilisateur linux et rutorrent
 #####################################################
-__suppUserRuto() {
-  ### traitement sur sshd, dossier user dans rutorrent, rtorrentd.sh, user linux et son home
-  # ${1} == $__saisieTexteBox
-  clear
-  # suppression du user allowed dans sshd_config
-  sed -i 's/'${1}' //' /etc/ssh/sshd_config
-  __servicerestart "sshd"
-
-  __suppUserRutoPasswd ${1}
-
-  # dossier rutorrent/conf/users/userRuto et rutorrent/share/users/userRuto
-  rm -r $REPWEB/rutorrent/conf/users/${1}
-  echo "Directory conf/users/${1} on ruTorrent deleted"; echo
-  rm -r $REPWEB/rutorrent/share/users/${1}
-  echo "Directory share/users/${1} on ruTorrent deleted"; echo
-
-  # modif de rtorrentd.sh (daemon)
-  sed -i '/.*'${1}.*'/d' /etc/init.d/rtorrentd.sh
-  rm /etc/init/${1}-rtorrent.conf
-
-  systemctl daemon-reload
-  __servicerestart "rtorrentd"
-  if [[ $? -eq 0 ]]; then
-    echo "Daemon rtorrent modified and work well."; echo
-  fi
-  # suppression fichier témoin de screen
-  rm -r /var/run/screen/S-${1}
-  # Suppression du home et suppression user linux (-f le home est root:root)
-  userdel -fr ${1}
-  echo "Linux user and his/her /home/${1} deleted"
-}  # fin __suppUserRuto
+. $REPLANCE/insert/util_supp-rutorrent-user.sh
 
 ######################################################
 ##  supprimer utilisateur sous menu et traitements
@@ -505,7 +375,7 @@ __suppUserRuto() {
 __ssmenuSuppUtilisateur() {
   local typeUser=""; local codeSortie=1
 
-  until [[ false ]]; do
+  until false; do
     # Delete a user:" 22 70 4 \
     CMD=(dialog --backtitle "$TITRE" --title "Delete a user" --trim --cr-wrap --cancel-label "Exit" --menu "
       What user kind do you want to remove?
@@ -561,14 +431,14 @@ __ssmenuSuppUtilisateur() {
   done
 }
 
-####################
-##  Changement pw
-####################
+#########################################
+##  Changement pw Menu + traitement
+#########################################
 
 __changePW() {
   local typeUser=""; local user=""; local codeSortie=1
 
-  until [[ false ]]; do
+  until false; do
     CMD=(dialog --backtitle "$TITRE" --title "Change User Password" --trim --cr-wrap --cancel-label "Exit" --menu "
 
 
@@ -643,32 +513,10 @@ __changePW() {
   done
 } # fin __changePW
 
-
 ######################################################
 ##  ajout vpn, téléchargement du script
 ######################################################
-__vpn() {
-  # $REPInstVpn is == $REPLANCE and readonly
-  clear
-  if [[ -e $REPInstVpn/openvpn-install.sh ]]; then
-    rm $REPInstVpn/openvpn-install.sh
-  fi
-  cmd="wget https://raw.githubusercontent.com/Angristan/OpenVPN-install/master/openvpn-install.sh -O $REPInstVpn/openvpn-install.sh"; $cmd || __msgErreurBox "$cmd" $?
-  chmod +x $REPInstVpn/openvpn-install.sh
-  export ERRVPN="" NOMCLIENTVPN=""
-  sed -i "/^#!\/bin\/bash/ a\__myTrap() {\nERRVPN=\$?\nNOMCLIENTVPN=\$CLIENT\ncd $REPInstVpn\n$REPInstVpn\/HiwsT-util.sh\n}\ntrap '__myTrap' EXIT" $REPLANCE/openvpn-install.sh
-  # __myTrap() {
-  #   ERRVPN=$?
-  #   NOMCLIENTVPN=$CLIENT
-  #   cd /home/<username>/HiwsT
-  #   /home/<username>/HiwsT/HiwsT-util.sh
-  # }
-  # trap '__myTrap' EXIT
-
-  ## supprimer la redirection de sterr
-  exec 2>&3 3>&-  # permettre l'affichage des read -p qui passe par sterr ?
-  . $REPLANCE/openvpn-install.sh
-}
+. $REPLANCE/insert/util_vpn.sh
 
 
 ############################
@@ -676,7 +524,7 @@ __vpn() {
 ############################
 __menu() {
   local choixMenu=""; local item=1
-  until [[ false ]]; do
+  until false; do
     # /!\ 7) doit être firewall (retour test openvpn avec $item) et openvpn 5)
     CMD=(dialog --backtitle "$TITRE" --title "Main menu" --trim --cr-wrap --cancel-label "Exit" --default-item "$item" --menu "
       To be used after installation with HiwsT
@@ -717,7 +565,7 @@ __menu() {
               installing the VPN !!!${N}
               "
             if [[ $__ouinonBox -eq 0 ]]; then
-              item=7  # menu Firewall
+              item=7  # menu => Firewall
               continue
             else
               continue
@@ -742,7 +590,7 @@ __menu() {
             |  - The configuration file will be located in the corresponding /home if his name exist.
             ------------------------------------------------------------------------------------------${N}" 22 100
           if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
-          item=1  # menu : Create a user
+          item=1  # menu => Create a user
         ;;
         6 )  ###################### ownCloud #############################
           pathOCC=$(find /var -name occ 2>/dev/null)
@@ -840,11 +688,11 @@ EOF
             reboot
           fi
         ;;
-      esac
+      esac  # $choixMenu
     else
       break
-    fi
-  done
+    fi  # Bouton ok/exit
+  done  # Boucle infinie menu
 
 }  # fin menu
 
@@ -952,9 +800,12 @@ trap "__trap" EXIT
 :>/tmp/hiwst.log # fichier temporaire msg pour __msgErreurBox
 exec 3>&2 2>/tmp/trace
 
+################################################################################
 # boucle menu / sortie
 __menu
 
+################################################################################
+# Sortie
 clear
 echo
 echo "Au revoir"  # french touch ;)

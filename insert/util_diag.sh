@@ -7,7 +7,7 @@ echo
 echo "IP: $IP"
 echo "Host Name: $HOSTNAME"
 serverName=$(cat $REPAPA2/sites-available/000-default.conf | egrep "^ServerName" | awk -F" " '{print $2}')
-if [[ $serverName != "" ]]; then   # Si nom de domaine
+if [[ -n $serverName ]]; then   # Si nom de domaine
   echo "Domain name: $serverName"
   echo
   echo "Certificates ssl"
@@ -61,7 +61,7 @@ echo "------"
 __listeUtilisateurs "texte"
 cat /tmp/liste
 
-until [[ false ]]; do
+until false; do
   echo "Scroll up to see the beginning"
   echo
   echo -e "\t1) See iptables rules, 'filter' table"

@@ -248,7 +248,7 @@ fi
 ##  domaines approuvés IP + noms de domaine
 sed -i "/0 => 'localhost'/a 1 => '"$IP"'," $ocpath/config/config.php
 serverName=$(cat $REPAPA2/sites-available/000-default.conf | egrep "^ServerName" | awk -F" " '{print $2}')
-if [[ $serverName != "" ]]; then   # Si nom de domaine
+if [[ -n $serverName ]]; then   # Si nom de domaine
   serverNameAlias="www."$serverName
   sed -i "/1 => '"$IP"'/a\ 2 => '"$serverName"',\n 3 => '"$serverNameAlias"', "  $ocpath/config/config.php
 fi

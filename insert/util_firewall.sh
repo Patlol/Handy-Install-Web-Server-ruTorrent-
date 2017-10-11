@@ -21,7 +21,7 @@ if [ $? != 0 ]; then
 fi
 
 # menu
-until [[ false ]] ; do
+until false ; do
   echo
   echo "Do you want"
   echo -e "\t1) List/Add and enable basic rules with ufw"
@@ -58,7 +58,7 @@ until [[ false ]] ; do
       echo "Do you want"
       echo -e "\t1) Add the rules above"
       echo -e "\t2) Back to menu"
-      until [[ false ]] ; do
+      until false ; do
         echo -n "Your choice (1 2) "
         read choixMenu1
         case $choixMenu1 in
@@ -100,7 +100,7 @@ until [[ false ]] ; do
         echo "Do you want"
         echo -e "\t1) Remove the above rules"
         echo -e "\t2) Back to menu"
-        until [[ false ]] ; do
+        until false ; do
           echo -n "Your choice (1 2) "
           read choixMenu2
           case $choixMenu2 in

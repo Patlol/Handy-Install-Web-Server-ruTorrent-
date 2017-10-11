@@ -82,7 +82,7 @@ __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 
 
 __messageBox() {   # param : titre texte vide=timeout on
   local argTimeOut
-  if [[ ${3} == "" ]]; then
+  if [[ -z ${3} ]]; then
     argTimeOut="--timeout $TIMEOUT"
   fi
   CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --scrollbar $argTimeOut --msgbox "${2}" 0 0)
@@ -113,7 +113,7 @@ __msgErreurBox() {   # param : commande, N° erreur
 }  # fin messageErreur
 
 __saisieTexteBox() {   # param : titre, texte
-  until [[ false ]]; do
+  until false; do
     CMD=(dialog --aspect $RATIO --colors --nocancel --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --max-input 15 --inputbox "${2}" 0 0)
     __saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
     if [ $? == 1 ]; then return 1; fi
@@ -131,7 +131,7 @@ __saisieTexteBox() {   # param : titre, texte
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
-  until [[ false ]]; do
+  until false; do
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
     reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
@@ -205,8 +205,9 @@ update-locale LC_ALL=$lang
 dpkg-reconfigure --frontend=noninteractive locales
 locale-gen
 
-# installe dialog si pas installé
 apt-get update
+
+# installe dialog si pas installé
 which dialog &>/dev/null
 if [ $? -ne 0 ]; then
   apt-get install -yq dialog
@@ -369,7 +370,7 @@ until [[ $usernameOk -ne 0 ]]; do
       "
   fi
 done
-  __saisiePwBox "Linux user" "
+__saisiePwBox "Linux user" "
     Password for $userLinux:" 4
 pwLinux=$__saisiePwBox
 
@@ -503,7 +504,6 @@ sleep 1
 echo
 
 # upgrade
-cmd="apt-get update -yq"; $cmd ||  __msgErreurBox "$cmd" $?
 cmd="apt-get upgrade -yq"; $cmd ||  __msgErreurBox "$cmd" $?
 echo "***********************"
 echo "|  Update completed   |"
@@ -513,215 +513,36 @@ sleep 1
 ##############################
 #  Création de linux user    #
 ##############################
-pwCrypt=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
-useradd -m -G adm,dip,plugdev,www-data,sudo -p $pwCrypt $userLinux
-if [[ $? -ne 0 ]]; then
-  __messageBox "Linux user" "
-    Unable to create linux user
-    "
-  exit 1
-fi
-sed -i "1 a\bash" /home/$userLinux/.profile  #ubuntu ok, debian ok après reboot
-echo $userLinux > $REPLANCE/firstusers
-readonly REPUL="/home/$userLinux"
-cmd="usermod -aG www-data $userLinux"; $cmd ||  __msgErreurBox "$cmd" $?
-
-## config mc (installé dans apacheinstall)
-# config mc user
-mkdir -p $REPUL/.config/mc/
-cp $REPLANCE/fichiers-conf/mc_panels.ini $REPUL/.config/mc/panels.ini
-chown -R $userLinux:$userLinux $REPUL/.config/
-# config mc root
-mkdir -p /root/.config/mc/
-cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
-
-echo
-echo "***************************"
-echo "|   Linux user created    |"
-echo "***************************"
-sleep 1
-echo
+. $REPLANCE/insert/install_linuxuser.sh
 
 ############################################
 #      Installation du serveur http        #
 ############################################
 service nginx stop &> /dev/null
-. $REPLANCE/insert/apacheinstall.sh
+. $REPLANCE/insert/install_apache.sh
 
 ############################################
 #           installation rtorrent          #
 ############################################
-# téléchargement rtorrent libtorrent xmlrpc
-if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
-  paquets=$paquetsRtoD8
-elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
-  paquets=$paquetsRtoD9
-else
-  paquets=$paquetsRtoU
-fi
-cmd="apt-get install -yq $paquets"; $cmd || __msgErreurBox "$cmd" $?
-
-echo
-echo "******************************"
-echo "|    rtorrent, libtorrent    |"
-echo "|    and xmlrpc packages     |"
-echo "******************************"
-echo
-sleep 1
-
-
-# configuration rtorrent
-cp $REPLANCE/fichiers-conf/rto_rtorrent.rc $REPUL/.rtorrent.rc
-sed -i 's/<username>/'$userLinux'/g' $REPUL/.rtorrent.rc
-
-mkdir -p $REPUL/downloads/watch
-mkdir -p $REPUL/downloads/.session
-chown -R $userLinux:$userLinux $REPUL/downloads
-echo
-echo "************************************************"
-echo "|   .rtorrent.rc configured for Linux user     |"
-echo "************************************************"
-sleep 1
-
-# mettre rtorrent en deamon / screen
-cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/$userLinux-rtorrent.conf
-chmod u+rwx,g+rwx,o+rx  /etc/init/$userLinux-rtorrent.conf
-sed -i 's/<username>/'$userLinux'/g' /etc/init/$userLinux-rtorrent.conf
-#-----------------------------------------------------------------
-cp $REPLANCE/fichiers-conf/rto_rtorrentd.sh /etc/init.d/rtorrentd.sh
-chmod u+rwx,g+rwx,o+rx  /etc/init.d/rtorrentd.sh
-sed -i 's/<username>/'$userLinux'/g' /etc/init.d/rtorrentd.sh
-ln -s /etc/init.d/rtorrentd.sh  /etc/rc4.d/S99rtorrentd.sh
-ln -s /etc/init.d/rtorrentd.sh  /etc/rc5.d/S99rtorrentd.sh
-ln -s /etc/init.d/rtorrentd.sh  /etc/rc6.d/K01rtorrentd.sh
-systemctl daemon-reload
-__servicerestart "rtorrentd"
-#-----------------------------------------------------------------
-pgrep rtorent && { \
-echo "**************************************"; \
-echo "|  rtorrent daemon works correctly   |"; \
-echo "**************************************"; \
-sleep 1; } || \
-__msgErreurBox "rtorrent daemon don't work" 1
+. $REPLANCE/insert/install_rtorrent.sh
 
 ############################################
 #        installation de rutorrent         #
 ############################################
-
-# création de userRuto dans apacheinstall.sh
-# Modifier la configuration du site par défaut (pour rutorrent) dans apacheinstall.sh
-
-# téléchargement
-mkdir $REPWEB/source
-cd $REPWEB/source
-cmd="wget https://github.com/Novik/ruTorrent/archive/master.zip"; $cmd || __msgErreurBox "$cmd" $?
-unzip -o master.zip
-mv -f ruTorrent-master $REPWEB/rutorrent
-chown -R www-data:www-data $REPWEB/rutorrent
-
-# fichier de config config.php générique ( modif dans conf/user/nonuser/)
-mv $REPWEB/rutorrent/conf/config.php $REPWEB/rutorrent/conf/config.php.old
-cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
-chown -R www-data:www-data $REPWEB/rutorrent
-chmod -R 755 $REPWEB/rutorrent
-
-# modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
-echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
-
-# modif du thème de rutorrent
-mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
-mkdir $REPWEB/rutorrent/share/users/$userRuto/settings
-chown -R www-data:www-data $REPWEB/rutorrent/share/users/$userRuto
-chmod -R 777 $REPWEB/rutorrent/share/users/$userRuto
-
-echo 'O:6:"rTheme":2:{s:4:"hash";s:9:"theme.dat";s:7:"current";s:8:"Oblivion";}' > $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
-chmod u+rwx,g+rx,o+rx $REPWEB/rutorrent/share/users/$userRuto
-chmod 666 $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
-chown www-data:www-data $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
-
-echo
-echo "**********************************************"
-echo "|    ruTorrent installed and configured      |"
-echo "**********************************************"
-sleep 1
-
-# installation de mediainfo et ffmpeg
-if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
-  chmod 777 /etc/apt/sources.list
-  echo $sourceMediaD8 >> /etc/apt/sources.list
-  chmod 644 /etc/apt/sources.list
-  apt-get update -yq
-  cmd="apt-get install -yq --force-yes deb-multimedia-keyring"; $cmd || __msgErreurBox "$cmd" $?
-  apt-get update -yq
-  cmd="apt-get install -y --force-yes $paquetsMediaD8"; $cmd || __msgErreurBox "$cmd" $?
-elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
-  cmd="apt-get install -yq $paquetsMediaD9"; $cmd || __msgErreurBox "$cmd" $?
-else
-  cmd="apt-get install -yq --force-yes $paquetsMediaU"; $cmd || __msgErreurBox "$cmd" $?
-fi
-echo
-echo "*****************************************"
-echo "|    mediainfo and ffmpeg installed     |"
-echo "*****************************************"
-sleep 1
-
-## plugins rutorrent
-mkdir $REPWEB/rutorrent/plugins/conf
-
-cp $REPLANCE/fichiers-conf/ruto_plugins.ini $REPWEB/rutorrent/plugins/conf/plugins.ini
-
-# création de conf/users/userRuto en prévision du multiusers
-mkdir -p $REPWEB/rutorrent/conf/users/$userRuto
-cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/$userRuto
-cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/$userRuto/config.php
-
-sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'$userLinux'/' $REPWEB/rutorrent/conf/users/$userRuto/config.php
-
-chown -R www-data:www-data $REPWEB/rutorrent/conf
-
-# Ajouter le plugin log-off
-
-cd $REPWEB/rutorrent/plugins
-cmd="wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/rutorrent-logoff/logoff-1.3.tar.gz"; $cmd || __msgErreurBox "$cmd" $?
-cmd="tar -zxf logoff-1.3.tar.gz"; $cmd || __msgErreurBox "$cmd" $?
-
-# action pro Qwant
-sed -i "s|\(\$logoffURL.*\)|\$logoffURL = \"https://www.qwant.com/\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
-sed -i "s|\(\$allowSwitch.*\)|\$allowSwitch = \"$userRuto\";|" $REPWEB/rutorrent/plugins/logoff/conf.php
-echo -e "\n;;\n        [logoff]\n        enabled = yes" >> $REPWEB/rutorrent/plugins/conf/plugins.ini
-
-chown -R www-data:www-data $REPWEB/rutorrent/plugins/logoff
-echo
-echo "********************************************"
-echo "|       ruTorrent plugins installed        |"
-echo "********************************************"
-sleep 1
-
-headTest=`curl -Is http://$IP/rutorrent/| head -n 1`
-headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ "$headTest" == Unauthorized* ]]; then
-  echo
-  echo "*********************************"
-  echo "|  ruTorrent works correctly    |"
-  echo "*********************************"
-  sleep 1
-else
-  __msgErreurBox "curl -Is http://$IP/rutorrent/| head -n 1 | awk -F\" \" '{ print $3 }' return $headTest" "http $headTest"
-fi
+. $REPLANCE/insert/install_rutorrent.sh
 
 #######################################################
 #             installation de WebMin                  #
 #######################################################
-
 if [[ $installWebMin -eq 0 ]]; then
-  . $REPLANCE/insert/webmininstall.sh
+  . $REPLANCE/insert/install_webmin.sh
 fi
 
 ########################################
 #            sécuriser ssh             #
 ########################################
 #  des choses à faire de tte façon
-. $REPLANCE/insert/sshsecuinstall.sh
+. $REPLANCE/insert/install_ssh.sh
 
 ####################################
 #     Nettoyage, finalisation      #
@@ -812,7 +633,8 @@ EOF
 # écrase la récap 1ère version et le répertoire de scripts dans root
 chmod 400 $REPUL/HiwsT/RecapInstall.txt
 __textBox "Installation summary" $REPUL/HiwsT/RecapInstall.txt "Information saved in RecapInstall.txt"
-__ouinonBox "Installation end" " Use HiwsT-util.sh for all modifications
+__ouinonBox "Installation end" "
+  Use HiwsT-util.sh for all modifications
   It may be necessary to reboot for
   everything work 100%.
   Do you want reboot your server now?"

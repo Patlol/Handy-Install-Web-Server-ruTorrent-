@@ -1,4 +1,3 @@
-#!/bin/bash
 
 # \u2502 │
 # \u2500 ─
@@ -56,7 +55,7 @@ __listeUtilisateurs() {
     else
       repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
     fi
-    if [[ $repQuery == "" ]]; then
+    if [[ -z $repQuery ]]; then
       if [[ ${1} != "texte" ]]; then
         __messageBox "${1}" "
           The Name or the password of mysql user is (are) not find."
