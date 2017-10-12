@@ -30,19 +30,17 @@ elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
   cmd="apt-get install -yq python-certbot-apache"; $cmd || __msgErreurBox "$cmd" $?
 else
   apt-get install software-properties-common
-  add-apt-repository ppa:certbot/certbot
+  add-apt-repository -y ppa:certbot/certbot
   apt-get update
   cmd="apt-get install -yq python-certbot-apache"; $cmd || __msgErreurBox "$cmd" $?
 fi
-certbot --apache certonly -d $__saisieDomaineBox1 -d $__saisieDomaineBox2
+cmd="certbot --apache certonly -d $__saisieDomaineBox1 -d $__saisieDomaineBox2"; $cmd || __msgErreurBox "$cmd" $?
 if [[ $? -ne 0 ]]; then
   __messageBox "Let's Encrypt install" "
-    ${BO}There are a issue on cerbot:
+    ${BO}There are a issue on cerbot:${N}
     Domain: $__saisieDomaineBox1
-    Type:   unknownHost
-    Detail: No valid IP addresses found for $__saisieDomaineBox1${N}
-    We can't continue to install Let's Encrypt
-    ServerName in Apache site-config deleted"
+    We can't continue to install Let's Encrypt.
+    ${R}ServerName in Apache site-config deleted${N}"
   sed -i "s/ServerName "$__saisieDomaineBox1"/# &/g" $REPAPA2/sites-available/000-default.conf
   sed -i "s/ServerAlias "$__saisieDomaineBox2"/# &/g" $REPAPA2/sites-available/000-default.conf
   __servicerestart "apache2"
