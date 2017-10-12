@@ -297,11 +297,6 @@ __servicerestart() {
 #       Fonctions principales
 ########################################
 
-############################################
-##  création utilisateur ruTorrent Linux
-############################################
-. $REPLANCE/insert/util_crea-rutorrent-user.sh
-
 #################################################
 ##  ajout utilisateur sous menu et traitements
 #################################################
@@ -362,12 +357,6 @@ until false; do
   fi
 done
 }   #  fin __ssmenuAjoutUtilisateur()
-
-
-#####################################################
-##  Suppression d'un utilisateur linux et rutorrent
-#####################################################
-. $REPLANCE/insert/util_supp-rutorrent-user.sh
 
 ######################################################
 ##  supprimer utilisateur sous menu et traitements
@@ -513,11 +502,6 @@ __changePW() {
   done
 } # fin __changePW
 
-######################################################
-##  ajout vpn, téléchargement du script
-######################################################
-. $REPLANCE/insert/util_vpn.sh
-
 
 ############################
 ##  Menu principal
@@ -632,7 +616,7 @@ EOF
             The following setting only takes into account the installations
             execute with HiwsT" 12 75
 
-          . $REPLANCE/insert/util_firewall.sh
+          __firewall
           if [[ $item -eq 7 ]]; then item=5; fi  # menu : si on vient de openvpn on y retourne
         ;;
         8 )  #################  domain & letsencrypt ###################
@@ -678,7 +662,7 @@ EOF
           fi
         ;;
         11 )  ################# Diagnostiques ###############################
-          . $REPLANCE/insert/util_diag.sh
+          __diag
         ;;
         12 )  ###########################  REBOOT  #######################
           __ouinonBox "${R}${BO}Server Reboot${N}"
@@ -735,11 +719,17 @@ if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
   echo
   exit 1
 fi
-
 SERVEURHTTP="Apache2"
-#  chargement des f() apache et liste users
+
+################################################################################
+#  chargement des f() apache, liste users ...
 . $REPLANCE/insert/util_apache.sh
 . $REPLANCE/insert/util_listeusers.sh
+. $REPLANCE/insert/util_diag.sh
+. $REPLANCE/insert/util_firewall.sh
+. $REPLANCE/insert/util_vpn.sh
+. $REPLANCE/insert/util_supp-rutorrent-user.sh
+. $REPLANCE/insert/util_crea-rutorrent-user.sh
 
 ################################################################################
 #  debian ou ubuntu et version  pour ownCloud et diag
