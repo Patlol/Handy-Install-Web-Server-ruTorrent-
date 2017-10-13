@@ -83,9 +83,12 @@ if [[ $? -eq 0 ]]; then
 fi
 ################################################################################
 ## si $ocDataDir modifié le créer et lui donner le bon proprio
-if [[ ${ocDataDi}r != "/var/www/owncloud/data" ]]; then
+if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   mkdir -p ${ocDataDir}
+  cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDir}/../.htaccess
+  touch ${ocDataDir}/../index.html
   chown -R ${htuser}:${htgroup} ${ocDataDir}
+  chown root:${htgroup} ${ocDataDir}/../.htaccess
 fi
 
 ################################################################################
@@ -137,8 +140,13 @@ fi
 #  upload_max_filesize=513M post_max_size=513Mpost_max_size=513M valeurs d'origine
 #  supprime l'integrity check    sed -i 's/  php_value memory_limit 512M/# php_value memory_limit 512M/g' $ocpath/.htaccess
 if [[ $fileSize != "513M" ]]; then
+  if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
+    repDataDir="${ocDataDir}/.."
+  else
+    repDataDir=$ocpath
+  fi
   sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
-    -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess
+    -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $repDataDir/.htaccess
 
   # pour éviter "Il y a eu des problèmes à la vérification d’intégrité du code."
   # https://doc.owncloud.org/server/9.0/admin_manual/issues/code_signing.html#errors et
