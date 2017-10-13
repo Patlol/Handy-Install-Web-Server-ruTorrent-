@@ -189,7 +189,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
     done
   }  # fin __saisiePwOcBox()
 
-  ## debut __saisieOCBox()
+  ## debut __saisieOCBox()  $2 texte $3 Nbr lignes de la sous-boite
   local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
   pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
   until false; do
@@ -260,27 +260,41 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   done  # fin until infinie
 }  # fin __saisieOCBox()
 
-__saisieDomaineBox() {  # param : titre, texte
+__saisieDomaineBox() {  # param : titre, texte, lignes sous-boite
+  local reponse="" message=""
+  installCert="Y"
   until false; do
     until false; do
-      CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --inputbox "${2}" 0 0)
-      __saisieDomaineBox1=$("${CMD[@]}" 2>&1 >/dev/tty)
+      CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --separator "\\" --default-item "$inputItem" --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Domain name:" 1 2 "$__saisieDomaineBox1" 1 28 44 43 0 "Cert Let's Encrypt [Y/N]:" 3 2 "$installCert" 3 28 2 1 0)
+      reponse=$("${CMD[@]}" 2>&1 >/dev/tty)  # ezfezf.ff\Y\
       if [[ $? == 1 ]]; then return 1; fi  # bouton cancel
-      if [[ "$__saisieDomaineBox1" =~ ^([[:digit:]a-z\.-]+\.[a-z\.]{2,})$ ]] && \
+      __saisieDomaineBox1=$(echo $reponse | awk -F"\\" '{ print $1 }')
+      installCert=$(echo $reponse | awk -F"\\" '{ print $2 }')
+      if [[ "$__saisieDomaineBox1" =~ ^([[:digit:]a-z-]+\.[a-z\.]{2,})$ ]] && \
       [[ $(echo $__saisieDomaineBox1 | egrep "^w{3}\.") == "" ]]; then
         __saisieDomaineBox2="www."$__saisieDomaineBox1
         break
       else
-        __messageBox "Entry validation" "
+                __messageBox "Entry validation" "
           Enter a valid domain name.
           Only unaccented alphanumeric characters,
           without http(s):// and www."
+          inputItem="Domain name:"
+      fi
+      if [[ ! $installCert =~ ^[YyNn]$ ]]; then
+        __messageBox "Entry validation" "
+          Enter a valid reply:
+          Y y N n in \"Cert Let's Encrypt\""
+        installCert="Y"
+        inputItem="Cert Let's Encrypt [Y/N]:"
       fi
     done
+    if [[ $installCert =~ ^[Yy]$ ]]; then message="${BO}Vous allez installer Let'sEncrypt${N}"; fi
     __ouinonBox "Confirmation" " The domain names concerned are well:
       ${R}$__saisieDomaineBox1${N}
       and
-      ${R}$__saisieDomaineBox2${N}"
+      ${R}$__saisieDomaineBox2${N}
+      $message"
     if [[ $__ouinonBox -eq 0 ]]; then break; fi
   done
 } # fin __saisieDomaineBox()
@@ -584,7 +598,7 @@ __menu() {
               "
             continue
           fi
-          __saisieOCBox "ownCloud setting" $R"Consult the help$N" 15   # lignes ss-boite
+          __saisieOCBox "ownCloud setting" "${R}Consult the help${N}" 15   # lignes ss-boite
 
           . $REPLANCE/insert/util_owncloud.sh
           varLocalhost="localhost"  # pour $I$varLocalhost dans __messageBox
@@ -628,14 +642,15 @@ EOF
             continue
           fi
           __saisieDomaineBox "Domain name registration" "
-            If you have provided a domain name for ${IP}/ruTorrent /ownCloud...,
+            If you have provided a domain name for ${IP}/ruTorrent /ownCloud
             ${R}AND${N} the DNS servers are uptodate, enter here your domain name.
 
             This domain will be used for the ${BO}Apache${N} and ${BO}Let's Encrypt${N} (free ssl certificate) configuration.
 
-            Example: ${I}my.domain-name.co.uk${N} or ${I}22my-22domaine.22name.commmm${N} etc. ...
+            Example: ${I}my-domain-name.co.uk${N} or ${I}22my-22domaine-name.commmm${N} etc. ...
 
-            ${R}Do not enter www. or http:// the two domains ${BO}www.mydomainname.com${N} and ${BO}mydomainname.com${N} will be automatically used${N}"
+            ${R}Do not enter www. or http:// The two domains ${BO}www.mydomainname.com${N}${R}
+            and ${BO}mydomainname.com${N}${R} will be automatically used${N}" 3
           if [[ $? -eq 0 ]]; then   # not cancel
             . $REPLANCE/insert/util_letsencrypt.sh
           fi
