@@ -70,7 +70,7 @@ __msgErreurBox() {   # param : commande, N° erreur
   local msgErreur; local ref=$(caller 0)
   err=$2
   msgErreur="------------------\n"
-  msgErreur+="Line N°$ref\n${BO}$R$1${N}\nError N° $R$err$N\n"
+  msgErreur+="Line N°$ref\n${BO}$R$1${N}\nError N° $R$err${N}\n"
   trace=$(cat /tmp/trace)
   msgErreur+="$trace\n"
   msgErreur+="------------------\n"
@@ -79,9 +79,11 @@ __msgErreurBox() {   # param : commande, N° erreur
     See the wiki on github${N}
     https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
     The error message is stored in ${I}/tmp/trace.log${N}" "NOtimeout"
-  echo -e $msgErreur > /tmp/hiwst.log
-  sed -i '/------------------/d' /tmp/hiwst.log
-  sed -r 's/(\\Zb)|(\\Z1)|(\\Zn)//g' </tmp/hiwst.log >>/tmp/trace.log
+  # echo -e $msgErreur > /tmp/hiwst.log
+  # sed -i '/------------------/d' /tmp/hiwst.log
+  # sed -r 's/(\\Zb)|(\\Z1)|(\\Zn)//g' </tmp/hiwst.log >>/tmp/trace.log
+  echo ${msgErreur} | sed -r 's/------------------//g' > /tmp/trace.log
+  sed -i 's/\\Zb|\\Z1|\\Zn//g' /tmp/trace.log
   __ouinonBox "Error" "
     Do you want continue anyway?
     "
@@ -650,7 +652,7 @@ EOF
             Example: ${I}my-domain-name.co.uk${N} or ${I}22my-22domaine-name.commmm${N} etc. ...
 
             ${R}Do not enter www. or http:// The two domains ${BO}www.mydomainname.com${N}${R}
-            and ${BO}mydomainname.com${N}${R} will be automatically used${N}" 3
+            and ${BO}mydomainname.com${N}${R} will be automatically used${N}" 3
           if [[ $? -eq 0 ]]; then   # not cancel
             . $REPLANCE/insert/util_letsencrypt.sh
           fi
