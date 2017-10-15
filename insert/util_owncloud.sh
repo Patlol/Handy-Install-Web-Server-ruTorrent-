@@ -75,7 +75,7 @@ cp $REPLANCE/fichiers-conf/apa_conf_owncloud.conf $REPAPA2/conf-available/ownclo
 # L'en-tête HTTP "Strict-Transport-Security" n'est pas configurée à "15552000" secondes.
 # Pour renforcer la sécurité nous recommandons d'activer HSTS cf. Guide pour le renforcement et la sécurité.
 # ==> man-in-the-middle attacks https://79.137.33.190/owncloud/index.php/settings/help?mode=admin
-cat default-ssl.conf | grep  "Header always set Strict-Transport-Security \"max-age=15552000; includeSubDomains\""
+cat $REPAPA2/sites-available/default-ssl.conf | grep  "Header always set Strict-Transport-Security \"max-age=15552000; includeSubDomains\""
 if [[ $? -ne 0 ]]; then
   sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
 
@@ -93,11 +93,7 @@ if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   mkdir -p ${ocDataDir}
   cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDirRoot}/.htaccess
   touch ${ocDataDirRoot}/index.html
-  chown -R ${htuser}:${htgroup} ${ocDataDir}
-  chown ${rootuser}:${htgroup} ${ocDataDirRoot}/.htaccess
-  chown ${rootuser}:${htgroup} ${ocDataDir}/.htaccess
-  chmod 644 ${ocDataDirRoot}/.htaccess
-  chmod 644 ${ocDataDir}/.htaccess
+  chown -R ${htuser}:${htgroup} ${ocDataDirRoot}
 fi
 
 ################################################################################
@@ -117,6 +113,7 @@ EOF
 if [[ $? -ne 0 ]]; then
   echo
   echo "Error creating the owncloud database: \"$ocDbName\"!!!"
+  echo "You can restart the installation of owncloud later"
   exit 1
 else
   echo "*****************************************************"
@@ -149,12 +146,12 @@ fi
 #  supprime l'integrity check    sed -i 's/  php_value memory_limit 512M/# php_value memory_limit 512M/g' $ocpath/.htaccess
 if [[ $fileSize != "513M" ]]; then
   if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
-    repDataDir="${ocDataDir}/.."
-  else
-    repDataDir=$ocpath
+    sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
+    -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' ${ocDataDirRoot}/.htaccess
   fi
   sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
-    -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $repDataDir/.htaccess
+  -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess
+
 
   # pour éviter "Il y a eu des problèmes à la vérification d’intégrité du code."
   # https://doc.owncloud.org/server/9.0/admin_manual/issues/code_signing.html#errors et
@@ -309,6 +306,12 @@ fi
 if [ -f ${ocpath}/data/.htaccess ]; then
   chmod 0644 ${ocpath}/data/.htaccess
   chown ${rootuser}:${htgroup} ${ocpath}/data/.htaccess
+fi
+if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
+  chown ${rootuser}:${htgroup} ${ocDataDirRoot}/.htaccess
+  chown ${rootuser}:${htgroup} ${ocDataDir}/.htaccess
+  chmod 644 ${ocDataDirRoot}/.htaccess
+  chmod 644 ${ocDataDir}/.htaccess
 fi
 rm $REPLANCE/owncloud*.*
 

@@ -100,50 +100,59 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
     echo "|          This may take a while            |"
     echo "*********************************************"
     echo
-    certbot renew --dry-run
-    if [[ $? -ne 0 ]];then
-      echo "There are a issue with renew running"
-      echo "The installed cert are:"
-      certbot certificates
-      echo -ne "/!\ You will not have cron task to renew your certificate Let's Encrypt\nit expires in 90 days"
-      read
-    else
-      echo
-      echo "*********************************************"
-      echo "|    Renewing all existing certificates     |"
-      echo "|       it's ok. We add on cron task        |"
-      echo "|   The cert are renewing all the 60 days   |"
-      echo "*********************************************"
-      echo
-      sleep 1
-      sed -i 's/# renew_before_expiry = 30 days/renew_before_expiry = 30 days/' /etc/letsencrypt/renewal/$__saisieDomaineBox1.conf
-      cp $REPLANCE/insert/letsencrypt-cron.sh /etc/letsencrypt/letsencrypt-cron.sh
-      chmod 755 /etc/letsencrypt/letsencrypt-cron.sh
-      cp $REPLANCE/fichiers-conf/letsencrypt-hiwst
-      __servicerestart "cron"
-      codeSortie1=$?
-      cp $REPLANCE/fichiers-conf/letsencrypt-rotate /etc/logrotate.d/letsencrypt-rotate
-      logrotate -f /etc/logrotate.conf
-      codeSortie2=$(( $? + $codeSortie1 ))
-      if [[ $codeSortie2 -eq 0 ]]; then
+    for (( i = 0; i < 2; i++ )); do
+      certbot renew --dry-run
+      if [[ $? -ne 0 ]] && [[ i -eq 0 ]];then
         echo
-        echo "****************************************"
-        echo "|         Renew cron task and          |"
-        echo "|  logrotate of letsencrypt-cron.log   |"
-        echo "|                 ok                   |"
-        echo "****************************************"
+        echo "There are a issue with renew running"
+        echo "The installed cert are:"
+        certbot certificates
+        echo -ne "/!\ You will not have cron task to renew your certificate Let's Encrypt\nit expires in 90 days"
         echo
+        if [[ $i -eq 0 ]];then
+          echo "We retested the simulation. Wait. "
+          sleep 3
+        fi
+        sleep 3
       else
         echo
-        echo "****************************************"
-        echo "|         WARNING ! Issue on           |"
-        echo "|       Renew cron task and/or         |"
-        echo "|  logrotate of letsencrypt-cron.log   |"
-        echo "****************************************"
+        echo "*********************************************"
+        echo "|    Renewing all existing certificates     |"
+        echo "|       it's ok. We add on cron task        |"
+        echo "|   The cert are renewing all the 60 days   |"
+        echo "*********************************************"
         echo
-        sleep 2
-      fi
-    fi  # cerbot renew ok
-    sleep 3
+        sleep 1
+        sed -i 's/# renew_before_expiry = 30 days/renew_before_expiry = 30 days/' /etc/letsencrypt/renewal/$__saisieDomaineBox1.conf
+        cp $REPLANCE/insert/letsencrypt-cron.sh /etc/letsencrypt/letsencrypt-cron.sh
+        chmod 755 /etc/letsencrypt/letsencrypt-cron.sh
+        cp $REPLANCE/fichiers-conf/letsencrypt-hiwst
+        __servicerestart "cron"
+        codeSortie1=$?
+        cp $REPLANCE/fichiers-conf/letsencrypt-rotate /etc/logrotate.d/letsencrypt-rotate
+        logrotate -f /etc/logrotate.conf
+        codeSortie2=$(( $? + $codeSortie1 ))
+        if [[ $codeSortie2 -eq 0 ]]; then
+          echo
+          echo "****************************************"
+          echo "|         Renew cron task and          |"
+          echo "|  logrotate of letsencrypt-cron.log   |"
+          echo "|                 ok                   |"
+          echo "****************************************"
+          echo
+        else
+          echo
+          echo "****************************************"
+          echo "|         WARNING ! Issue on           |"
+          echo "|       Renew cron task and/or         |"
+          echo "|  logrotate of letsencrypt-cron.log   |"
+          echo "****************************************"
+          echo
+          sleep 2
+        fi  # logrotate ok
+        sleep 3
+        break  # sort de la boucle double test
+      fi  # cerbot renew ok
+    done  # fin de la boucle double test
   fi  # install cert by certbot ok
 fi  # installCert = Y
