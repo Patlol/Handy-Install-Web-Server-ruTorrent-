@@ -3,6 +3,9 @@ clear
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
+readonly ocDbName="owncloud"
+readonly ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
+# ocpath=/var/www/owncloud
 
 ################################################################################
 wget https://download.owncloud.org/community/owncloud-10.0.2.tar.bz2
@@ -30,11 +33,11 @@ a2enmod dir
 a2enmod mime
 a2enmod proxy_fcgi setenvif
 
-__servicerestart $PHPVER
+__servicerestart $PHPVER && __servicerestart "apache2"
 if [[ $? -eq 0 ]]; then
-  echo "**************************************"
-  echo "|  php restart (APCu anbd Redis) ok  |"
-  echo "**************************************"
+  echo "***********************************************"
+  echo "|  php & apache restart (APCu anbd Redis) ok  |"
+  echo "***********************************************"
   sleep 1.5
 fi
 ################################################################################
@@ -72,23 +75,29 @@ cp $REPLANCE/fichiers-conf/apa_conf_owncloud.conf $REPAPA2/conf-available/ownclo
 # L'en-tête HTTP "Strict-Transport-Security" n'est pas configurée à "15552000" secondes.
 # Pour renforcer la sécurité nous recommandons d'activer HSTS cf. Guide pour le renforcement et la sécurité.
 # ==> man-in-the-middle attacks https://79.137.33.190/owncloud/index.php/settings/help?mode=admin
-sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
+cat default-ssl.conf | grep  "Header always set Strict-Transport-Security \"max-age=15552000; includeSubDomains\""
+if [[ $? -ne 0 ]]; then
+  sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
 
-__servicerestart "apache2"
-if [[ $? -eq 0 ]]; then
-  echo "**************************"
-  echo "|  apache setting-up ok  |"
-  echo "**************************"
-  sleep 1.5
+  __servicerestart "apache2"
+  if [[ $? -eq 0 ]]; then
+    echo "**************************"
+    echo "|  apache setting-up ok  |"
+    echo "**************************"
+    sleep 1.5
+  fi
 fi
 ################################################################################
 ## si $ocDataDir modifié le créer et lui donner le bon proprio
 if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   mkdir -p ${ocDataDir}
-  cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDir}/../.htaccess
-  touch ${ocDataDir}/../index.html
+  cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDirRoot}/.htaccess
+  touch ${ocDataDirRoot}/index.html
   chown -R ${htuser}:${htgroup} ${ocDataDir}
-  chown root:${htgroup} ${ocDataDir}/../.htaccess
+  chown ${rootuser}:${htgroup} ${ocDataDirRoot}/.htaccess
+  chown ${rootuser}:${htgroup} ${ocDataDir}/.htaccess
+  chmod 644 ${ocDataDirRoot}/.htaccess
+  chmod 644 ${ocDataDir}/.htaccess
 fi
 
 ################################################################################
@@ -99,19 +108,19 @@ echo "| Enter the root password you entered in the mySql/mariadb installation |"
 echo "|          Or leave blank if you have not entered anything              |"
 echo "*************************************************************************"
 mysql -tp <<EOF
-CREATE DATABASE IF NOT EXISTS owncloud;
+CREATE DATABASE IF NOT EXISTS $ocDbName;
 show databases;
-GRANT ALL PRIVILEGES ON owncloud.* TO '`echo $userBdD`'@'localhost' IDENTIFIED BY '`echo $pwBdD`';
+GRANT ALL PRIVILEGES ON $ocDbName.* TO '`echo $userBdD`'@'localhost' IDENTIFIED BY '`echo $pwBdD`';
 \q
 EOF
 
 if [[ $? -ne 0 ]]; then
   echo
-  echo "Error creating the owncloud database!!!"
+  echo "Error creating the owncloud database: \"$ocDbName\"!!!"
   exit 1
 else
   echo "*****************************************************"
-  echo "|  owncloud database and its administrator created  |"
+  echo "|  \"$ocDbName\" database and its administrator created  |"
   echo "*****************************************************"
   sleep 1.5
 fi
@@ -120,8 +129,7 @@ fi
 ## finalisation de l'installation remplace la GUI
 # maintenance:install [--database DATABASE] [--database-name DATABASE-NAME] [--database-host DATABASE-HOST] [--database-user DATABASE-USER] [--database-pass [DATABASE-PASS]] [--database-table-prefix [DATABASE-TABLE-PREFIX]] [--admin-user ADMIN-USER] [--admin-pass ADMIN-PASS] [--data-dir DATA-DIR]
 chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ et l'accès à www-data
-sudo -u $htuser mkdir -p $ocDataDir
-sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name "owncloud"  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
+sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name $ocDbName  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
 if [[ $? -ne 0 ]]; then
   echo
   echo "Error in owncloud finalizing the installation"
@@ -277,9 +285,9 @@ if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   echo -e "\nchown and chmod for new owncloud data directory\n"
   find ${ocDataDir}/ -type f -print0 | xargs -0 chmod 0640
   find ${ocDataDir}/ -type d -print0 | xargs -0 chmod 0750
-  ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
-  chmod 750 ${ocDataDirRoot}  # - /data(/)
-  chown ${rootuser}:${htgroup} ${ocDataDirRoot} # - /data(/)
+  chmod 750 ${ocDataDirRoot}
+  chown ${rootuser}:${htgroup} ${ocDataDirRoot}
+  chown -R ${htuser}:${htgroup} ${ocDataDir}
 fi
 
 echo -e "\nchown Directories\n"
