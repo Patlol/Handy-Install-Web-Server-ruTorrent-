@@ -3,6 +3,7 @@ clear
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
+readonly ocDbName="owncloud"
 
 ################################################################################
 wget https://download.owncloud.org/community/owncloud-10.0.2.tar.bz2
@@ -99,19 +100,19 @@ echo "| Enter the root password you entered in the mySql/mariadb installation |"
 echo "|          Or leave blank if you have not entered anything              |"
 echo "*************************************************************************"
 mysql -tp <<EOF
-CREATE DATABASE IF NOT EXISTS owncloud;
+CREATE DATABASE IF NOT EXISTS $ocDbName;
 show databases;
-GRANT ALL PRIVILEGES ON owncloud.* TO '`echo $userBdD`'@'localhost' IDENTIFIED BY '`echo $pwBdD`';
+GRANT ALL PRIVILEGES ON $ocDbName.* TO '`echo $userBdD`'@'localhost' IDENTIFIED BY '`echo $pwBdD`';
 \q
 EOF
 
 if [[ $? -ne 0 ]]; then
   echo
-  echo "Error creating the owncloud database!!!"
+  echo "Error creating the owncloud database: \"$ocDbName\"!!!"
   exit 1
 else
   echo "*****************************************************"
-  echo "|  owncloud database and its administrator created  |"
+  echo "|  \"$ocDbName\" database and its administrator created  |"
   echo "*****************************************************"
   sleep 1.5
 fi
@@ -120,8 +121,7 @@ fi
 ## finalisation de l'installation remplace la GUI
 # maintenance:install [--database DATABASE] [--database-name DATABASE-NAME] [--database-host DATABASE-HOST] [--database-user DATABASE-USER] [--database-pass [DATABASE-PASS]] [--database-table-prefix [DATABASE-TABLE-PREFIX]] [--admin-user ADMIN-USER] [--admin-pass ADMIN-PASS] [--data-dir DATA-DIR]
 chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ et l'accès à www-data
-sudo -u $htuser mkdir -p $ocDataDir
-sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name "owncloud"  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
+sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name $ocDbName  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
 if [[ $? -ne 0 ]]; then
   echo
   echo "Error in owncloud finalizing the installation"
