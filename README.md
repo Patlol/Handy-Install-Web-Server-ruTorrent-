@@ -36,7 +36,7 @@ With this utility you can
 - Add a VPN (openVPN)
   - Install / uninstall
   - Creates / remove new user
-- Add ownCloud 10.0.2 (optionally with Audioplayer and External storage)
+- Add ownCloud ~~10.0.2~~ **10.0.3** (optionally with Audioplayer and External storage)
   - With app external storage (for torrents downloaded) and Audioplayer
 - Add phpMyAdmin
 - Perform a system diagnosis  
