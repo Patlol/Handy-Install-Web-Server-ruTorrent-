@@ -1,10 +1,11 @@
 
 __firewall() {
+  read
   clear
   # récupération du port ssh
   portSSH=0
   portSSH=$(cat /etc/ssh/sshd_config | grep ^Port | awk -F" " '{print$2}')
-
+read
   if [ $portSSH -eq 0 ]; then
     __messageBox "ssh port Error" "
       The ssh port can not be found in /etc/ssh/sshd_config
@@ -51,6 +52,7 @@ __firewall() {
         echo "Accept port 443 Chain INPUT (https)"
         echo "Accept the ports range 55950:56000/tcp Chain INPUT (rtorrent)"
         echo "Accept the ports range 55950:56000/udp Chain INPUT (rtorrent)"
+        echo "Accept port 6881 Chain INPUT (rtorrent DHT)"
         echo "Accept port 10000/tcp Chain INPUT (Webmin)"
         echo "Enable logs in LOW (logging on)"
         echo "Drop others ports in Chain INPUT (policy DROP)"
@@ -73,6 +75,8 @@ __firewall() {
               ufw allow 55950:56000/tcp
               ufw allow 55950:56000/udp
               ufw allow 10000/tcp
+              ufw allow 6881/tcp  # DHT rtorent
+              ufw allow 6881/udp
               # ufw allow 25/tcp
               ufw default deny
               ufw logging on
