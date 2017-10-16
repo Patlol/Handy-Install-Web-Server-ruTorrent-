@@ -8,16 +8,16 @@ readonly ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
 # ocpath=/var/www/owncloud
 
 ################################################################################
-wget https://download.owncloud.org/community/owncloud-10.0.2.tar.bz2
-wget https://download.owncloud.org/community/owncloud-10.0.2.tar.bz2.md5
-md5sum -c owncloud-10.0.2.tar.bz2.md5 < owncloud-10.0.2.tar.bz2 || __msgErreurBox "md5sum -c owncloud-10.0.2.tar.bz2.md5 < owncloud-10.0.2.tar.bz2" $?
+wget https://download.owncloud.org/community/owncloud-10.0.3.tar.bz2
+wget https://download.owncloud.org/community/owncloud-10.0.3.tar.bz2.md5
+md5sum -c owncloud-10.0.3.tar.bz2.md5 < owncloud-10.0.3.tar.bz2 || __msgErreurBox "md5sum -c owncloud-10.0.3.tar.bz2.md5 < owncloud-10.0.3.tar.bz2" $?
 
 wget https://owncloud.org/owncloud.asc
-wget https://download.owncloud.org/community/owncloud-10.0.2.tar.bz2.asc
+wget https://download.owncloud.org/community/owncloud-10.0.3.tar.bz2.asc
 gpg --import owncloud.asc &>/dev/null
-gpg --verify owncloud-10.0.2.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-10.0.2.tar.bz2.asc" $?
+gpg --verify owncloud-10.0.3.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-10.0.3.tar.bz2.asc" $?
 
-tar -xjf owncloud-10.0.2.tar.bz2
+tar -xjf owncloud-10.0.3.tar.bz2
 mv owncloud $ocpath
 if [[ $nameDistrib == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
   cmd="apt-get -yq install mariadb-server php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server libzip2 php-pclzip php5-imap"; $cmd || __msgErreurBox "$cmd" $?
