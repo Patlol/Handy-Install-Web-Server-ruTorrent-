@@ -94,21 +94,20 @@ __msgErreurBox() {   # param : commande, N° erreur
   err=${2}
   msgErreur="------------------\n"
   msgErreur+="Line N°${ref}\n${BO}${R}${1}${N}\nError N° ${R}${err}${N}\n"
-  trace=$(cat /tmp/trace)
+  trace=$(tail -n 10 /tmp/trace)
   msgErreur+="${trace}\n"
-  msgErreur+="------------------\n"
+  msgErreur+="-------------------\n"
   :>/tmp/trace
   __messageBox "${R}Error message${N}" " ${msgErreur}  ${R}
     See the wiki on github ${N}
     https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
     The error message is stored in ${I}/tmp/trace.log${N}" "NOtimeout"
+  echo -e ${msgErreur} | sed -r 's/------------------//g' > /tmp/trace.log
+  sed -i -e 's/\\Zb//g' -e 's/\\Z1//g' -e 's/\\Zn//g' /tmp/trace.log
   __ouinonBox "Error" "
     Do you want continue anyway?
     "
   if [[ $__ouinonBox -ne 0 ]]; then exit $err; fi
-  echo -e $msgErreur > /tmp/hiwst.log
-  sed -i '/------------------/d' /tmp/hiwst.log
-  sed -r 's/(\\Zb)|(\\Z1)|(\\Zn)//g' </tmp/hiwst.log >>/tmp/trace.log
   return $err
 }  # fin messageErreur
 
@@ -483,7 +482,6 @@ clear
 ## gestion des erreurs stderr par __msgErreurBox()
 :>/tmp/trace # fichier d'erreur temporaire
 :>/tmp/trace.log  # messages d'erreur
-:>/tmp/hiwst.log  # fichier temporaire msg pour __msgErreurBox
 exec 3>&2 2>/tmp/trace
 trap "__trap" EXIT # supprime info.php et affiche le dernier message d'erreur
 echo
