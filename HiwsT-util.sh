@@ -16,7 +16,7 @@ readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
 readonly REPInstVpn=$REPLANCE
-readonly ocpath='/var/www/owncloud' # pour letsencrypt et owncloud
+readonly ocpath='/var/www/owncloud' # pour letsencrypt, owncloud et up-owncloud
 # pas readonly pour IP car modifié dans openvpninstall
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 readonly HOSTNAME=$(hostname -f)
@@ -75,8 +75,8 @@ __msgErreurBox() {   # param : commande, N° erreur
   msgErreur+="$trace\n"
   msgErreur+="------------------\n"
   :>/tmp/trace
-  __messageBox "${R}Error message${N}" " $msgErreur  ${R}
-    See the wiki on github${N}
+  __messageBox "${R}Error message${N}" " $msgErreur$
+    ${R}See the wiki on github${N}
     https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
     The error message is stored in ${I}/tmp/trace.log${N}" "NOtimeout"
   # echo -e $msgErreur > /tmp/hiwst.log
@@ -525,7 +525,8 @@ __changePW() {
 __menu() {
   local choixMenu=""; local item=1
   until false; do
-    # /!\ 7) doit être firewall (retour test openvpn avec $item) et openvpn 5)
+    # /!\ 7) doit être firewall (retour test openvpn avec $item) et openvpn 5) item=x
+    # --menu text height width menu-height
     CMD=(dialog --backtitle "$TITRE" --title "Main menu" --trim --cr-wrap --cancel-label "Exit" --default-item "$item" --menu "
       To be used after installation with HiwsT
 
@@ -535,7 +536,7 @@ __menu() {
       3 "Delete a user" \
       4 "List existing users" \
       5 "Install/uninstall OpenVPN, a openVPN user" \
-      6 "Install ownCloud" \
+      6 "Install/update ownCloud" \
       7 "Firewall" \
       8 "Add domain name & Install free cert Let's Encrypt" \
       9 "Install phpMyAdmin" \
@@ -595,33 +596,42 @@ __menu() {
         6 )  ###################### ownCloud #############################
           pathOCC=$(find /var -name occ 2>/dev/null)
           if [[ -n $pathOCC ]]; then
-            __messageBox "Install ownCloud" "
-              ownCloud is already installed
+            __ouinonBox "Install/update ownCloud" "
+              ownCloud is already installed.
+              Do you want update it?
               "
-            continue
+            if [[ $__ouinonBox -ne 0 ]]; then
+              continue
+            else
+              . $REPLANCE/insert/util_up-owncloud.sh
+              __messageBox "Owncloud upgrade" " Treatment completed.
+              Your new ownCloud version: $ocVer is ok
+              "
+              continue
+            fi
           fi
           __saisieOCBox "ownCloud setting" "${R}Consult the help${N}" 15   # lignes ss-boite
 
           . $REPLANCE/insert/util_owncloud.sh
           varLocalhost="localhost"  # pour $I$varLocalhost dans __messageBox
           varOwnCloud="owncloud"
-          __messageBox "ownCloud install" " Treatment completed.
+          __messageBox "${ocVer} install" " Treatment completed.
             Your ownCloud website https://$HOSTNAME/owncloud or
             https://$IP/owncloud
             Accept the Self Signed Certificate and the exception for this certificate!
 
-            ${BO}Note that ${N}${I}${FIRSTUSER[0]}$N${BO} and her/his password is your account and ownCloud administrator account.
-            The administrator of mysql database $varOwnCloud is${N} ${I}$userBdD${N}
+            ${BO}Note that ${N}${I}${FIRSTUSER[0]}$N${BO} and his password is your account and ownCloud administrator account.
+            The administrator of mysql database $varOwnCloud is${N} ${I}$userBdD${N} and his password ${I}$pwBdD${N}
 
             This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
           cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
-  Pour accéder a votre cloud privé :
-    https://$HOSTNAME/owncloud ou $IP/owncloud
-    Utilisateur (et administrateur) : ${FIRSTUSER[0]}
-    Mot de passe : $pwFirstuser
-    Administrateur de la base de donnée OC : $userBdD
-    Mot de passe : $pwBdD
+To access your private cloud:
+  https://$HOSTNAME/owncloud ou $IP/owncloud
+  User (and administrator): ${FIRSTUSER[0]}
+  Password: $pwFirstuser
+  Administrator of OC database: $userBdD
+  Password: $pwBdD
 EOF
         ;;
         7 )  #####################  firewall  ############################

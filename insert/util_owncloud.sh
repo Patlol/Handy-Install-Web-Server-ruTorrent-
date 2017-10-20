@@ -6,18 +6,18 @@ readonly rootuser='root'
 readonly ocDbName="owncloud"
 readonly ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
 # ocpath=/var/www/owncloud
-
+readonly ocVersion="10.0.3"
 ################################################################################
-wget https://download.owncloud.org/community/owncloud-10.0.3.tar.bz2
-wget https://download.owncloud.org/community/owncloud-10.0.3.tar.bz2.md5
-md5sum -c owncloud-10.0.3.tar.bz2.md5 < owncloud-10.0.3.tar.bz2 || __msgErreurBox "md5sum -c owncloud-10.0.3.tar.bz2.md5 < owncloud-10.0.3.tar.bz2" $?
+wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2  # old owncloud-10.0.2 new owncloud-10.0.3
+wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.md5
+md5sum -c owncloud-$ocVersion.tar.bz2.md5 < owncloud-$ocVersion.tar.bz2 || __msgErreurBox "md5sum -c owncloud-$ocVersion.tar.bz2.md5 < owncloud-$ocVersion.tar.bz2" $?
 
 wget https://owncloud.org/owncloud.asc
-wget https://download.owncloud.org/community/owncloud-10.0.3.tar.bz2.asc
+wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.asc
 gpg --import owncloud.asc &>/dev/null
-gpg --verify owncloud-10.0.3.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-10.0.3.tar.bz2.asc" $?
+gpg --verify owncloud-$ocVersion.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-$ocVersion.tar.bz2.asc" $?
 
-tar -xjf owncloud-10.0.3.tar.bz2
+tar -xjf owncloud-$ocVersion.tar.bz2
 mv owncloud $ocpath
 if [[ $nameDistrib == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
   cmd="apt-get -yq install mariadb-server php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server libzip2 php-pclzip php5-imap"; $cmd || __msgErreurBox "$cmd" $?
@@ -269,7 +269,7 @@ fi
 sed -i "/);/i 'memcache.local' => '\\\OC\\\Memcache\\\APCu',\n'memcache.locking' => '\\\OC\\\Memcache\\\Redis',\n'redis' => array(\n     'host' => 'localhost',\n     'port' => 6379,\n      )," $ocpath/config/config.php
 
 ################################################################################
-## modif des droits
+## modif des droits cf https://doc.owncloud.org/server/latest/admin_manual/installation/installation_wizard.html#post-installation-steps-label
 echo -e "\nCreating possible missing Directories\n"
 mkdir -p $ocpath/data
 mkdir -p $ocpath/assets
@@ -318,9 +318,9 @@ rm $REPLANCE/owncloud*.*
 echo "*************************************"
 echo "|  Permissions and owners modified  |"
 echo "*************************************"
-
+ocVer=$(sudo -u $htuser $ocpath/occ -V)
 echo
-echo -n "      "; sudo -u $htuser $ocpath/occ -V
+echo "      $ocVer"
 echo "****************************"
 echo "|  Installation completed  |"
 echo "****************************"
