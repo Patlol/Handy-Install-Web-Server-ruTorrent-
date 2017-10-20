@@ -27,7 +27,7 @@ With this utility you can
  - Prohibits new user access via ssh  
 - Delete user Linux / ruTorrent and its directories
 - Change passwords Linux / ruTorrent
-- Add a firewall (ufw)
+- Add a firewall (ufw) and basic rules
 - Add Let's Encrypt certificate
   - Takes the domain name into apache, ownCloud
   - Creates a certificate with Lets Encrypt / certbot
@@ -38,10 +38,12 @@ With this utility you can
   - Creates / remove new user
 - Add ownCloud ~~10.0.2~~ **10.0.3** (optionally with Audioplayer and External storage)
   - With app external storage (for torrents downloaded) and Audioplayer
+- Upgrade an installed ownCloud 10.0.2 => 10.0.3
+  - With backup
 - Add phpMyAdmin
 - Perform a system diagnosis  
 
-![copie d'écran](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:03:30.png)
+![copie d'écran](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/png/HiwsTU-menu.png)
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/Home">Wiki</a> in french  
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/Home-en">Wiki</a> in english
