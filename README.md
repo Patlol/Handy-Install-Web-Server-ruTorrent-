@@ -46,7 +46,7 @@ With this utility you can
 - Add phpMyAdmin
 - Perform a system diagnosis  
 
-![copie d'écran](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/png/HiwsTU-menu.png)
+![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsTU-menu.png)
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/Home">Wiki</a> in french  
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/Home-en">Wiki</a> in english
