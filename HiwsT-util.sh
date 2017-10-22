@@ -16,7 +16,7 @@ readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
 readonly REPInstVpn=$REPLANCE
-readonly ocpath='/var/www/owncloud' # pour letsencrypt, owncloud et up-owncloud
+readonly ocpath='/var/www/owncloud' # pour letsencrypt, owncloud, up-owncloud et crea-owncloud-user
 # pas readonly pour IP car modifié dans openvpninstall
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 readonly HOSTNAME=$(hostname -f)
@@ -111,7 +111,8 @@ __saisieTexteBox() {   # param : titre, texte
 }
 
 __trap() {  # pour exit supprime affiche la dernière erreur
-  if [ -s /tmp/trace.log ]; then
+  export -n OC_PASS
+  if [ -s /tmp/trace.log ]; then  # taille fichier > 0 ;)
     echo "/tmp/trace.log:"; echo
     cat /tmp/trace.log
   fi
@@ -151,42 +152,42 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   done
 }
 
+__saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vérifier
+  local pw1=""; local codeSortie=""; local reponse=""
+  until false; do
+    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
+    reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+    if [[ $? == 1 ]]; then return 1; fi
+    if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
+    [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
+      __messageBox "${1}" "
+        The password can't contain spaces or \\.
+        "
+    else
+      pw1=$(echo $reponse | awk -F" " '{ print $1 }')
+      case $pw1 in
+        "" )
+          __messageBox "${1}" "
+            The password can't be empty.
+            "
+        ;;
+        ${4} )  # password linux or database
+          break
+        ;;
+        * )
+          __messageBox "${1}" "
+            The 2 inputs are not identical.
+            "
+        ;;
+      esac
+    fi
+  done
+}  # fin __saisiePwOcBox()
+
 __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
   }  # fin __helpOC()
-
-  __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vérifier
-    local pw1=""; local codeSortie=""; local reponse=""
-    until false; do
-      CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
-      reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
-      if [[ $? == 1 ]]; then return 1; fi
-      if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
-      [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
-        __messageBox "${1}" "
-          The password can't contain spaces or \\.
-          "
-      else
-        pw1=$(echo $reponse | awk -F" " '{ print $1 }')
-        case $pw1 in
-          "" )
-            __messageBox "${1}" "
-              The password can't be empty.
-              "
-          ;;
-          ${4} )  # password linux or database
-            break
-          ;;
-          * )
-            __messageBox "${1}" "
-              The 2 inputs are not identical.
-              "
-          ;;
-        esac
-      fi
-    done
-  }  # fin __saisiePwOcBox()
 
   ## debut __saisieOCBox()  $2 texte $3 Nbr lignes de la sous-boite
   local reponse="" codeRetour="" inputItem="" help="" # champs ou a été actionné le help-button
@@ -322,26 +323,26 @@ until false; do
 
     A ruTorrent user can only be created with a Linux user
 
-    Create a user:" 18 65 2 \
+    Create a user:" 18 65 3 \
     1 "Linux + ruTorrent"
-    2 "Users list")
+    2 "OwnCloud"
+    3 "Users list")
 
   typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
-  if [[ $? -eq 0 ]]; then
-    if [[ $typeUser -ne 2 ]]; then
-      __saisieTexteBox "Creating a user" "
+  if [[ $? -eq 0 ]]; then  # pas cancel
+    if [[ $typeUser -ne 3 ]]; then  # 3 = users list
+      __saisieTexteBox "Creating user" "
         Input the name of new user${R}
         Neither space nor special characters${N}"
       if [[ $? -eq 1 ]]; then   # 1 si bouton cancel
         typeUser=""
-      else
-        __userExist $__saisieTexteBox    # insert/util_apache.sh renvoie userL userR
       fi
     fi
     case $typeUser in
       1 )  #  créa linux ruto
+        __userExist $__saisieTexteBox    # insert/util_apache.sh renvoie userL userR 0 = existe
         if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
-          __messageBox "Creating a user" "
+          __messageBox "Creating Linux/ruTorrent user" "
             The $__saisieTexteBox user already exists
             "
         else
@@ -361,11 +362,28 @@ until false; do
           fi
         fi
       ;;
-      2 )
+      2 )  # créa owncloud user
+        pathOCC=$(find /var -name occ 2>/dev/null)
+        if [[ -n $pathOCC ]]; then  # owncloud installé
+          __listeUtilisateursOC
+          if [[ $(echo $__listeUtilisateursOC | grep -w $__saisieTexteBox) ]]; then
+            # l'utilisateur existe
+            __messageBox "Creating ownCloud user" "
+              The $__saisieTexteBox user \Z1already exists\Zn
+              "
+          else
+            . $REPLANCE/insert/util_crea-owncloud-user.sh
+          fi
+        else # ownCloud pas installé
+          __messageBox "Creating ownCloud user" "
+            Owncloud is not installing!"
+        fi
+      ;;
+      3 )
         cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
       ;;
     esac
-  else  # === si sortie du menu $? -ne 0
+  else  # === si sortie du menu $? -ne 0 = bouton cancel
     break
   fi
 done
@@ -528,7 +546,7 @@ __menu() {
       To be used after installation with HiwsT
 
       Your choice:" 22 70 12 \
-      1 "Create a user" \
+      1 "Create a user Linux, ruTorrent, ownCloud" \
       2 "Change user password" \
       3 "Delete a user" \
       4 "List existing users" \

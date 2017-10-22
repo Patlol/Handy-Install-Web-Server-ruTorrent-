@@ -14,6 +14,18 @@
 # \u253C ┼
 # \u2524 ┤
 
+
+__listeUtilisateursOC() {
+  # use debian script user
+  userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
+  pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?
+  if [[ -z $pwBdD ]]; then
+    __listeUtilisateursOC=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+  else
+    __listeUtilisateursOC=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+  fi
+}
+
 __listeUtilisateurs() {
   local listeL; local listeR; local listeVpn
   # les différents tableaux : utilisateurs linux, ruto, vpn et oc
@@ -47,15 +59,8 @@ __listeUtilisateurs() {
   # if owncloud installed
   pathOCC=$(find /var -name occ 2>/dev/null)
   if [[ -n $pathOCC ]]; then
-    # use debian script user
-    userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
-    pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?
-    if [[ -z $pwBdD ]]; then
-      repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
-    else
-      repQuery=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "repQuery=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
-    fi
-    if [[ -z $repQuery ]]; then
+    __listeUtilisateursOC
+    if [[ -z $__listeUtilisateursOC ]]; then
       if [[ ${1} != "texte" ]]; then
         __messageBox "${1}" "
           The Name or the password of mysql user is (are) not find."
@@ -65,8 +70,8 @@ __listeUtilisateurs() {
         echo
       fi
     else
-      # liste => tab,  $repQuery : group id group id .....
-      tabQuery=($(echo $repQuery))
+      # liste => tab,  $__listeUtilisateursOC : group id group id .....
+      tabQuery=($(echo $__listeUtilisateursOC))
       j=0  # $j : 0 1 2 3 ... index nouveau tableau $listeOC ne contenant que les id
            # $i : 1 3 5 ... les id dans $tabQuery,  (($i-1)) le groupe correspondant
       for (( i = 1; i < ${#tabQuery[@]}; i++)); do
@@ -78,6 +83,7 @@ __listeUtilisateurs() {
       done
     fi
   fi
+
   # tableau contenant la longueur (en nbr d'éléments) de chaque tableau ci-dessus
   tabLong=(${#listeL[@]} ${#listeR[@]} ${#listeVpn[@]} ${#listeOC[@]})
 
