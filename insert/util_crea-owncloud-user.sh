@@ -1,8 +1,8 @@
 
 htuser="www-data"
 newUserName=$__saisieTexteBox
-
-# mettre dans fonction ? var doivent etre remise à 0
+# get infos in config.php
+readonly ocDataDir=$(grep "datadirectory" < $ocpath/config/config.php | awk -F"=>" '{ print $2 }' | sed -r "s/[ ',]//g")
 
 # boite de saisie
 __creaUserOCBox() {   # arg : titre, texte, l sous-boite
@@ -135,9 +135,9 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
   fi
   sed -i '/<title>AudioplayerOC<\/title>/ a\<path type="recursive" syslog="off" events="close_write,move,delete,delete_self,move_self" exec="\/etc\/iwatch\/scanOC.sh %e %f">'$ocDataDir'\/'${newUserName}'\/files<\/path>' /etc/iwatch/iwatch.xml
   if [[ $addStorage =~ [yY] ]]; then
-    sed -i '/<path type="recursive".*/ a\<path type="recursive" syslog="off" events="close_write,move,delete,delete_self,move_self" exec="\/etc\/iwatch\/scanOC.sh %e %f">'$mountDir'<\/path>' /etc/iwatch/iwatch.xml
+    sed -i '/<title>AudioplayerOC<\/title>/ a\<path type="recursive" syslog="off" events="close_write,move,delete,delete_self,move_self" exec="\/etc\/iwatch\/scanOC.sh %e %f">'$mountDir'<\/path>' /etc/iwatch/iwatch.xml
     if [[ -e "$mountDir/.session" ]] || [[ -e "$mountDir/watch" ]]; then
-      sed -i '/<path type="recursive".*/ a\<path type="exception">'$mountDir'\/.session<\/path>\n<path type="exception">'$mountDir'\/watch<\/path>'  /etc/iwatch/iwatch.xml
+      sed -i '/.*</watchlist>/ i\<path type="exception">'$mountDir'\/.session<\/path>\n<path type="exception">'$mountDir'\/watch<\/path>'  /etc/iwatch/iwatch.xml
     fi
   fi
   __servicerestart "iwatch"
