@@ -20,13 +20,13 @@ __creaUserRuto () {
   fi
   sed -i "1 a\bash" /home/${1}/.profile
 
-  echo "Linux user ${1} created"; echo
+  echoc v " Linux user ${1} created "; echo
 
   mkdir -p /home/${1}/downloads/watch
   mkdir -p /home/${1}/downloads/.session
   chown -R ${1}:${1} /home/${1}/
 
-  echo "Directory/subdirectories /home/${1} created"; echo
+  echoc v " Directory/subdirectories /home/${1} created "; echo
 
   #  partie rtorrent __creaUserRuto------------------------------------------------
   # incrémenter le port scgi, écrir le fichier témoin
@@ -44,7 +44,7 @@ __creaUserRuto () {
   sed -i 's/<username>/'${1}'/g' /home/${1}/.rtorrent.rc
   sed -i 's/<port>/'$port'/' /home/${1}/.rtorrent.rc  #  port scgi
 
-  echo "/home/${1}/rtorrent.rc created"; echo
+  echoc v " /home/${1}/rtorrent.rc created "; echo
 
   #  fichiers daemon rtorrent
   #  créer rtorrent.conf
@@ -59,7 +59,7 @@ __creaUserRuto () {
   systemctl daemon-reload
   __servicerestart "rtorrentd"
   if [[ $? -eq 0 ]]; then
-    echo "rtorrent daemon modified and work well."; echo
+    echoc v " rtorrent daemon modified and work well. "; echo
   fi
   #  fin partie rtorrent  __creaUserRuto-----------------------------------------
 
@@ -79,7 +79,7 @@ __creaUserRuto () {
   chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
   chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
 
-  echo "Directory users/${1} created on ruTorrent"; echo
+  echoc v " Directory users/${1} created on ruTorrent "; echo
 
   __creaUserRutoPasswd ${1} ${2}   # insert/util_apache.sh ne renvoie rien
 
@@ -99,6 +99,11 @@ __creaUserRuto () {
   fi
   __servicerestart "sshd"
   if [[ $? -eq 0 ]]; then
-    echo "SFTP security ok" # seulement accès a /home/${1}
+    echoc v " SFTP security ok " # seulement accès a /home/${1}
   fi
+  echo
+  echoc v "                                "
+  echoc v "   All is ok for the new user   "
+  echoc v "                                "
+  sleep 2
 }   #  fin __creaUserRuto

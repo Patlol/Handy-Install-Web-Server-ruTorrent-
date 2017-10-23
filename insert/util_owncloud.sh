@@ -35,10 +35,7 @@ a2enmod proxy_fcgi setenvif
 
 __servicerestart $PHPVER && __servicerestart "apache2"
 if [[ $? -eq 0 ]]; then
-  echo "***********************************************"
-  echo "|  php & apache restart (APCu anbd Redis) ok  |"
-  echo "***********************************************"
-  sleep 1.5
+  echoc v " php & apache restart (APCu anbd Redis) ok "
 fi
 ################################################################################
 # install de postfix et mailutils si pas présents
@@ -50,16 +47,11 @@ if [ $? != 0 ]; then
   service postfix reload
   __servicerestart "postfix"
   if [[ $? -eq 0 ]]; then
-    echo "**************************"
-    echo "|    postfix start ok    |"
-    echo "**************************"
+    echoc v "           postfix start ok                "
   fi
 fi
-
-echo "*************************"
-echo "|  Packages installed   |"
-echo "*************************"
-sleep 1.5
+echoc v "          Packages installed               "
+sleep 1
 
 ################################################################################
 # paramétrage apache
@@ -81,10 +73,9 @@ if [[ $? -ne 0 ]]; then
 
   __servicerestart "apache2"
   if [[ $? -eq 0 ]]; then
-    echo "**************************"
-    echo "|  apache setting-up ok  |"
-    echo "**************************"
-    sleep 1.5
+
+    echoc v " apache setting-up ok "
+    sleep 1
   fi
 fi
 ################################################################################
@@ -98,11 +89,11 @@ fi
 
 ################################################################################
 ## création base de données
-echo "*************************************************************************"
-echo "|        Creating the owncloud database and its administrator           |"
-echo "| Enter the root password you entered in the mySql/mariadb installation |"
-echo "|          Or leave blank if you have not entered anything              |"
-echo "*************************************************************************"
+echoc v "                                                                           "
+echoc v "          Creating the owncloud database and its administrator             "
+echoc r "   Enter the root password you entered in the mySql/mariadb installation   "
+echoc r "            Or leave blank if you have not entered anything                "
+echoc v "                                                                           "
 mysql -tp <<EOF
 CREATE DATABASE IF NOT EXISTS $ocDbName;
 show databases;
@@ -111,15 +102,17 @@ GRANT ALL PRIVILEGES ON $ocDbName.* TO '`echo $userBdD`'@'localhost' IDENTIFIED 
 EOF
 
 if [[ $? -ne 0 ]]; then
-  echo
-  echo "Error creating the owncloud database: \"$ocDbName\"!!!"
-  echo "You can restart the installation of owncloud later"
+  echoc v "                                                       "
+  echoc r "       Error creating the owncloud database!!!         "
+  echoc r "  You can restart the installation of owncloud later   "
+  echoc v "                                                       "
+  sleep 4
   exit 1
 else
-  echo "*****************************************************"
-  echo "|  \"$ocDbName\" database and its administrator created  |"
-  echo "*****************************************************"
-  sleep 1.5
+  echoc v "                                            "
+  echoc v "   Database and its administrator created   "
+  echoc v "                                            "
+  sleep 2
 fi
 
 ################################################################################
@@ -129,14 +122,15 @@ chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ et l'a
 sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name $ocDbName  --database-user $userBdD --database-pass $pwBdD --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
 if [[ $? -ne 0 ]]; then
   echo
-  echo "Error in owncloud finalizing the installation"
+  echoc r " Error in owncloud finalizing the installation "
   echo
+  sleep 4
   exit 1
 else
-  echo "*************************************"
-  echo "|       Finalized installation      |"
-  echo "|     Database and admin-user set   |"
-  echo "*************************************"
+  echoc v "                                 "
+  echoc v "     Finalized installation      "
+  echoc v "   Database and admin-user set   "
+  echoc v "                                 "
   sleep 1.5
 fi
 
@@ -157,11 +151,11 @@ if [[ $fileSize != "513M" ]]; then
   # https://doc.owncloud.org/server/9.0/admin_manual/issues/code_signing.html#errors et
   # https://stackoverflow.com/questions/35954919/owncloud-9-code-signing-and-htaccess
   sed -i "/);/i 'integrity.check.disabled' => true," $ocpath/config/config.php
-  echo "**********************************"
-  echo "|      upload_max_filesize       |"
-  echo "|      and post_max_size set     |"
-  echo "|  add integrity.check.disabled  |"
-  echo "**********************************"
+  echoc v "                                  "
+  echoc v "       upload_max_filesize        "
+  echoc v "      and post_max_size set       "
+  echoc v "   add integrity.check.disabled   "
+  echoc v "                                  "
   sleep 1.5
 fi
 
@@ -176,16 +170,16 @@ if [[ $addStorage =~ [yY] ]]; then
   verify=$(sudo -u $htuser $ocpath/occ files_external:verify 1)
   echo $verify | grep ok
   if [[ $? -ne 0 ]]; then
-    echo
-    echo "Error setting external storage to /home/${FIRSTUSER[0]}/downloads"
-    echo "Does not impact main owncloud installation"
+    echoc r "                                                "
+    echoc r "        Error setting external storage          "
+    echoc r "   Does not impact main owncloud installation   "
+    echoc r "                                                "
     echo
     sleep 3
   else
-    echo "**************************************"
-    echo "|    External storage support ok     |"
-    echo "|  on /home/${FIRSTUSER[0]}/downloads  |"
-    echo "**************************************"
+    echoc v "                                 "
+    echoc v "   External storage support ok   "
+    echoc v "                                 "
     sleep 1.5
   fi
 fi
@@ -197,10 +191,10 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
   verify=$(sudo -u $htuser $ocpath/occ app:enable audioplayer)
   echo $verify | grep enabled
   if [[ $? -ne 0 ]]; then
-    echo
-    echo "Error Audio Player install"
-    echo "Does not impact main owncloud installation"
-    echo
+    echoc r "                                                "
+    echoc r "           Error Audio Player install           "
+    echoc r "   Does not impact main owncloud installation   "
+    echoc r "                                                "
     sleep 3
   else
     ############################################################################
@@ -238,17 +232,17 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
     logrotate -f /etc/logrotate.conf
     if [[ $? -eq 0 ]]; then
       echo
-      echo "*********************************"
-      echo "|   rotate of owncloud.log ok   |"
-      echo "*********************************"
+      echoc v "                               "
+      echoc v "   rotate of owncloud.log ok   "
+      echoc v "                               "
       echo
       sleep 1
     else
       echo
-      echo "****************************************"
-      echo "|              WARNING !               |"
-      echo "|   issue on rotate of owncloud.log    |"
-      echo "****************************************"
+      echoc r "                                     "
+      echoc r "              WARNING!               "
+      echoc r "   issue on rotate of owncloud.log   "
+      echoc r "                                     "
       echo
       sleep 2
     fi
@@ -270,16 +264,20 @@ sed -i "/);/i 'memcache.local' => '\\\OC\\\Memcache\\\APCu',\n'memcache.locking'
 
 ################################################################################
 ## modif des droits cf https://doc.owncloud.org/server/latest/admin_manual/installation/installation_wizard.html#post-installation-steps-label
-echo -e "\nCreating possible missing Directories\n"
+echo
+echoc v " Creating possible missing Directories "
+echo
 mkdir -p $ocpath/data
 mkdir -p $ocpath/assets
 mkdir -p $ocpath/updater
 
-echo -e "\nchmod Files and Directories\n"
+echoc v " chmod Files and Directories "
+echo
 find ${ocpath}/ -type f -print0 | xargs -0 chmod 0640
 find ${ocpath}/ -type d -print0 | xargs -0 chmod 0750
 if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
-  echo -e "\nchown and chmod for new owncloud data directory\n"
+  echoc v " chown and chmod for new owncloud data directory "
+  echo
   find ${ocDataDir}/ -type f -print0 | xargs -0 chmod 0640
   find ${ocDataDir}/ -type d -print0 | xargs -0 chmod 0750
   chmod 750 ${ocDataDirRoot}
@@ -287,7 +285,7 @@ if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   chown -R ${htuser}:${htgroup} ${ocDataDir}
 fi
 
-echo -e "\nchown Directories\n"
+echoc v " chown Directories "
 chown -R ${rootuser}:${htgroup} ${ocpath}/
 chown -R ${htuser}:${htgroup} ${ocpath}/apps/
 chown -R ${htuser}:${htgroup} ${ocpath}/assets/
@@ -298,7 +296,8 @@ chown -R ${htuser}:${htgroup} ${ocpath}/updater/
 
 chmod +x ${ocpath}/occ
 
-echo -e "\nchmod and chown .htaccess\n"
+echoc v "chmod and chown .htaccess"
+echo
 if [ -f ${ocpath}/.htaccess ]; then
   chmod 0644 ${ocpath}/.htaccess
   chown ${rootuser}:${htgroup} ${ocpath}/.htaccess
@@ -315,16 +314,14 @@ if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
 fi
 rm $REPLANCE/owncloud*.*
 
-echo "*************************************"
-echo "|  Permissions and owners modified  |"
-echo "*************************************"
+echoc v "                                     "
+echoc v "   Permissions and owners modified   "
+echoc v "                                     "
 ocVer=$(sudo -u $htuser $ocpath/occ -V)
-echo
-echo "      $ocVer"
-echo "****************************"
-echo "|  Installation completed  |"
-echo "****************************"
-
-sleep 2
+echoc b "          $ocVer            "
+echoc v "                                     "
+echoc v "       Installation completed        "
+echoc v "                                     "
+sleep 4
 # why i don't know, but necessary, the first restart is not enough
 if [[ $(pgrep iwatch) -ne 0 ]]; then __servicerestart "iwatch"; fi

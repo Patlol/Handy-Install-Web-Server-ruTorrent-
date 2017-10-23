@@ -39,7 +39,7 @@ paquetsMediaU="mediainfo ffmpeg"
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
-readonly REPLANCE=$(echo `pwd`)
+readonly REPLANCE=$(echo $(pwd))
 REPUL=""    # repertoire user Linux dans __creauser
 readonly PORT_SCGI=5000  # port 1er Utilisateur
 readonly PLANCHER=20001  # bas fourchette port ssh
@@ -64,6 +64,28 @@ readonly N="\Zn"   # retour à la normale
 ######################################
 #       Fonctions utilitaires
 ######################################
+
+echoc() {
+  local ER="\\E[40m\\E[31m"  # fond + typo rouge
+  local EV="\\E[40m\\E[32m"  # fond + typo verte
+  local EN="\\E[0m"   # retour aux std
+  local EF="\\E[40m"  # fond
+  case ${1} in
+    r)
+      echo -e "\t${ER}${2}${EN}"
+    ;;
+    v)
+      echo -e "\t${EV}${2}${EN}"
+    ;;
+    b)
+      echo -e "\t${EF}${2}${EN}"
+    ;;
+    *)
+      echo -e "\t${1}"
+    ;;
+  esac
+  sleep 0.2
+}
 
 __trap() {  # pour exit supprime info.php et affiche dernier message d'erreur
   if [ -e $REPWEB/info.php ]; then rm $REPWEB/info.php; fi
@@ -182,7 +204,7 @@ __servicerestart() {
 
 if [[ $(id -u) -ne 0 ]]; then
   echo
-  echo "This script needs to be run with sudo."
+  echoc r "This script needs to be run with sudo."
   echo
   exit 1
 fi
@@ -484,28 +506,21 @@ clear
 :>/tmp/trace.log  # messages d'erreur
 exec 3>&2 2>/tmp/trace
 trap "__trap" EXIT # supprime info.php et affiche le dernier message d'erreur
-echo
-echo
-echo
-echo "************************************"
-echo "|           Installation           |"
-echo "************************************"
-echo
-echo
-echo
-echo "************************************"
-echo "|           System update          |"
-echo "|     User Linux configuration     |"
-echo "|       Packages installation      |"
-echo "************************************"
-sleep 1
+
+echoc v "                              "
+echoc b "         Installation         "
+echoc v "                              "
+echoc b "         Update System        "
+echoc b "   User Linux configuration   "
+echoc b "     Packages installation    "
+echoc v "                              "
 echo
 
 # upgrade
-cmd="apt-get upgrade -yq"; $cmd ||  __msgErreurBox "$cmd" $?
-echo "***********************"
-echo "|  Update completed   |"
-echo "***********************"
+cmd="apt-get upgrade -yq"; $cmd || __msgErreurBox "$cmd" $?
+echoc v "                              "
+echoc v "      Update completed        "
+echoc v "                              "
 sleep 1
 
 ##############################
@@ -643,6 +658,6 @@ if [ $__ouinonBox -eq 0 ]; then
 fi
 clear
 echo
-echo "Au revoir"  # french touch ;)
+echoc b "   Au revoir   "  # french touch ;)
 echo
 exit 0

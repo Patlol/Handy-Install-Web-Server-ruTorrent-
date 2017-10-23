@@ -50,6 +50,28 @@ readonly N="\Zn"   # retour à la normale
 #       Fonctions utilitaires
 ########################################
 
+echoc() {
+  local ER="\\E[40m\\E[31m"  # fond + typo rouge
+  local EV="\\E[40m\\E[32m"  # fond + typo verte
+  local EN="\\E[0m"   # retour aux std
+  local EF="\\E[40m"  # fond
+  case ${1} in
+    r)
+      echo -e "\t${ER}${2}${EN}"
+    ;;
+    v)
+      echo -e "\t${EV}${2}${EN}"
+    ;;
+    b)
+      echo -e "\t${EF}${2}${EN}"
+    ;;
+    *)
+      echo -e "\t${1}"
+    ;;
+  esac
+  sleep 0.2
+}
+
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox 0 ou 1
   CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --yesno "
 ${2}" 0 0 )
@@ -124,8 +146,8 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password: " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
     reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
 
-    if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
-    [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
+    if [[ $(echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*") -ne 0 ]] ||\
+    [[ $(echo $reponse | grep -Ec "[\\]") -ne 0 ]]; then
       __messageBox "${1}" "
         The password can't contain spaces or \\.
         "
@@ -158,8 +180,8 @@ __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vér
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
     reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
     if [[ $? == 1 ]]; then return 1; fi
-    if [[ `echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*"` -ne 0 ]] ||\
-    [[ `echo $reponse | grep -Ec "[\\]"` -ne 0 ]]; then
+    if [[ $(echo $reponse | grep -Ec ".*[[:space:]].*[[:space:]].*") -ne 0 ]] ||\
+    [[ $(echo $reponse | grep -Ec "[\\]") -ne 0 ]]; then
       __messageBox "${1}" "
         The password can't contain spaces or \\.
         "
@@ -731,7 +753,7 @@ if [[ $(id -u) -ne 0 ]]; then
   echo
   echo "This script needs to be run with sudo."
   echo
-  echo "id : "`id`
+  echo "id : "$(id)
   echo
   exit 1
 fi

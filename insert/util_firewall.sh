@@ -46,17 +46,17 @@ read
       ;;
       1 )  #  Lister/Ajouter et activer les règles minimums
         echo
-        echo "** Rules added by the script **"
-        echo "Accept port $portSSH/tcp Chain INPUT (port ssh)"
-        echo "Accept port 80 Chain INPUT (http)"
-        echo "Accept port 443 Chain INPUT (https)"
-        echo "Accept the ports range 55950:56000/tcp Chain INPUT (rtorrent)"
-        echo "Accept the ports range 55950:56000/udp Chain INPUT (rtorrent)"
-        echo "Accept port 6881 Chain INPUT (rtorrent DHT)"
-        echo "Accept port 10000/tcp Chain INPUT (Webmin)"
-        echo "Enable logs in LOW (logging on)"
-        echo "Drop others ports in Chain INPUT (policy DROP)"
-        echo "Accept all ports in Chain OUTPUT (policy ACCEPT)"
+        echoc r "** Rules added by the script **"
+        echoc r "Accept port $portSSH/tcp Chain INPUT (port ssh)"
+        echoc r "Accept port 80 Chain INPUT (http)"
+        echoc r "Accept port 443 Chain INPUT (https)"
+        echoc r "Accept the ports range 55950:56000/tcp Chain INPUT (rtorrent)"
+        echoc r "Accept the ports range 55950:56000/udp Chain INPUT (rtorrent)"
+        echoc r "Accept port 6881 Chain INPUT (rtorrent DHT)"
+        echoc r "Accept port 10000/tcp Chain INPUT (Webmin)"
+        echoc r "Enable logs in LOW (logging on)"
+        echoc r "Drop others ports in Chain INPUT (policy DROP)"
+        echoc r "Accept all ports in Chain OUTPUT (policy ACCEPT)"
         echo
         echo "Do you want"
         echo -e "\t1) Add the rules above"
@@ -95,9 +95,10 @@ read
       ;;
       2 )  #  Lister/Supprimer les règles en place
         echo
-        echo "** Rules currently enabled: **"
-        if [ `ufw show added | grep None` ]; then
-          echo "No rule enabled"
+        echoc r "** Rules currently enabled: **"
+        if [ $(ufw show added | grep None) ]; then
+          echoc r "      No rule enabled         "
+          echo
           sleep 1; continue
         else
           ufw status verbose
@@ -145,7 +146,7 @@ read
         echo "*************************************************************************"
       ;;
       * )
-        echo "Invalid input"
+        echoc r "Invalid input"
         sleep 1
       ;;
     esac

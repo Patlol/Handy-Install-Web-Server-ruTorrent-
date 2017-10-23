@@ -38,8 +38,9 @@ else  # debian 9
 fi
 __servicerestart "sshd"
 
-echo "****************************************"
-echo "|             ssh secure               |"
-echo "****************************************"
+echo
+echoc v "                  "
+echoc v "    ssh secure    "
+echoc v "                  "
 echo
 sleep 1

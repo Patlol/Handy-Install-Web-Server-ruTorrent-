@@ -63,7 +63,7 @@ __diag() {
   cat /tmp/liste
 
   until false; do
-    echo "Scroll up to see the beginning"
+    echoc r "Scroll up to see the beginning"
     echo
     echo -e "\t1) See iptables rules, 'filter' table"
     echo -e "\t2) See iptables rules, 'nat' table"
@@ -105,7 +105,7 @@ __diag() {
         echo "------------------------------------------------------------------------"
       ;;
       * )
-        echo "Invalid input"
+        echoc r "Invalid input"
         sleep 1
       ;;
     esac

@@ -5,18 +5,18 @@
 sed -i "/<VirtualHost/a \ServerName "$__saisieDomaineBox1"\nServerAlias "$__saisieDomaineBox2"\n" $REPAPA2/sites-available/000-default.conf
 __servicerestart "apache2"
 echo
-echo "**********************************************"
-echo "|   ServerName in Apache site-config added   |"
-echo "**********************************************"
+echoc v "                                                                 "
+echoc v "              ServerName in Apache site-config added             "
+echoc v "                                                                 "
 echo
 sleep 2
 if [[ $installCert =~ ^[YyNn]$ ]]; then
   ## Certificat letsencript avec certbot
   echo
-  echo "******************************************************************"
-  echo "|   Let's Encrypt obtain and install HTTPS/TLS/SSL certificates  |"
-  echo "|            replacing the self-signed certificate               |"
-  echo "******************************************************************"
+  echoc v "                                                                 "
+  echoc v "   Let's Encrypt obtain and install HTTPS/TLS/SSL certificates   "
+  echoc v "             replacing the self-signed certificate               "
+  echoc v "                                                                 "
   echo
   sleep 1
   if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
@@ -58,9 +58,7 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
     __servicerestart "apache2"
 
       echo
-      echo "**********************************"
-      echo "|   SSL Apache config modified   |"
-      echo "**********************************"
+      echoc v " SSL Apache config modified "
       echo
       sleep 2
 
@@ -74,11 +72,9 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
       __servicerestart "webmin"
 
       echo
-      echo "***************************************"
-      echo "|   Webmin SSL certificate modified   |"
-      echo "***************************************"
+      echoc v " Webmin SSL certificate modified "
       echo
-      sleep 2
+      sleep 1
     fi
 
     ## Modif ownCloud : domaines approuvés
@@ -86,41 +82,44 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
     if [[ -n $pathOCC ]]; then
       sed -i "/1 => '"$IP"'/a \2 => '"$__saisieDomaineBox1"',\n3 => '"$__saisieDomaineBox2"', " $ocpath/config/config.php
       echo
-      echo "*********************************************************"
-      echo "|   Domain name added in owncloud trusted domain array  |"
-      echo "*********************************************************"
+      echoc v " Domain name added in owncloud trusted domain array "
       echo
-      sleep 2
     fi
 
-    echo
-    echo "*********************************************"
-    echo "|    Renewing all existing certificates     |"
-    echo "|  just a simulating renewal from dry run   |"
-    echo "|          This may take a while            |"
-    echo "*********************************************"
+    echoc v "                                            "
+    echoc v "     Renewing all existing certificates     "
+    echoc v "   just a simulating renewal from dry run   "
+    echoc v "          This may take a while             "
+    echoc v "                                            "
     echo
     for (( i = 0; i < 2; i++ )); do
       certbot renew --dry-run
-      if [[ $? -ne 0 ]] && [[ i -eq 0 ]];then
-        echo
-        echo "There are a issue with renew running"
-        echo "The installed cert are:"
-        certbot certificates
-        echo -ne "/!\ You will not have cron task to renew your certificate Let's Encrypt\nit expires in 90 days"
-        echo
+      if [[ $? -ne 0 ]] && [[ $i -eq 0 ]];then
         if [[ $i -eq 0 ]];then
-          echo "We retested the simulation. Wait. "
+          echo
+          echoc r "                                          "
+          echoc r "   There are a issue with renew running   "
+          echoc r "        The installed cert are:           "
+          echoc r "    We retested the simulation. Wait.     "
+          echoc r "                                          "
           sleep 3
+        else
+          certbot certificates
+          echo
+          echoc r "                                                                             "
+          echoc r "   /!\ You will not have cron task to renew your certificate Let's Encrypt   "
+          echoc r "                         it expires in 90 days                               "
+          echoc r "                                                                             "
+          echo
         fi
         sleep 3
       else
         echo
-        echo "*********************************************"
-        echo "|    Renewing all existing certificates     |"
-        echo "|       it's ok. We add on cron task        |"
-        echo "|   The cert are renewing all the 60 days   |"
-        echo "*********************************************"
+        echoc v "                                           "
+        echoc v "    Renewing all existing certificates     "
+        echoc v "       it's ok. We add on cron task        "
+        echoc v "   The cert are renewing all the 60 days   "
+        echoc v "                                           "
         echo
         sleep 1
         sed -i 's/# renew_before_expiry = 30 days/renew_before_expiry = 30 days/' /etc/letsencrypt/renewal/$__saisieDomaineBox1.conf
@@ -134,19 +133,19 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
         codeSortie2=$(( $? + $codeSortie1 ))
         if [[ $codeSortie2 -eq 0 ]]; then
           echo
-          echo "****************************************"
-          echo "|         Renew cron task and          |"
-          echo "|  logrotate of letsencrypt-cron.log   |"
-          echo "|                 ok                   |"
-          echo "****************************************"
+          echoc v "                                       "
+          echoc v "         Renew cron task and           "
+          echoc v "   logrotate of letsencrypt-cron.log   "
+          echoc v "             All is ok                 "
+          echoc v "                                       "
           echo
         else
           echo
-          echo "****************************************"
-          echo "|         WARNING ! Issue on           |"
-          echo "|       Renew cron task and/or         |"
-          echo "|  logrotate of letsencrypt-cron.log   |"
-          echo "****************************************"
+          echoc r "                                       "
+          echoc r "          WARNING ! Issue on           "
+          echoc r "        Renew cron task and/or         "
+          echoc r "   logrotate of letsencrypt-cron.log   "
+          echoc r "                                       "
           echo
           sleep 2
         fi  # logrotate ok

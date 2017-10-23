@@ -8,11 +8,11 @@ else
 fi
 cmd="apt-get install -yq $paquetsWeb"; $cmd || __msgErreurBox "$cmd" $?
 echo
-echo "***********************************************"
-echo "|     Packages needed by the web server      |"
-echo "|                 installed                  |"
-echo "**********************************************"
-sleep 1
+echoc v "                                       "
+echoc v "   Packages needed by the web server   "
+echoc v "              installed                "
+echoc v "                                       "
+echo
 
 # config apache
 a2enmod ssl
@@ -26,9 +26,10 @@ sed -i 's/^Timeout[ 0-9]*/Timeout 30/' $REPAPA2/apache2.conf
 echo -e "\nServerTokens Prod\nServerSignature Off" >> $REPAPA2/apache2.conf
 
 echo
-echo "***********************************"
-echo "|      Apache2 configured         |"
-echo "***********************************"
+echoc v "                                       "
+echoc v "        Apache2 configured             "
+echoc v "                                       "
+echo
 sleep 1
 
 # mot de passe user rutorrent  htpasswd
@@ -49,9 +50,9 @@ headTest1=$(echo $headTest1 | awk -F" " '{ print $3 }')
 headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
 if [[ "$headTest1" == OK* ]] && [[ "$headTest2" == OK* ]]
 then
-  echo "***********************************************"
-  echo "|        Apache and php work well             |"
-  echo "***********************************************"
+  echoc v "                              "
+  echoc v "   Apache and php work well   "
+  echoc v "                              "
   sleep 1
   rm $REPWEB/info.php
 elif [[ "$headTest1" != OK* ]]; then
@@ -73,8 +74,10 @@ sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"r
 a2ensite default-ssl
 __servicerestart "apache2"
 echo
-echo "**********************************************"
-echo "|      Self-signed certificate created       |"
-echo "**********************************************"
-sleep 1
+echoc v "                                                "
+echoc v "         Self-signed certificate created        "
+echoc b "   You can install a Lets Encrypt certificate   "
+echoc b "               with HiwsT-util                  "
+echoc v "                                                "
+sleep 3
 echo

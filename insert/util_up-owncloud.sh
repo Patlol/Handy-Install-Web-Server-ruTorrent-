@@ -16,32 +16,35 @@ __backupDir() {
   echo
   until false; do
     echo
-    echo -en '\E[32mOn your server:'; echo -e '\E[0m'
+    echo -en '\E[32mOn your server:\n'
     df -h --output='fstype','size','used','avail','pcent','target' | head -n 1
     df -h --output='fstype','size','used','avail','pcent','target' | grep ext
-    echo
-    echo -en '\E[32mSize of your data directory:'; echo -en '\E[0m '
+    echo -e '\E[0m'
+    echo -en '\E[31mSize of your data directory:'
     du -sh $ocpath
+    echo -en '\E[0m'
     echo
     until false; do
       rep=""
-      echo -n "Directory for backup (return /$ocBackup) "; read __backupDir
+      echo -en "\E[32mDirectory for backup \E[31m(return /$ocBackup)\E[0m "; read __backupDir
+      echo
       if [[ $__backupDir == "" ]]; then
         __backupDir="/$ocBackup"
       fi
       __backupDir=$(echo "$__backupDir" | sed -r 's|^[a-zA-Z0-9]|/&|')
       __backupDir=$(echo "$__backupDir" | sed -r 's|/$||')
-      echo -en "The backup directory will be \E[31m$__backupDir\E[0m it's ok [y|N] "; read rep
+      echo -en "\E[32mThe backup directory will be \E[31m$__backupDir\E[32m it's ok [y|N]\E[0m "; read rep
       if [[ $rep =~ [Yy] ]]; then break; fi
       echo
     done
     echo
     dataBkupOk=""; rep2=""
-    echo -n "Do you want/can backup your data directory? [y|N] "; read dataBkupOk
+    echo -ne "\E[32mDo you want/can backup your data directory? [y|N]\E[0m "; read dataBkupOk
     if [[ $dataBkupOk != [Yy] ]]; then
       break
     else
-      echo -en "For data the backup directory will be \E[31m$__backupDir/data\E[0m it's ok [y|N] "; read rep2
+      echo
+      echo -en "\E[32mFor data the backup directory will be \E[31m$__backupDir/data\E[32m it's ok [y|N]\E[0m "; read rep2
       if [[ $rep2 =~ [Yy] ]]; then break; fi
       echo
     fi
@@ -51,30 +54,28 @@ __backupDir() {
 cmd="sudo -u $htuser php $ocpath/occ maintenance:mode --on"; $cmd || __msgErreurBox "$cmd" $?
 
 echo
-echo "***********************************************"
-echo "|   Turned on maintenance mode for updating   |"
-echo "***********************************************"
-echo
+echoc v " Turned on maintenance mode for updating "
+
 cmd="service apache2 stop"; $cmd || __msgErreurBox "$cmd" $?
+
 echo
-echo "**********************************************"
-echo "|   apache2 service is stoped for updating   |"
-echo "**********************************************"
+echoc v " apache2 service is stoped for updating "
+
 echo
 
 # backup
 echo
-echo "************************************"
-echo "|   Make own backup for updating   |"
-echo "************************************"
+echoc v "                                  "
+echoc v "   Make own backup for updating   "
+echoc v "                                  "
 echo
 __backupDir
 # fichiers owncloud/config, data
-cmd="rsync -Aax $ocpath/config $ocpath/.htaccess /$__backupDir/"; $cmd || __msgErreurBox "$cmd" $?
+cmd="rsync -Aax $ocpath/config $ocpath/.htaccess /$__backupDir/"; $cmd || __msgErreurBox "$cmd" $?
 
 # data
 if [[ $dataBkupOk =~ [yY] ]]; then
-  cmd="rsync -Aax $ocDataDir $ocDataDirRoot/.htaccess $__backupDir/data"; $cmd || __msgErreurBox "$cmd" $?
+  cmd="rsync -Aax $ocDataDir $ocDataDirRoot/.htaccess $__backupDir/data"; $cmd || __msgErreurBox "$cmd" $?
 fi
 
 # BACKUP DE LA BdD
@@ -90,28 +91,21 @@ else
   mysqldump --opt -u $userBdD --password=$pwBdD $ocDbName > $nameTableFile || __msgErreurBox "mysqldump --opt -u $userBdD --password=$pwBdD $ocDbName > $nameTableFile" $?
 fi
 
-echo
-echo "****************************************"
-echo "|   Own backup for Updating Complete   |"
-echo "|        in \"/$ocBackup/\"              |"
-echo "****************************************"
+echoc v "                                      "
+echoc v "   Own backup for Updating Complete   "
+echoc v "                                      "
 echo
 
 # Sets permissions of the owncloud instance for updating
 cmd="chown -R ${htuser}:${htgroup} ${ocpath}"; $cmd || __msgErreurBox "$cmd" $?
-echo
-echo "**************************************************************"
-echo "|   Sets permissions of the owncloud instance for updating   |"
-echo "**************************************************************"
+
+echoc v " Sets permissions of the owncloud instance for updating "
 echo
 
 
 # # maintenant utilisons l'app updater ...
+echoc v " clean the cache "
 sudo -u www-data php $ocpath/updater/application.php upgrade:cleanCache
-# sudo -u www-data php $ocpath/updater/application.php
-# Created checkpoint
-# Extracting source into owncloud/data/updater-data/_oc_upgrade/10.0.x
-# upgrade manuel
 
 wget https://download.owncloud.org/community/owncloud-$ocNewVersion.tar.bz2  # old owncloud-10.0.2 new owncloud-10.0.3
 wget https://download.owncloud.org/community/owncloud-$ocNewVersion.tar.bz2.md5
@@ -121,7 +115,10 @@ wget https://owncloud.org/owncloud.asc
 wget https://download.owncloud.org/community/owncloud-$ocNewVersion.tar.bz2.asc
 gpg --import owncloud.asc &>/dev/null
 gpg --verify owncloud-$ocNewVersion.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-$ocNewVersion.tar.bz2.asc" $?
-
+if [[ $? -eq 0 ]]; then
+  echoc v " owncloud download is ok "
+  echo
+fi
 cmd="tar -xjf owncloud-$ocNewVersion.tar.bz2"; $cmd || __msgErreurBox "$cmd" $?
 cmd="mv $ocpath ${ocpath}.old"; $cmd || __msgErreurBox "$cmd" $?
 cmd="mv owncloud $ocpath"; $cmd || __msgErreurBox "$cmd" $?
@@ -144,34 +141,32 @@ if [[ $fileSize != "513M" ]]; then
 fi
 
 cmd="service apache2 start"; $cmd || __msgErreurBox "$cmd" $?
-echo
-echo "********************************"
-echo "|   apache2 service is start   |"
-echo "********************************"
-echo
+if [[ $? -eq 0 ]]; then
+  echoc v " apache2 service is start "
+  echo
+fi
 
 cmd="chown -R ${htuser}:${htgroup} ${ocpath}"; $cmd || __msgErreurBox "$cmd" $?
 sudo -u $htuser php $ocpath/occ maintenance:mode --off
-echo
-echo "***********************************"
-echo "|   Turned off maintenance mode   |"
-echo "***********************************"
+echoc v " Turned off maintenance mode "
 echo
 
 cmd="sudo -u $htuser php $ocpath/occ upgrade"; $cmd || __msgErreurBox "$cmd" $?
-
+if [[ $? -eq 0 ]]; then
+  echoc v "                   "
+  echoc v "   Upgrade is ok   "
+  echoc v "                   "
+fi
 ################################################################################
 ## modif des droits cf https://doc.owncloud.org/server/latest/admin_manual/installation/installation_wizard.html#post-installation-steps-label
-echo -e "\nCreating possible missing Directories\n"
+
 mkdir -p $ocpath/data
 mkdir -p $ocpath/assets
 mkdir -p $ocpath/updater
 
-echo -e "\nchmod Files and Directories\n"
 find ${ocpath}/ -type f -print0 | xargs -0 chmod 0640
 find ${ocpath}/ -type d -print0 | xargs -0 chmod 0750
 if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
-  echo -e "\nchown and chmod for new owncloud data directory\n"
   find ${ocDataDir}/ -type f -print0 | xargs -0 chmod 0640
   find ${ocDataDir}/ -type d -print0 | xargs -0 chmod 0750
   chmod 750 ${ocDataDirRoot}
@@ -179,7 +174,6 @@ if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
   chown -R ${htuser}:${htgroup} ${ocDataDir}
 fi
 
-echo -e "\nchown Directories\n"
 chown -R ${rootuser}:${htgroup} ${ocpath}/
 chown -R ${htuser}:${htgroup} ${ocpath}/apps/
 chown -R ${htuser}:${htgroup} ${ocpath}/assets/
@@ -190,7 +184,6 @@ chown -R ${htuser}:${htgroup} ${ocpath}/updater/
 
 chmod +x ${ocpath}/occ
 
-echo -e "\nchmod and chown .htaccess\n"
 if [ -f ${ocpath}/.htaccess ]; then
   chmod 0644 ${ocpath}/.htaccess
   chown ${rootuser}:${htgroup} ${ocpath}/.htaccess
@@ -208,27 +201,24 @@ fi
 rm $REPLANCE/owncloud*.*
 rm -r $REPLANCE/owncloud
 
-echo "*************************************"
-echo "|  Permissions and owners modified  |"
-echo "*************************************"
+
+echoc v " Permissions and owners modified "
+echo
 
 cmd="service apache2 start"; $cmd || __msgErreurBox "$cmd" $?
-echo
-echo "********************************"
-echo "|   apache2 service is start   |"
-echo "********************************"
-echo
+if [[ $? -eq 0 ]]; then
+  echoc v " apache2 service is start "
+  echo
+fi
 cmd="sudo -u $htuser php $ocpath/occ maintenance:mode --off"; $cmd || __msgErreurBox "$cmd" $?
-echo
-echo "***********************************"
-echo "|   Turned off maintenance mode   |"
-echo "***********************************"
-echo
+if [[ $? -eq 0 ]]; then
+  echoc v " Turned off maintenance mode "
+  echo
+fi
 cmd="sudo -u $htuser php $ocpath/occ files:scan --all"; $cmd || __msgErreurBox "$cmd" $?
-echo
-echo "***************************"
-echo "|   Scan the data files   |"
-echo "***************************"
-echo
+if [[ $? -eq 0 ]]; then
+  echoc v " Scan the data files "
+  echo
+fi
 ocVer=$(sudo -u $htuser $ocpath/occ -V)
-sleep 4
+sleep 3

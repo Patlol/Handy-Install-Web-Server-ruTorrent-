@@ -34,9 +34,9 @@ chmod 666 $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
 chown www-data:www-data $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
 
 echo
-echo "**********************************************"
-echo "|    ruTorrent installed and configured      |"
-echo "**********************************************"
+echoc v "                                        "
+echoc v "   ruTorrent installed and configured   "
+echoc v "                                        "
 sleep 1
 
 # installation de mediainfo et ffmpeg
@@ -54,9 +54,9 @@ else
   cmd="apt-get install -yq --force-yes $paquetsMediaU"; $cmd || __msgErreurBox "$cmd" $?
 fi
 echo
-echo "*****************************************"
-echo "|    mediainfo and ffmpeg installed     |"
-echo "*****************************************"
+echoc v "                                        "
+echoc v "    mediainfo and ffmpeg installed      "
+echoc v "                                        "
 sleep 1
 
 ## plugins rutorrent
@@ -86,19 +86,18 @@ echo -e "\n;;\n        [logoff]\n        enabled = yes" >> $REPWEB/rutorrent/plu
 
 chown -R www-data:www-data $REPWEB/rutorrent/plugins/logoff
 echo
-echo "********************************************"
-echo "|       ruTorrent plugins installed        |"
-echo "********************************************"
-sleep 1
+echoc v "                                        "
+echoc v "      ruTorrent plugins installed       "
+echoc v "                                        "
 
-headTest=`curl -Is http://$IP/rutorrent/| head -n 1`
+headTest=$(curl -Is http://$IP/rutorrent/| head -n 1)
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 if [[ "$headTest" == Unauthorized* ]]; then
   echo
-  echo "*********************************"
-  echo "|  ruTorrent works correctly    |"
-  echo "*********************************"
-  sleep 1
+  echoc v "                                      "
+  echoc v "     ruTorrent works correctly        "
+  echoc v "                                      "
+  sleep 2
 else
   __msgErreurBox "curl -Is http://$IP/rutorrent/| head -n 1 | awk -F\" \" '{ print $3 }' return $headTest" "http $headTest"
 fi

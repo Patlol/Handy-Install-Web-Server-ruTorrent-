@@ -29,7 +29,7 @@ __listeUtilisateursOC() {
 __listeUtilisateurs() {
   local listeL; local listeR; local listeVpn
   # les différents tableaux : utilisateurs linux, ruto, vpn et oc
-  listeL=(`cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }'`) || __msgErreurBox "listeL=(`cat /etc/passwd | grep -P \"(:0:)|(:10[0-9]{2}:)\" | awk -F\":\" '{ print $1 }'`)" $?
+  listeL=($(cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }')) || __msgErreurBox "listeL=($(cat /etc/passwd | grep -P \"(:0:)|(:10[0-9]{2}:)\" | awk -F\":\" '{ print $1 }'))" $?
   # encadrement utilisateur principal
   for (( i = 0; i < ${#listeL[@]}; i++ )); do
     if [[ "${listeL[i]}" == "${FIRSTUSER[0]}" ]]; then
@@ -65,9 +65,10 @@ __listeUtilisateurs() {
         __messageBox "${1}" "
           The Name or the password of mysql user is (are) not find."
       else
-        echo
-        echo "The Name or the password of mysql user is (are) not find."
-        echo
+        echoc r "                                                               "
+        echoc r "   The Name or the password of mysql user is (are) not find.   "
+        echoc r "                                                               "
+        sleep 4
       fi
     else
       # liste => tab,  $__listeUtilisateursOC : group id group id .....

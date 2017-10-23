@@ -1,13 +1,9 @@
 echo
+echoc r "                                        "
+echoc r "           Installing WebMin            "
+echoc r "         This may take a while          "
+echoc r "                                        "
 echo
-echo
-echo "********************************************"
-echo "|           Installing WebMin              |"
-echo "|         This may take a while            |"
-echo "********************************************"
-echo
-echo
-sleep 1
 # paquets debian 8
 upDebWebMinD="http://prdownloads.sourceforge.net/webadmin/webmin_1.850_all.deb"
 paquetWebMinD="perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python"
@@ -27,20 +23,20 @@ cmd="wget $upDebWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 cmd="apt-get -f install -y $paquetWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 cmd="dpkg --install $debWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 
-echo "***************************"
-echo "|   Packages Installed    |"
-echo "***************************"
+echoc v "                        "
+echoc v "   Packages Installed   "
+echoc v "                        "
 echo
 sleep 1
 
 
-headTest=`curl -Is http://$IP:10000 | head -n 1`
+headTest=$(curl -Is http://$IP:10000 | head -n 1)
 headTest=$(echo $headTest | awk -F" " '{ print $3 }')
 if [[ "$headTest" == Document* ]]; then
-  echo "******************************"
-  echo "|     WebMin works well      |"
-  echo "******************************"
-  echo "Accepter l'exception au certificat pour ce site"
+  echoc v "                                                     "
+  echoc v "                  WebMin works well                  "
+  echoc r "    Accept exception to certificate for this site    "
+  echoc v "                                                     "
   echo
   sleep 1
 else

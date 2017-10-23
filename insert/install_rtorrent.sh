@@ -13,12 +13,12 @@ fi
 cmd="apt-get install -yq $paquets"; $cmd || __msgErreurBox "$cmd" $?
 
 echo
-echo "******************************"
-echo "|    rtorrent, libtorrent    |"
-echo "|    and xmlrpc packages     |"
-echo "******************************"
+echoc v "                                                "
+echoc v "            rtorrent, libtorrent                "
+echoc v "            and xmlrpc packages                 "
+echoc v "                installed                       "
+echoc v "                                                "
 echo
-sleep 1
 
 
 # configuration rtorrent
@@ -29,9 +29,9 @@ mkdir -p $REPUL/downloads/watch
 mkdir -p $REPUL/downloads/.session
 chown -R $userLinux:$userLinux $REPUL/downloads
 echo
-echo "************************************************"
-echo "|   .rtorrent.rc configured for Linux user     |"
-echo "************************************************"
+echoc v "                                                "
+echoc v "    .rtorrent.rc configured for Linux user      "
+echoc v "                                                "
 sleep 1
 
 # mettre rtorrent en deamon / screen
@@ -49,8 +49,7 @@ systemctl daemon-reload
 __servicerestart "rtorrentd"
 #-----------------------------------------------------------------
 pgrep rtorrent && { \
-echo "**************************************"; \
-echo "|  rtorrent daemon works correctly   |"; \
-echo "**************************************"; \
-sleep 1; } || \
-__msgErreurBox "rtorrent daemon don't work" 1
+echoc v "                                                "; \
+echoc v "       rtorrent daemon works correctly          "; \
+echoc v "                                                "; \
+sleep 1; }

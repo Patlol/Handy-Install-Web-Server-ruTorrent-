@@ -115,11 +115,10 @@ if [[ $addStorage =~ [yY] ]]; then
   sudo -u $htuser $ocpath/occ files_external:applicable --add-user=${newUserName} $id
   cmd="sudo -u $htuser $ocpath/occ files_external:verify $id"; $cmd || __msgErreurBox "$cmd" $?
   if [[ $? -eq 0 ]]; then
-    echo "**************************************"
-    echo "|    External storage support ok     |"
-    echo "|  on $mountDir  |"
-    echo "**************************************"
-    sleep 3
+    echoc v "                                      "
+    echoc v "     External storage support ok      "
+    echoc v "                                      "
+    sleep 2
   fi
   if [[ $flagFiles_external == "disabled" ]]; then  # si l'app était désactivée la remettre dans le même état
     cmd="sudo -u $htuser php $ocpath/occ app:disable files_external"; $cmd || __msgErreurBox "$cmd" $?
@@ -141,4 +140,11 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
     fi
   fi
   __servicerestart "iwatch"
+  if [[ $? -eq 0 ]]; then
+    echoc v "                                      "
+    echoc v "   Automatic AudioPlayer refresh ok   "
+    echoc v "      All is ok for the new user      "
+    echoc v "                                      "
+    sleep 2
+  fi
 fi
