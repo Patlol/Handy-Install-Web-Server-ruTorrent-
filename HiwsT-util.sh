@@ -678,8 +678,8 @@ EOF
             ${I}Warning !!!${N}
             The following setting only takes into account the installations
             execute with HiwsT" 12 75
-
-          __firewall
+          . insert/util_firewall.sh
+          cmd="__firewall"; $cmd || __msgErreurBox "$cmd" $?
           if [[ $item -eq 7 ]]; then item=5; fi  # menu : si on vient de openvpn on y retourne
         ;;
         8 )  #################  domain & letsencrypt ###################
