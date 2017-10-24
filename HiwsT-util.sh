@@ -384,10 +384,16 @@ until false; do
           fi
         fi
       ;;
-      2 )  # créa owncloud user
+      2 )  # créa owncloud user "a-z", "A-Z", "0-9", "_@-" et "." (le point)
         pathOCC=$(find /var -name occ 2>/dev/null)
         if [[ -n $pathOCC ]]; then  # owncloud installé
-          __listeUtilisateursOC
+          if [[ ! "$__saisieTexteBox" =~ ^[[:alnum:]_@\.-]{1,}$ ]]; then
+            __messageBox "Creating ownCloud user" "
+            It's the UID, you can use only
+            \"a-z\", \"A-Z\", \"0-9\", \"_@-\" et \".\" (point)"
+            continue
+          fi
+          __listeUtilisateursOC   ## in util_listusers.sh liste users existants
           if [[ $(echo $__listeUtilisateursOC | grep -w $__saisieTexteBox) ]]; then
             # l'utilisateur existe
             __messageBox "Creating ownCloud user" "
