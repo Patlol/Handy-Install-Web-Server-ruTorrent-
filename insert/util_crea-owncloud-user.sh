@@ -17,7 +17,7 @@ __creaUserOCBox() {   # arg : titre, texte, l sous-boite
   }
   local inputItem="" reponse=""
   addStorage="Y"; addAudioPlayer="Y"
-  newUserPw=""; newFullUserName=""; newUserGroup=""
+  newUserPw=""; newFullUserName=""; newUserGroup=""; newUserMail=""
   until false; do
     # "${newUserName}" 1 28 -25 0 2
     # x, y
@@ -145,6 +145,6 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
     echoc v "   Automatic AudioPlayer refresh ok   "
     echoc v "      All is ok for the new user      "
     echoc v "                                      "
-    sleep 2
+    sleep 4
   fi
 fi

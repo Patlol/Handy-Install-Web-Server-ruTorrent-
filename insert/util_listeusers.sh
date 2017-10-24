@@ -16,6 +16,17 @@
 
 
 __listeUtilisateursOC() {
+  # __listeUtilisateursOC=($(sudo -u $htuser php $ocpath/occ user:list | cut -d ":" -f 1 | sed -r 's/  - //g' | sed -r 's/ /£/g'))
+  # for (( i = 0; i < ${#__listeUtilisateursOC[*]}; i++ )); do
+  #   # echo "traitement de ${__listeUtilisateursOC[$i]}"
+  #   __listeUtilisateursOC[$i]=$(echo ${__listeUtilisateursOC[$i]} | sed -r 's/£/ /g')
+  #   group=$(sudo -u $htuser php $ocpath/occ user:list-groups "${__listeUtilisateursOC[$i]}")
+  #   if [[ $group == "  - admin" ]]; then
+  #     __listeUtilisateursOC[$i]="[${__listeUtilisateursOC[$i]}]"
+  #   fi
+  #   __listeUtilisateursOC[$i]=$(echo ${__listeUtilisateursOC[$i]} | sed -r 's/ /£/g')
+  # done
+# echo ${liste[*]}
   # use debian script user
   userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
   pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?

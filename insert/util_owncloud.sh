@@ -74,7 +74,7 @@ if [[ $? -ne 0 ]]; then
   __servicerestart "apache2"
   if [[ $? -eq 0 ]]; then
 
-    echoc v " apache setting-up ok "
+    echoc v "                       apache setting-up ok                                "
     sleep 1
   fi
 fi
@@ -127,10 +127,10 @@ if [[ $? -ne 0 ]]; then
   sleep 4
   exit 1
 else
-  echoc v "                                 "
-  echoc v "     Finalized installation      "
-  echoc v "   Database and admin-user set   "
-  echoc v "                                 "
+  echoc v "                                            "
+  echoc v "          Finalized installation            "
+  echoc v "        Database and admin-user set         "
+  echoc v "                                            "
   sleep 1.5
 fi
 
@@ -151,11 +151,11 @@ if [[ $fileSize != "513M" ]]; then
   # https://doc.owncloud.org/server/9.0/admin_manual/issues/code_signing.html#errors et
   # https://stackoverflow.com/questions/35954919/owncloud-9-code-signing-and-htaccess
   sed -i "/);/i 'integrity.check.disabled' => true," $ocpath/config/config.php
-  echoc v "                                  "
-  echoc v "       upload_max_filesize        "
-  echoc v "      and post_max_size set       "
-  echoc v "   add integrity.check.disabled   "
-  echoc v "                                  "
+  echoc v "                                            "
+  echoc v "           upload_max_filesize              "
+  echoc v "          and post_max_size set             "
+  echoc v "       add integrity.check.disabled         "
+  echoc v "                                            "
   sleep 1.5
 fi
 
@@ -177,9 +177,9 @@ if [[ $addStorage =~ [yY] ]]; then
     echo
     sleep 3
   else
-    echoc v "                                 "
-    echoc v "   External storage support ok   "
-    echoc v "                                 "
+    echoc v "                                            "
+    echoc v "       External storage support ok          "
+    echoc v "                                            "
     sleep 1.5
   fi
 fi
@@ -232,9 +232,9 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
     logrotate -f /etc/logrotate.conf
     if [[ $? -eq 0 ]]; then
       echo
-      echoc v "                               "
-      echoc v "   rotate of owncloud.log ok   "
-      echoc v "                               "
+      echoc v "                                     "
+      echoc v "     rotate of owncloud.log ok       "
+      echoc v "                                     "
       echo
       sleep 1
     else

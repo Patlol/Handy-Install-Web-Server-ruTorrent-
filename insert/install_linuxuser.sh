@@ -24,8 +24,8 @@ mkdir -p /root/.config/mc/
 cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
 
 echo
-echoc v "                        "
-echoc v "   Linux user created   "
-echoc v "                        "
+echoc v "                              "
+echoc v "     Linux user created       "
+echoc v "                              "
 sleep 1
 echo

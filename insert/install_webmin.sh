@@ -1,6 +1,6 @@
 echo
 echoc r "                                        "
-echoc r "           Installing WebMin            "
+echoc b "           Installing WebMin            "
 echoc r "         This may take a while          "
 echoc r "                                        "
 echo
@@ -23,9 +23,9 @@ cmd="wget $upDebWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 cmd="apt-get -f install -y $paquetWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 cmd="dpkg --install $debWebMinD9"; $cmd || __msgErreurBox "$cmd" $?
 
-echoc v "                        "
-echoc v "   Packages Installed   "
-echoc v "                        "
+echoc v "                                                     "
+echoc v "                Packages Installed                   "
+echoc v "                                                     "
 echo
 sleep 1
 
