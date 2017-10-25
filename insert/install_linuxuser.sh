@@ -17,11 +17,11 @@ cmd="usermod -aG www-data $userLinux"; $cmd ||  __msgErreurBox "$cmd" $?
 ## config mc (installé dans install_apache.sh)
 # config mc user
 mkdir -p $REPUL/.config/mc/
-cp $REPLANCE/fichiers-conf/mc_panels.ini $REPUL/.config/mc/panels.ini
+cp ${REPLANCE}/fichiers-conf/mc_panels.ini $REPUL/.config/mc/panels.ini
 chown -R $userLinux:$userLinux $REPUL/.config/
 # config mc root
 mkdir -p /root/.config/mc/
-cp $REPLANCE/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
+cp ${REPLANCE}/fichiers-conf/mc_panels.ini /root/.config/mc/panels.ini
 
 echo
 echoc v "                              "

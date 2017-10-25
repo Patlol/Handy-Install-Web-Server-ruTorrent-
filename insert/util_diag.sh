@@ -7,7 +7,7 @@ __diag() {
   echo
   echo "IP: $IP"
   echo "Host Name: $HOSTNAME"
-  serverName=$(cat $REPAPA2/sites-available/000-default.conf | egrep "^ServerName" | awk -F" " '{print $2}')
+  serverName=$(grep -E "^ServerName" $REPAPA2/sites-available/000-default.conf | awk -F" " '{print $2}')
   if [[ -n $serverName ]]; then   # Si nom de domaine
     echo "Domain name: $serverName"
     echo
@@ -54,7 +54,7 @@ __diag() {
   echo "----------"
   service rtorrentd status
   echo
-  ps -aux | grep '.torrent$'
+  pgrep 'torrent'
   echo
   echo "-------------------------------------------------------------------------------"
   echo "Users:"
@@ -101,7 +101,7 @@ __diag() {
         echo "------------------------------------------------------------------------"
         echo "netstat:"
         echo "--------"
-        netstat -tap | egrep "ESTABLISHED | LISTEN | SYN_SENT |SYN_RECV | CONNECTING | CONNECTED | SYN_RECV"
+        netstat -tap | grep -E "ESTABLISHED | LISTEN | SYN_SENT |SYN_RECV | CONNECTING | CONNECTED | SYN_RECV"
         echo "------------------------------------------------------------------------"
       ;;
       * )

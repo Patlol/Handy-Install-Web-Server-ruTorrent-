@@ -26,10 +26,10 @@ __listeUtilisateursOC() {
   #   fi
   #   __listeUtilisateursOC[$i]=$(echo ${__listeUtilisateursOC[$i]} | sed -r 's/ /£/g')
   # done
-# echo ${liste[*]}
+  # echo ${liste[*]}
   # use debian script user
-  userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
-  pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?
+  userBdD=$(grep -m 1 "user" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || __msgErreurBox "grep -m 1 user /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }'" $?
+  pwBdD=$(grep -m 1 "password" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || __msgErreurBox "grep -m 1 password /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }'" $?
   if [[ -z $pwBdD ]]; then
     __listeUtilisateursOC=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
   else
@@ -40,7 +40,7 @@ __listeUtilisateursOC() {
 __listeUtilisateurs() {
   local listeL; local listeR; local listeVpn
   # les différents tableaux : utilisateurs linux, ruto, vpn et oc
-  listeL=($(cat /etc/passwd | grep -P "(:0:)|(:10[0-9]{2}:)" | awk -F":" '{ print $1 }')) || __msgErreurBox "listeL=($(cat /etc/passwd | grep -P \"(:0:)|(:10[0-9]{2}:)\" | awk -F\":\" '{ print $1 }'))" $?
+  listeL=($(grep -P "(:0:)|(:10[0-9]{2}:)" /etc/passwd | awk -F":" '{ print $1 }')) || __msgErreurBox "listeL=($(grep -P \"(:0:)|(:10[0-9]{2}:)\" /etc/passwd | awk -F\":\" '{ print $1 }'))" $?
   # encadrement utilisateur principal
   for (( i = 0; i < ${#listeL[@]}; i++ )); do
     if [[ "${listeL[i]}" == "${FIRSTUSER[0]}" ]]; then

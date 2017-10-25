@@ -40,15 +40,15 @@ echoc v "                                        "
 sleep 1
 
 # installation de mediainfo et ffmpeg
-if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
+if [[ "$nameDistrib" == "Debian" && "$os_version_M" -eq 8 ]]; then
   chmod 777 /etc/apt/sources.list
-  echo $sourceMediaD8 >> /etc/apt/sources.list
+  echo "$sourceMediaD8" >> /etc/apt/sources.list
   chmod 644 /etc/apt/sources.list
   apt-get update -yq
   cmd="apt-get install -yq --force-yes deb-multimedia-keyring"; $cmd || __msgErreurBox "$cmd" $?
   apt-get update -yq
   cmd="apt-get install -y --force-yes $paquetsMediaD8"; $cmd || __msgErreurBox "$cmd" $?
-elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
+elif [[ "$nameDistrib" == "Debian" && "$os_version_M" -eq 9 ]]; then
   cmd="apt-get install -yq $paquetsMediaD9"; $cmd || __msgErreurBox "$cmd" $?
 else
   cmd="apt-get install -yq --force-yes $paquetsMediaU"; $cmd || __msgErreurBox "$cmd" $?
@@ -91,8 +91,8 @@ echoc v "      ruTorrent plugins installed       "
 echoc v "                                        "
 
 headTest=$(curl -Is http://$IP/rutorrent/| head -n 1)
-headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ "$headTest" == Unauthorized* ]]; then
+headTest=$(echo "$headTest" | awk -F" " '{ print $3 }')
+if [[ "$headTest" == "Unauthorized" ]]; then
   echo
   echoc v "                                        "
   echoc v "      ruTorrent works correctly         "

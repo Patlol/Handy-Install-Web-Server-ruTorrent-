@@ -38,16 +38,16 @@ sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
 
 # Modifier la configuration du site par défaut (pour rutorrent)
 cp $REPAPA2/sites-available/000-default.conf $REPAPA2/sites-available/000-default.conf.old
-cp $REPLANCE/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
+cp ${REPLANCE}/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
 sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
 __servicerestart "apache2"
 
 # vérif bon fonctionnement apache et php
 echo "<?php phpinfo(); ?>" >$REPWEB/info.php
-headTest1=`curl -Is http://$IP/info.php/| head -n 1`
-headTest2=`curl -Is http://$IP/| head -n 1`
-headTest1=$(echo $headTest1 | awk -F" " '{ print $3 }')
-headTest2=$(echo $headTest2 | awk -F" " '{ print $3 }')
+headTest1=$(curl -Is http://$IP/info.php/| head -n 1)
+headTest2=$(curl -Is http://$IP/| head -n 1)
+headTest1=$(echo "$headTest1" | awk -F" " '{ print $3 }')
+headTest2=$(echo "$headTest2" | awk -F" " '{ print $3 }')
 if [[ "$headTest1" == OK* ]] && [[ "$headTest2" == OK* ]]
 then
   echoc v "                              "

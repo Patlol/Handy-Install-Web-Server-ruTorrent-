@@ -39,7 +39,7 @@ paquetsMediaU="mediainfo ffmpeg"
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
-readonly REPLANCE=$(echo $(pwd))
+readonly REPLANCE=$(pwd)
 REPUL=""    # repertoire user Linux dans __creauser
 readonly PORT_SCGI=5000  # port 1er Utilisateur
 readonly PLANCHER=20001  # bas fourchette port ssh
@@ -98,21 +98,22 @@ __trap() {  # pour exit supprime info.php et affiche dernier message d'erreur
 
 __ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 1
   CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap  --yesno "${2}" 0 0 )
-  choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+  choix=$("${CMD[@]}" 2>&1 > /dev/tty)
   __ouinonBox=$?
 }  # fin ouinon
 
-__messageBox() {   # param : titre texte vide=timeout on
+__messageBox() {   # param : titre, texte, timeout : vide=timeout on
   local argTimeOut
   if [[ -z ${3} ]]; then
     argTimeOut="--timeout $TIMEOUT"
   fi
-  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --scrollbar $argTimeOut --msgbox "${2}" 0 0)
-  choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --scrollbar "$argTimeOut" --msgbox "${2}" 0 0)
+  choix=$("${CMD[@]}" 2>&1 > /dev/tty)
 }
 
 __msgErreurBox() {   # param : commande, N° erreur
-  local msgErreur; local ref=$(caller 0)
+  local msgErreur; local ref
+  ref=$(caller 0)
   err=${2}
   msgErreur="------------------\n"
   msgErreur+="Line N°${ref}\n${BO}${R}${1}${N}\nError N° ${R}${err}${N}\n"
@@ -151,10 +152,10 @@ __saisieTexteBox() {   # param : titre, texte
 }
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
-  local pw=1""; local pw2=""; local codeSortie=""; local reponse=""
+  local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
   until false; do
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
-    reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+    reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
     if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
       [[ "$reponse" =~ [\\] ]]; then
       __messageBox "${1}" "
@@ -185,13 +186,13 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
 
 __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
   CMD=(dialog --backtitle "$TITRE" --exit-label "Continued from installation" --title "${1}" --hline "${3}" --textbox  "${2}" 0 0)
-  ("${CMD[@]}" 2>&1 >/dev/tty)
+  ("${CMD[@]}" 2>&1 > /dev/tty)
 }
 
 __servicerestart() {
-  service $1 restart
+  service "${1}" restart
   codeSortie=$?
-  cmd="service $1 status"; $cmd || __msgErreurBox "$cmd" $?
+  cmd="service ${1} status"; "$cmd" || __msgErreurBox "$cmd" $?
   return $codeSortie
 }  #  fin __servicerestart
 
@@ -215,14 +216,14 @@ clear
 #########################################
 
 # Complèter la localisation (vps)
-lang=$(cat /etc/locale.gen | egrep ^[a-z].*UTF-8$ | awk -F" " '{ print $1 }')
-lang=$(echo $lang | awk -F" " '{ print $1 }')  # debian 9
-export LANGUAGE=$lang
-export LANG=$lang
-export LC_ALL=$lang
-update-locale LANGUAGE=$lang
-update-locale LANG=$lang
-update-locale LC_ALL=$lang
+lang=$(grep -E "^[a-z].*UTF-8$" /etc/locale.gen | awk -F" " '{ print $1 }')
+lang=$(echo "$lang" | awk -F" " '{ print $1 }')  # debian 9
+export LANGUAGE="$lang"
+export LANG="$lang"
+export LC_ALL="$lang"
+update-locale LANGUAGE="$lang"
+update-locale LANG="$lang"
+update-locale LC_ALL="$lang"
 dpkg-reconfigure --frontend=noninteractive locales
 locale-gen
 
@@ -247,10 +248,9 @@ fi
 
 arch=$(uname -m)
 readonly IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
-distrib=$(cat /etc/issue | awk -F"\\" '{ print $1 }')
 nameDistrib=$(lsb_release -si)  # Debian ou Ubuntu
 os_version=$(lsb_release -sr)   # 18 , 8.041 ...
-os_version_M=$(echo $os_version | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')  # version majeur
+os_version_M=$(echo "$os_version" | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')  # version majeur
 description=$(lsb_release -sd)     #  nom de code
 user=$(id -un)       #  root avec user sudo
 
@@ -273,7 +273,7 @@ done
 
 # ubuntu / debian et bonne version ?
 
-if [[ $nameDistrib == "Debian" && $os_version_M -gt 9 ]] || [[ $nameDistrib == "Ubuntu" && $os_version_M -gt 16 ]]; then
+if [[ "$nameDistrib" == "Debian" && "$os_version_M" -gt 9 ]] || [[ "$nameDistrib" == "Ubuntu" && "$os_version_M" -gt 16 ]]; then
   __ouinonBox "Distribution check" "
     You are using $description
     This script is intended to run on a Debian server
@@ -283,7 +283,7 @@ if [[ $nameDistrib == "Debian" && $os_version_M -gt 9 ]] || [[ $nameDistrib == "
   if [[ $__ouinonBox -ne 0 ]]; then  clear; exit 1; fi
 fi
 
-if [[ $nameDistrib == "Debian" && $os_version_M -lt 8 ]] || [[ $nameDistrib == "Ubuntu" && $os_version_M -lt 16 ]]; then
+if [[ "$nameDistrib" == "Debian" && "$os_version_M" -lt 8 ]] || [[ "$nameDistrib" == "Ubuntu" && "$os_version_M" -lt 16 ]]; then
   __messageBox "Distribution check" "
     You are using $description
     This script is intended to run on a Debian server
@@ -291,7 +291,7 @@ if [[ $nameDistrib == "Debian" && $os_version_M -lt 8 ]] || [[ $nameDistrib == "
   clear; exit 1
 fi
 
-if [[ $nameDistrib != "Debian" && $nameDistrib != "Ubuntu" ]]; then
+if [[ "$nameDistrib" != "Debian" && "$nameDistrib" != "Ubuntu" ]]; then
   __messageBox "Distribution check" "
     You are using $description
     This script is intended to run on a Debian server
@@ -357,7 +357,7 @@ __messageBox "Your system" " ${BO}
   $info"  # $info valeur suivant $homeDispo cf. # espace dispo
 
 if [ -z "$homeDispo" ]; then  # /
-  if [ $rootDispo -lt $miniDispoRoot ]; then
+  if [ "$rootDispo" -lt $miniDispoRoot ]; then
     __messageBox "Important message" "
       ${BO}${R}
       WARNING ${N}
@@ -365,7 +365,7 @@ if [ -z "$homeDispo" ]; then  # /
       Only ${R}$(( $rootDispo/1024/1024 )) Go${N}, on / to store downloaded files"
   fi
 else  # /home
-  if [ $homeDispo -lt $miniDispoHome ];then
+  if [ "$homeDispo" -lt $miniDispoHome ];then
     __messageBox "Important message" "
       ${BO}$R
       WARNING $N
@@ -381,8 +381,8 @@ until [[ $usernameOk -ne 0 ]]; do
     You must create a specific user.
     Choose a linux username${R}
     (neither space nor \)${N}: "
-  userLinux=$__saisieTexteBox
-  egrep "^$userLinux:" /etc/passwd >/dev/null
+  userLinux="$__saisieTexteBox"
+  grep -E "^$userLinux:" /etc/passwd >/dev/null
   usernameOk=$?
   if [[ $usernameOk -eq 0 ]]; then
     __messageBox "Linux user" "
@@ -403,10 +403,10 @@ until [[ $usernameOk -ne 0 ]]; do
     It's more secure to choose a different name
     than the Linux user
     Choose a ruTorrent username${R} (neither space nor \)$N: "
-  userRuto=$__saisieTexteBox
-  egrep "^$userRuto:" /etc/passwd >/dev/null
+  userRuto="$__saisieTexteBox"
+  grep -E "^$userRuto:" /etc/passwd >/dev/null
   usernameOk=$?
-  if [[ $usernameOk -eq 0 ]] && [[ $userRuto != $userLinux ]]; then
+  if [[ $usernameOk -eq 0 ]] && [[ "$userRuto" != "$userLinux" ]]; then
     __messageBox "ruTorrent user" "
       $userRuto already exists, choose another username
       "
@@ -414,7 +414,7 @@ until [[ $usernameOk -ne 0 ]]; do
 done
 __saisiePwBox "ruTorrent user" "
   Password for $userRuto:" 4
-pwRuto=$__saisiePwBox
+pwRuto="$__saisiePwBox"
 
 #  webmin
 __ouinonBox "Webmin" "
@@ -426,8 +426,8 @@ installWebMin=$__ouinonBox
 __ouinonBox "Secure ssh/sftp" "
   In order to secure SSH and SFTP it's proposed to change the standard port (22)
   and to prohibit root.
-  $R
-  This is a highly recommended safety measure.$N
+  ${R}
+  This is a highly recommended safety measure.${N}
 
   The user will be $userLinux and the random port $portSSH${BO} or a port designated by you.$N
   Would you like to apply this change?"
@@ -436,13 +436,13 @@ if [ $changePort -eq 0 ]; then
   choix=0
   until [[ $choix -le $ECHELLE && $choix -ge $PLANCHER ]] || [[ $choix -eq 22 ]]; do
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "ssh/sftp port" --trim --cr-wrap --max-input 5 --nocancel --inputbox "
-      The proposed random port is $I$portSSH${N}${BO}
+      The proposed random port is ${I}$portSSH${N}${BO}
       You can change it between $PLANCHER and $ECHELLE$N
       Or the default port 22. The ssh user is $userLinux" 0 0 $portSSH)
-    choix=$("${CMD[@]}" 2>&1 >/dev/tty)
+    choix=$("${CMD[@]}" 2>&1 > /dev/tty)
   done
   portSSH=$choix
-  userSSH=$userLinux
+  userSSH="$userLinux"
 else
   portSSH=22
   userSSH="root"
@@ -450,7 +450,7 @@ fi
 
 
 #  Récapitulatif
-cat << EOF > $REPLANCE/RecapInstall.txt
+cat << EOF > ${REPLANCE}/RecapInstall.txt
 
 This information will be used only after the script has been executed correctly.
 
@@ -459,12 +459,12 @@ Architecture    : $arch
 Your IP         : $IP
 Your hostname   : $HOSTNAME
 
-`if [ -z "$homeDispo" ]
+$(if [ -z "$homeDispo" ]
 then
   echo "You haven't /home partition."
 else
   echo "Your /home partition has $(( $homeDispo/1024/1024 )) Go free."
-fi`
+fi)
 Your root (/) partition has $(( $rootDispo/1024/1024 )) Go free.
 
 At the end of the installation:
@@ -480,16 +480,16 @@ Password Linux user:      $pwLinux
 ruTorrent username:       $userRuto
 Password ruTorrent user:  $pwRuto
 
-`if [[ $installWebMin -ne 0 ]]
+$(if [[ $installWebMin -ne 0 ]]
 then
   echo "You don't want to install WebMin"
 else
   echo "You want install WebMin"
-  echo "The user will be "root" with his password"
-fi`
+  echo "The user will be root with his password"
+fi)
 EOF
 
-__textBox "Installation Summary" $REPLANCE/RecapInstall.txt
+__textBox "Installation Summary" "$REPLANCE/RecapInstall.txt"
 __ouinonBox "Installation" "
 Do you want start installation?
 "
@@ -517,7 +517,7 @@ echoc v "                              "
 echo
 
 # upgrade
-cmd="apt-get upgrade -yq"; $cmd || __msgErreurBox "$cmd" $?
+cmd="apt-get upgrade -yq"; "$cmd" || __msgErreurBox "$cmd" $?
 echoc v "                              "
 echoc v "      Update completed        "
 echoc v "                              "
@@ -526,43 +526,43 @@ sleep 1
 ##############################
 #  Création de linux user    #
 ##############################
-. $REPLANCE/insert/install_linuxuser.sh
+. ${REPLANCE}/insert/install_linuxuser.sh
 
 ############################################
 #      Installation du serveur http        #
 ############################################
 service nginx stop &> /dev/null
-. $REPLANCE/insert/install_apache.sh
+. ${REPLANCE}/insert/install_apache.sh
 
 ############################################
 #           installation rtorrent          #
 ############################################
-. $REPLANCE/insert/install_rtorrent.sh
+. ${REPLANCE}/insert/install_rtorrent.sh
 
 ############################################
 #        installation de rutorrent         #
 ############################################
-. $REPLANCE/insert/install_rutorrent.sh
+. ${REPLANCE}/insert/install_rutorrent.sh
 
 #######################################################
 #             installation de WebMin                  #
 #######################################################
 if [[ $installWebMin -eq 0 ]]; then
-  . $REPLANCE/insert/install_webmin.sh
+  . ${REPLANCE}/insert/install_webmin.sh
 fi
 
 ########################################
 #            sécuriser ssh             #
 ########################################
 #  des choses à faire de tte façon
-. $REPLANCE/insert/install_ssh.sh
+. ${REPLANCE}/insert/install_ssh.sh
 
 ####################################
 #     Nettoyage, finalisation      #
 ####################################
 
 ## copie les scripts dans home
-cp -r  $REPLANCE $REPUL/HiwsT
+cp -r  ${REPLANCE} $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
 
 ## complète firstusers
@@ -572,7 +572,7 @@ chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
 
 ## copie dans $REPUL/HiwsT le fichiers log d'erreurs
 cp -t $REPUL/HiwsT /tmp/trace.log
-rm -r $REPLANCE
+rm -r ${REPLANCE}
 
 ########################################
 #            générique de fin          #
@@ -596,7 +596,7 @@ To access ruTorrent:
   With https, accept the Self Signed Certificate and
   the exception for this certificate!
 
-`if [[ $installWebMin -eq 0 ]]; then
+$(if [[ $installWebMin -eq 0 ]]; then
   echo "To access WebMin:"
   echo -e "\thttps://$IP:10000"
   echo -e "\tor https://$HOSTNAME:10000"
@@ -604,12 +604,12 @@ To access ruTorrent:
   echo -e "\tAccept the Self Signed Certificate and"
   echo -e "\tthe exception for this certificate!"
   echo " "
-fi`
+fi)
 In case of issues strictly concerning this script, you can go consult the wiki:
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki
 and post  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues
 
-`if [[ $changePort -eq 0 ]]; then   # ssh sécurisé
+$(if [[ $changePort -eq 0 ]]; then   # ssh sécurisé
   echo "***********************************************"
   echo "|      Warning standard port and root         |"
   echo "|     no longer access to SSH and SFTP        |"
@@ -640,7 +640,7 @@ else   # ssh n'est pas sécurisé
   echo -e "\tProtocol      : SFTP-SSH File Transfer Protocol"
   echo -e "\tAuthentication: normal"
   echo -e "\tLogin         : root"
-fi  # ssh pas sécurisé/ sécurisé`
+fi  # ssh pas sécurisé/ sécurisé)
 EOF
 
 # écrase la récap 1ère version et le répertoire de scripts dans root

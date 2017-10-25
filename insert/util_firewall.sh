@@ -4,7 +4,7 @@ __firewall() {
   clear
   # récupération du port ssh
   portSSH=0
-  portSSH=$(cat /etc/ssh/sshd_config | grep ^Port | awk -F" " '{print$2}')
+  portSSH=$(grep -E ^Port /etc/ssh/sshd_config | awk -F" " '{print$2}')
 read
   if [ $portSSH -eq 0 ]; then
     __messageBox "ssh port Error" "

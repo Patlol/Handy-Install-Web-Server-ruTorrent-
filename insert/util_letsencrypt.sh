@@ -19,13 +19,13 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
   echoc v "                                                                 "
   echo
   sleep 1
-  if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
+  if [[ "$nameDistrib" == "Debian" && $os_version_M -eq 8 ]]; then
     chmod 777 /etc/apt/sources.list
     echo "deb http://ftp.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
     chmod 644 /etc/apt/sources.list
     apt-get update
     cmd="apt-get -t jessie-backports install -yq python-certbot-apache"; $cmd || __msgErreurBox "$cmd" $?
-  elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
+  elif [[ "$nameDistrib" == "Debian" && $os_version_M -eq 9 ]]; then
     apt-get update
     cmd="apt-get install -yq python-certbot-apache"; $cmd || __msgErreurBox "$cmd" $?
   else

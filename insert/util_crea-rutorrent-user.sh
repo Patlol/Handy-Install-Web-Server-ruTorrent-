@@ -4,7 +4,7 @@
 __creaUserRuto () {
   # param : ${1} name user ${2} pw user"
   local codeSortie
-  egrep "^sftp" /etc/group > /dev/null
+  grep -E "^sftp" /etc/group > /dev/null
   if [[ $? -ne 0 ]]; then
     addgroup sftp
   fi
@@ -65,36 +65,36 @@ __creaUserRuto () {
 
   #  partie rutorrent -----------------------------------------------------------
   # dossier conf/users/userRuto
-  mkdir -p $REPWEB/rutorrent/conf/users/${1}
-  cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/${1}
-  cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/${1}/config.php
-  sed -i -e 's/<port>/'$port'/' -e 's/<username>/'${1}'/' $REPWEB/rutorrent/conf/users/${1}/config.php
-  chown -R www-data:www-data $REPWEB/rutorrent/conf/users/${1}
+  mkdir -p "$REPWEB/rutorrent/conf/users/${1}"
+  cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini "$REPWEB/rutorrent/conf/users/${1}"
+  cp $REPLANCE/fichiers-conf/ruto_multi_config.php "$REPWEB/rutorrent/conf/users/${1}/config.php"
+  sed -i -e 's/<port>/'$port'/' -e 's/<username>/'${1}'/' "$REPWEB/rutorrent/conf/users/${1}/config.php"
+  chown -R www-data:www-data "$REPWEB/rutorrent/conf/users/${1}"
 
   # déactivation du plugin linkcakebox
-  mkdir -p $REPWEB/rutorrent/share/users/${1}/torrents
-  mkdir $REPWEB/rutorrent/share/users/${1}/settings
-  chmod -R 777 $REPWEB/rutorrent/share/users/${1}
-  echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
-  chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
+  mkdir -p "$REPWEB/rutorrent/share/users/${1}/torrents"
+  mkdir "$REPWEB/rutorrent/share/users/${1}/settings"
+  chmod -R 777 "$REPWEB/rutorrent/share/users/${1}"
+  echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > "$REPWEB/rutorrent/share/users/${1}/settings/plugins.dat"
+  chmod 666 "$REPWEB/rutorrent/share/users/${1}/settings/plugins.dat"
   chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
 
   echoc v " Directory users/${1} created on ruTorrent "; echo
 
-  __creaUserRutoPasswd ${1} ${2}   # insert/util_apache.sh ne renvoie rien
+  __creaUserRutoPasswd "${1}" "${2}"   # insert/util_apache.sh ne renvoie rien
 
   # modif pour sftp / sécu sftp __creaUserRuto  ---------------------------------
   # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
-  usermod -s /bin/false ${1}
+  usermod -s /bin/false "${1}"
   # pour interdire de sortir de /home/user  en sftp
-  chown root:root /home/${1}
-  chmod 0755 /home/${1}
+  chown root:root "/home/${1}"
+  chmod 0755 "/home/${1}"
 
   # modif sshd_config  -------------------------------------------------------
   sed -i 's/AllowUsers.*/& '${1}'/' /etc/ssh/sshd_config
   sed -i 's|^Subsystem.*sftp.*/usr/lib/openssh/sftp-server|#  &|' /etc/ssh/sshd_config   # commente
   # pour bloquer les utilisateurs supplémentaires
-  if [[ `cat /etc/ssh/sshd_config | grep "Subsystem  sftp  internal-sftp"` == "" ]]; then
+  if [[ $(grep "Subsystem  sftp  internal-sftp" /etc/ssh/sshd_config) == "" ]]; then
     echo -e "Subsystem  sftp  internal-sftp\nMatch Group sftp\n ChrootDirectory %h\n ForceCommand internal-sftp\n AllowTcpForwarding no" >> /etc/ssh/sshd_config
   fi
   __servicerestart "sshd"

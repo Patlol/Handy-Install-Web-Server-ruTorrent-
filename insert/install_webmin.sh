@@ -31,8 +31,8 @@ sleep 1
 
 
 headTest=$(curl -Is http://$IP:10000 | head -n 1)
-headTest=$(echo $headTest | awk -F" " '{ print $3 }')
-if [[ "$headTest" == Document* ]]; then
+headTest=$(echo "$headTest" | awk -F" " '{ print $3 }')
+if [[ "$headTest" == "Document" ]]; then
   echoc v "                                                     "
   echoc v "                  WebMin works well                  "
   echoc r "    Accept exception to certificate for this site    "

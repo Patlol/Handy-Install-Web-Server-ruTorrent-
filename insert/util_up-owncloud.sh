@@ -9,8 +9,8 @@ readonly ocNewVersion="10.0.3"
 # ocpath=/var/www/owncloud
 
 # get infos in config.php
-readonly ocDataDir=$(grep "datadirectory" < $ocpath/config/config.php | awk -F"=>" '{ print $2 }' | sed -r "s/[ ',]//g")
-readonly ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
+readonly ocDataDir=$(grep "datadirectory" < "$ocpath/config/config.php" | awk -F"=>" '{ print $2 }' | sed -r "s/[ ',]//g")
+readonly ocDataDirRoot=$(echo "$ocDataDir" | sed 's/\/data\/*$//')
 
 __backupDir() {
   echo
@@ -80,10 +80,10 @@ fi
 
 # BACKUP DE LA BdD
 # use debian script user
-userBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 user | awk -F"= " '{ print $2 }') || \
-    __msgErreurBox "userBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 user | awk -F\"= \" '{ print $2 }')" $?
-pwBdD=$(cat "/etc/mysql/debian.cnf" | grep -m 1 password | awk -F"= " '{ print $2 }') || \
-    __msgErreurBox "pwBdD=$(cat \"/etc/mysql/debian.cnf\" | grep -m 1 password | awk -F\"= \" '{ print $2 }')" $?
+userBdD=$(grep -m 1 "user" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || \
+    __msgErreurBox "userBdD=$(grep -m 1 user /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }')" $?
+pwBdD=$(grep -m 1 "password" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || \
+    __msgErreurBox "pwBdD=$(grep -m 1 password /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }')" $?
 nameTableFile="/$__backupDir/ocdbBackup_$(date +"%Y%m%d").bak"
 if [[ -z $pwBdD ]]; then
   mysqldump --opt -u $userBdD $ocDbName > $nameTableFile || __msgErreurBox "mysqldump --opt -u $userBdD $ocDbName > $nameTableFile" $?
@@ -134,7 +134,7 @@ done
 cd $REPLANCE
 
 # $ocpath/.htaccess /$ocBackup/"   php_value upload_max_filesize xxxM|G
-fileSize=$(cat ${ocpath}.old/.htaccess | grep -m 1 "php_value upload_max_filesize" | awk -F " " '{ print $3 }')
+fileSize=$(grep -m 1 "php_value upload_max_filesize" "${ocpath}.old/.htaccess" | awk -F " " '{ print $3 }')
 if [[ $fileSize != "513M" ]]; then
   sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
   -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' $ocpath/.htaccess

@@ -4,7 +4,7 @@ readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
 readonly ocDbName="owncloud"
-readonly ocDataDirRoot=$(echo $ocDataDir | sed 's/\/data\/*$//')
+readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
 # ocpath=/var/www/owncloud
 readonly ocVersion="10.0.3"
 ################################################################################
@@ -17,11 +17,11 @@ wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.asc
 gpg --import owncloud.asc &>/dev/null
 gpg --verify owncloud-$ocVersion.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-$ocVersion.tar.bz2.asc" $?
 
-tar -xjf owncloud-$ocVersion.tar.bz2
-mv owncloud $ocpath
-if [[ $nameDistrib == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
+tar -xjf "owncloud-$ocVersion.tar.bz2"
+mv owncloud "$ocpath"
+if [[ "$nameDistrib" == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
   cmd="apt-get -yq install mariadb-server php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server libzip2 php-pclzip php5-imap"; $cmd || __msgErreurBox "$cmd" $?
-elif [[ $nameDistrib == "Debian" ]] && [[ $os_version_M -eq 9 ]]; then
+elif [[ "$nameDistrib" == "Debian" ]] && [[ $os_version_M -eq 9 ]]; then
   cmd="apt-get -yq install default-mysql-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
 else  # Ubuntu
   cmd="apt-get -yq install mariadb-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php-imagick php-apcu apcupsd php-redis redis-server libzip4 php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
@@ -67,7 +67,7 @@ cp $REPLANCE/fichiers-conf/apa_conf_owncloud.conf $REPAPA2/conf-available/ownclo
 # L'en-tête HTTP "Strict-Transport-Security" n'est pas configurée à "15552000" secondes.
 # Pour renforcer la sécurité nous recommandons d'activer HSTS cf. Guide pour le renforcement et la sécurité.
 # ==> man-in-the-middle attacks https://79.137.33.190/owncloud/index.php/settings/help?mode=admin
-cat $REPAPA2/sites-available/default-ssl.conf | grep  "Header always set Strict-Transport-Security \"max-age=15552000; includeSubDomains\""
+grep  "Header always set Strict-Transport-Security \"max-age=15552000; includeSubDomains\"" $REPAPA2/sites-available/default-ssl.conf
 if [[ $? -ne 0 ]]; then
   sed -i '/<VirtualHost _default_:443>/a <IfModule mod_headers.c>\n  Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"\n</IfModule>' $REPAPA2/sites-available/default-ssl.conf
 
@@ -80,7 +80,7 @@ if [[ $? -ne 0 ]]; then
 fi
 ################################################################################
 ## si $ocDataDir modifié le créer et lui donner le bon proprio
-if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
+if [[ "${ocDataDir}" != "/var/www/owncloud/data" ]]; then
   mkdir -p ${ocDataDir}
   cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDirRoot}/.htaccess
   touch ${ocDataDirRoot}/index.html
@@ -139,7 +139,7 @@ fi
 #  upload_max_filesize=513M post_max_size=513Mpost_max_size=513M valeurs d'origine
 #  supprime l'integrity check    sed -i 's/  php_value memory_limit 512M/# php_value memory_limit 512M/g' $ocpath/.htaccess
 if [[ $fileSize != "513M" ]]; then
-  if [[ ${ocDataDir} != "/var/www/owncloud/data" ]]; then
+  if [[ "${ocDataDir}" != "/var/www/owncloud/data" ]]; then
     sed -i -e 's/php_value upload_max_filesize 513M/php_value upload_max_filesize '$fileSize'/' \
     -e 's/php_value post_max_size 513M/php_value post_max_size '$fileSize'/' ${ocDataDirRoot}/.htaccess
   fi
@@ -168,8 +168,7 @@ if [[ $addStorage =~ [yY] ]]; then
   sudo -u $htuser $ocpath/occ files_external:option 1 enable_sharing true
   sudo -u $htuser $ocpath/occ files_external:applicable --add-user=${FIRSTUSER[0]} 1
   verify=$(sudo -u $htuser $ocpath/occ files_external:verify 1)
-  echo $verify | grep ok
-  if [[ $? -ne 0 ]]; then
+  if [[ $(grep ok <<< "$verify") ]]; then
     echoc r "                                                "
     echoc r "        Error setting external storage          "
     echoc r "   Does not impact main owncloud installation   "
@@ -189,8 +188,7 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
   rm $ocpath/apps/audioplayer-2.1.0.zip
   chown -R $htuser:$htgroup $ocpath/apps/audioplayer
   verify=$(sudo -u $htuser $ocpath/occ app:enable audioplayer)
-  echo $verify | grep enabled
-  if [[ $? -ne 0 ]]; then
+  if [[ $(grep enabled <<< "$verify") ]]; then
     echoc r "                                                "
     echoc r "           Error Audio Player install           "
     echoc r "   Does not impact main owncloud installation   "
@@ -254,10 +252,10 @@ fi
 ##  Après maintenance:install si non config.php n'existe pas
 ##  domaines approuvés IP + noms de domaine
 sed -i "/0 => 'localhost'/a 1 => '"$IP"'," $ocpath/config/config.php
-serverName=$(cat $REPAPA2/sites-available/000-default.conf | egrep "^ServerName" | awk -F" " '{print $2}')
-if [[ -n $serverName ]]; then   # Si nom de domaine
-  serverNameAlias="www."$serverName
-  sed -i "/1 => '"$IP"'/a\ 2 => '"$serverName"',\n 3 => '"$serverNameAlias"', "  $ocpath/config/config.php
+serverName=$(grep -E "^ServerName" $REPAPA2/sites-available/000-default.conf | awk -F" " '{print $2}')
+if [[ -n "$serverName" ]]; then   # Si nom de domaine
+  serverNameAlias="www.$serverName"
+  sed -i "/1 => '"$IP"'/a\ 2 => '"$serverName"',\n 3 => '"$serverNameAlias"', " "$ocpath/config/config.php"
 fi
 ##  Prise en compte du memcache APCu/Redis
 sed -i "/);/i 'memcache.local' => '\\\OC\\\Memcache\\\APCu',\n'memcache.locking' => '\\\OC\\\Memcache\\\Redis',\n'redis' => array(\n     'host' => 'localhost',\n     'port' => 6379,\n      )," $ocpath/config/config.php

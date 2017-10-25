@@ -34,18 +34,18 @@ __creaUserOCBox() {   # arg : titre, texte, l sous-boite
     "AudioPlayer [Y/N]:" 11 2 "${addAudioPlayer}" 11 28 2 1 0
     "External storage [Y/N]:" 13 2 "${addStorage}" 13 28 2 1 0 \
     "Full path of local directory to mount:" 15 2 "${mountDir}" 16 15 50 26 0)
-    reponse=$("${CMD[@]}" 2>&1 >/dev/tty)
+    reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
     if [[ $? -ne 0 ]]; then return 1; fi
 
     # $newUserName n'est pas dans reponse, n'étant pas modifiable (-25)
     # format de $reponse : zesfg\zf\azdzad\....
-    newUserPw=$(echo $reponse | awk -F"\\" '{ print $1 }')
-    newFullUserName=$(echo $reponse | awk -F"\\" '{ print $2 }')
-    newUserGroup=$(echo $reponse | awk -F"\\" '{ print $3 }')
-    newUserMail=$(echo $reponse | awk -F"\\" '{ print $4 }')
-    addAudioPlayer=$(echo $reponse | awk -F"\\" '{ print $5 }')
-    addStorage=$(echo $reponse | awk -F"\\" '{ print $6 }')
-    mountDir=$(echo $reponse | awk -F"\\" '{ print $7 }')
+    newUserPw=$(echo "$reponse" | awk -F"\\" '{ print $1 }')
+    newFullUserName=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
+    newUserGroup=$(echo "$reponse" | awk -F"\\" '{ print $3 }')
+    newUserMail=$(echo "$reponse" | awk -F"\\" '{ print $4 }')
+    addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
+    addStorage=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
+    mountDir=$(echo "$reponse" | awk -F"\\" '{ print $7 }')
 
     # si erreur vide le champs incriminé et place le curseur
     if [[ "$newUserPw" =~ [[:space:]\\] ]] || [[ -z $newUserPw ]]; then
@@ -107,7 +107,7 @@ if [[ $addStorage =~ [yY] ]]; then
     cmd="sudo -u $htuser php $ocpath/occ app:enable files_external"; $cmd || __msgErreurBox "$cmd" $?
     flagFiles_external="disabled"
   fi
-  id=$(sudo -u $htuser $ocpath/occ files_external:create ext-storage \\OC\\Files\\Storage\\Local null::null)
+  id=$(sudo -u $htuser $ocpath/occ files_external:create Local-storage \\OC\\Files\\Storage\\Local null::null)
   id=$(expr match "$id" '.*\(.[0-9]\)')  # 1 ou 2 digits
   # ajout de \ a mountDir \/home\/${$newUserL}\/downloads
   sudo -u $htuser $ocpath/occ files_external:config $id datadir $mountDir
