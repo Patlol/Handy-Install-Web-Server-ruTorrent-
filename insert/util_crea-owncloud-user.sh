@@ -106,6 +106,8 @@ if [[ $addStorage =~ [yY] ]]; then
   if [[ $verify == "no" ]]; then
     cmd="sudo -u $htuser php $ocpath/occ app:enable files_external"; $cmd || __msgErreurBox "$cmd" $?
     flagFiles_external="disabled"
+  else
+    flagFiles_external="enabled"
   fi
   id=$(sudo -u $htuser $ocpath/occ files_external:create Local-storage \\OC\\Files\\Storage\\Local null::null)
   id=$(expr match "$id" '.*\(.[0-9]\)')  # 1 ou 2 digits
@@ -131,6 +133,8 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
   ## correspond à "activé" sur le GUI
   if [[ $verify == "no" ]]; then
     flagAudioplayer="disabled"
+  else
+    flagAudioplayer="enabled"
   fi
   sed -i '/<title>AudioplayerOC<\/title>/ a\<path type="recursive" syslog="off" events="close_write,move,delete,delete_self,move_self" exec="\/etc\/iwatch\/scanOC.sh %e %f">'$ocDataDir'\/'${newUserName}'\/files<\/path>' /etc/iwatch/iwatch.xml
   if [[ $addStorage =~ [yY] ]]; then

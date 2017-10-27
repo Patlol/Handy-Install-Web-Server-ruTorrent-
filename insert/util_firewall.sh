@@ -19,6 +19,10 @@ read
   if [ $? != 0 ]; then
     apt-get update
     cmd="apt-get -yq install ufw"; $cmd || __msgErreurBox "$cmd" $?
+    cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+
+Firewall (ufw) is installed
+EOF
     clear
   fi
 

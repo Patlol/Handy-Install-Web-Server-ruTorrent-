@@ -402,6 +402,16 @@ until false; do
               "
           else
             . $REPLANCE/insert/util_crea-owncloud-user.sh
+            __messageBox "Creating ownCloud user" " Setting-up completed
+            $newUserName user created with
+            Password:         $newUserPw
+            Full name:        $newFullUserName
+            Group:            $newUserGroup
+            email:            $newUserMail
+            External storege: $mountDir
+            Audioplayer:      $addAudioPlayer
+            The app External Storage is $flagFiles_external
+            The app Audioplayer is $flagAudioplayer"
           fi
         else # ownCloud pas installé
           __messageBox "Creating ownCloud user" "
@@ -634,7 +644,13 @@ __menu() {
             |    a user, uninstall the VPN.
             |  - The configuration file will be located in the corresponding /home if his name exist.
             ------------------------------------------------------------------------------------------${N}" 22 100
-          if [[ $__ouinonBox -eq 0 ]]; then __vpn; fi
+          if [[ $__ouinonBox -eq 0 ]]; then
+            __vpn
+            cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+
+OpenVpn is installed
+EOF
+          fi
           item=1  # menu => Create a user
         ;;
         6 )  ###################### ownCloud #############################
@@ -708,6 +724,12 @@ EOF
             and ${BO}mydomainname.com${N}${R} will be automatically used${N}" 3
           if [[ $? -eq 0 ]]; then   # not cancel
             . ${REPLANCE}/insert/util_letsencrypt.sh
+            cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+
+Certificate is installed with Let's Encrypt
+  Domaines names: $__saisieDomaineBox1 and
+                  $__saisieDomaineBox2
+EOF
           fi
         ;;
         9 )  ########################  phpMyAdmin  #####################
@@ -719,6 +741,10 @@ EOF
             continue
           fi
           . ${REPLANCE}/insert/util_phpmyadmin.sh
+          cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+
+PhpMyAdmin is installed
+EOF
         ;;
         10 )  ########################  Relance rtorrent  ######################
           __messageBox "Message" "
