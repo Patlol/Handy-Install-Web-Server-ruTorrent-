@@ -24,6 +24,7 @@ echo
 # configuration rtorrent
 cp $REPLANCE/fichiers-conf/rto_rtorrent.rc $REPUL/.rtorrent.rc
 sed -i 's/<username>/'$userLinux'/g' $REPUL/.rtorrent.rc
+sed -i 's/<port>/'$PORT_SCGI'/' $REPUL/.rtorrent.rc
 
 mkdir -p $REPUL/downloads/watch
 mkdir -p $REPUL/downloads/.session
