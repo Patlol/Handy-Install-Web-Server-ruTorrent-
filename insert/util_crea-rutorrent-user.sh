@@ -9,7 +9,8 @@ __creaUserRuto () {
     addgroup sftp
   fi
 
-  pass=$(perl -e 'print crypt($ARGV[0], "pwRuto")' ${2})
+  salt=$(perl -e '@c=("A".."Z","a".."z",0..9);print join("",@c[map{rand @c}(1..2)])')
+  pass=$(perl -e 'print crypt($ARGV[0], $ARGV[1])' ${2} $salt)
   useradd -m -G sftp -p $pass ${1}
   codeSortie=$?
   if [[ $codeSortie -ne 0 ]]; then

@@ -206,6 +206,32 @@ __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vér
   done
 }  # fin __saisiePwOcBox()
 
+__verifPwd() {
+  local userNameInput; local inputPass; local origPass; local algo; local salt
+  local genPass
+  userNameInput=$1
+  inputPass=$2
+  origPass=$(grep -w "$userNameInput" /etc/shadow | cut -d":" -f2)
+  algo=$(echo $origPass | cut -d"$" -f2)
+  salt=$(echo $origPass | cut -d"$" -f3)
+  if [[ "$algo" == "$salt" ]]; then
+    # toto02:zzDxrNjXuUs3U:17469:0:99999:7:::   avec crypt() et useradd : création de user
+    salt="$(expr substr $origPass 1 2)"
+    genPass="$(perl -e 'print crypt($ARGV[0], $ARGV[1])' $inputPass $salt)"
+  else
+    # toto02:$6$rLklwx9K$Brv4lvNjR.S7f8i.Lmt8.iv8pgcbKhwDgINzhT1XwCBbD7XkB98lCtwUK3/4hdylkganoLuh/eIc38PtMArgZ/:17469:0:99999:7:::
+    # avec echo "${userNameInput}:${newPwd}" | chpasswd    # modif mot de passe
+    genPass="$(perl -e 'print crypt($ARGV[0],"\$$ARGV[1]\$$ARGV[2]\$")' $inputPass $algo $salt)"
+  fi
+  if [ "$genPass" == "$origPass" ]; then
+     # Valid Password
+     return 0
+  else
+     # Invalid Password
+     return 1
+  fi
+}
+
 __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   __helpOC() {
     dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
@@ -217,7 +243,7 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
   until false; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
     # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux user:" 1 2 "${FIRSTUSER[0]}" 1 28 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 28 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 28 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 28 25 25 1 "Max files size:" 9 2 "$fileSize" 9 28 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 28 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 28 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 28 2 1 0)
+    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux/admin ownCloud user:" 1 2 "${FIRSTUSER[0]}" 1 29 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 29 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 29 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 29 25 25 1 "Max files size:" 9 2 "$fileSize" 9 29 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 29 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 29 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 29 2 1 0)
     reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
     codeRetour=$?
 
@@ -244,8 +270,9 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
       ocDataDir=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
       addStorage=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
       addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $7 }')
-      # vide le champs incriminé et place le curseur
-      if [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ -z $pwFirstuser ]]; then
+      # vide le champs incriminé et place le curseur si erreur
+      __verifPwd ${FIRSTUSER[0]} $pwFirstuser
+      if  [[ $? -ne 0 ]] || [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ -z $pwFirstuser ]]; then
         __helpOC
         pwFirstuser=""
         inputItem="PW Linux user:"
@@ -274,7 +301,6 @@ __saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
         addAudioPlayer=""
         inputItem="AudioPlayer [Y/N]:"
       else
-        __saisiePwOcBox "Validation password entry" "Linux user password" 2 $pwFirstuser && \
         __saisiePwOcBox "Validation password entry" "Database admin password" 2 $pwBdD  && \
         break
       fi

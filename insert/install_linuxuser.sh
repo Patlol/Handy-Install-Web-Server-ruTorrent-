@@ -1,7 +1,8 @@
 ##############################
 #  Création de linux user    #
 ##############################
-pwCrypt=$(perl -e 'print crypt($ARGV[0], "pwLinux")' $pwLinux)
+salt=$(perl -e '@c=("A".."Z","a".."z",0..9);print join("",@c[map{rand @c}(1..2)])')
+pwCrypt=$(perl -e 'print crypt($ARGV[0], $ARGV[1])' $pwLinux $salt)
 cmd="useradd -m -G adm,dip,plugdev,www-data,sudo -p $pwCrypt $userLinux"; $cmd || __msgErreurBox "$cmd" $?
 if [[ $? -ne 0 ]]; then
   __messageBox "Linux user" "

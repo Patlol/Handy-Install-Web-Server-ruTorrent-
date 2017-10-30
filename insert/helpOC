@@ -4,17 +4,18 @@ The 7 fields are mandatory.
 
 Linux user
   Can't be modified.
-  This is the main Linux user, your user.
+  This is the main Linux user, AND OwnCloud administrator.
 
 PW Linux user
-  Enter the password for the user above.
+  Enter the password of the linux user above. This password
+  is also the password of the ownCloud administrator
 
 OC Database admin
   15 characters maximum.
   Can be the main Linux user or any other name.
 
 Password OC database admin
-  15 characters maximum.
+  15 characters maximum. No space, no \
 
 Max files size
   5 characters maximum.
@@ -31,17 +32,17 @@ Max files size
   Default value: 513M
 
 Data directory localisation
-  The full directory where the cloud files will be stored.
+  The full path where the cloud files will be stored.
   Default value: /var/www/owncloud/data
 
 External storage (Recommended for ruTorrent)
   1 characters maximum "y" or "n" Lower case or upper case.
   Allows to activate the External storage support app.
   and to mount in ownCloud the /home/user/downloads directory
-  of rutorrent. "user" being the main user.
+  of rutorrent or other directory. "user" being the main user.
 
 AudioPlayer (Recommended for ruTorrent)
   1 characters maximum "y" or "n" Lower case or upper case.
   Allows to install and setup Audio-Player app.
   Also scans your data and external directories,
-  if External storage is enabled.
+  if External storage is enabled with iwatch.
