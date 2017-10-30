@@ -64,10 +64,10 @@ readonly N="\Zn"   # retour à la normale
 ######################################
 #       Fonctions utilitaires
 ######################################
-
+\E[40m\E[1;31m
 echoc() {
-  local ER="\\E[40m\\E[31m"  # fond + typo rouge
-  local EV="\\E[40m\\E[32m"  # fond + typo verte
+  local ER="\\E[40m\\E[1;31m"  # fond + typo rouge
+  local EV="\\E[40m\\E[1;32m"  # fond + typo verte
   local EN="\\E[0m"   # retour aux std
   local EF="\\E[40m"  # fond
   case ${1} in
@@ -107,7 +107,7 @@ __messageBox() {   # param : titre, texte, timeout : vide=timeout on
   if [[ -z ${3} ]]; then
     argTimeOut="--timeout $TIMEOUT"
   fi
-  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --scrollbar "$argTimeOut" --msgbox "${2}" 0 0)
+  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --scrollbar $argTimeOut --msgbox "${2}" 0 0)
   choix=$("${CMD[@]}" 2>&1 > /dev/tty)
 }
 
@@ -156,8 +156,7 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   until false; do
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
     reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
-    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || \
-      [[ "$reponse" =~ [\\] ]]; then
+    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || [[ "$reponse" =~ [\\] ]]; then
       __messageBox "${1}" "
         The password can't contain spaces or \\.
         "
@@ -192,7 +191,7 @@ __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
 __servicerestart() {
   service "${1}" restart
   codeSortie=$?
-  cmd="service ${1} status"; "$cmd" || __msgErreurBox "$cmd" $?
+  cmd="service ${1} status"; $cmd || __msgErreurBox "$cmd" $?
   return $codeSortie
 }  #  fin __servicerestart
 
@@ -517,7 +516,7 @@ echoc v "                              "
 echo
 
 # upgrade
-cmd="apt-get upgrade -yq"; "$cmd" || __msgErreurBox "$cmd" $?
+cmd="apt-get upgrade -yq"; $cmd || __msgErreurBox "$cmd" $?
 echoc v "                              "
 echoc v "      Update completed        "
 echoc v "                              "

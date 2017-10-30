@@ -168,7 +168,7 @@ if [[ $addStorage =~ [yY] ]]; then
   sudo -u $htuser $ocpath/occ files_external:option 1 enable_sharing true
   sudo -u $htuser $ocpath/occ files_external:applicable --add-user=${FIRSTUSER[0]} 1
   verify=$(sudo -u $htuser $ocpath/occ files_external:verify 1)
-  if [[ $(grep ok <<< "$verify") ]]; then
+  if [[ ! $(grep ok <<< "$verify") ]]; then
     echoc r "                                                "
     echoc r "        Error setting external storage          "
     echoc r "   Does not impact main owncloud installation   "
@@ -188,7 +188,7 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
   rm $ocpath/apps/audioplayer-2.1.0.zip
   chown -R $htuser:$htgroup $ocpath/apps/audioplayer
   verify=$(sudo -u $htuser $ocpath/occ app:enable audioplayer)
-  if [[ $(grep enabled <<< "$verify") ]]; then
+  if [[ ! $(grep enabled <<< "$verify") ]]; then
     echoc r "                                                "
     echoc r "           Error Audio Player install           "
     echoc r "   Does not impact main owncloud installation   "

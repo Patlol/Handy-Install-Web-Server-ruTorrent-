@@ -90,14 +90,13 @@ echoc v "                                        "
 echoc v "      ruTorrent plugins installed       "
 echoc v "                                        "
 
-headTest=$(curl -Is http://$IP/rutorrent/| head -n 1)
-headTest=$(echo "$headTest" | awk -F" " '{ print $3 }')
-if [[ "$headTest" == "Unauthorized" ]]; then
+headTest=$(curl -Is http://$IP/rutorrent/ | head -n 1 | awk -F" " '{ print $3 }')
+if [[ "$headTest" =~ "Unauthorized" ]]; then
   echo
   echoc v "                                        "
   echoc v "      ruTorrent works correctly         "
   echoc v "                                        "
   sleep 2
 else
-  __msgErreurBox "curl -Is http://$IP/rutorrent/| head -n 1 | awk -F\" \" '{ print $3 }' return $headTest" "http $headTest"
+  __msgErreurBox "curl -Is http://$IP/rutorrent/ | head -n 1 | awk -F\" \" '{ print $3 }' return $headTest" "http $headTest"
 fi

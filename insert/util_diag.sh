@@ -54,7 +54,7 @@ __diag() {
   echo "----------"
   service rtorrentd status
   echo
-  pgrep 'torrent'
+  ps -aux | grep '.torrent$'
   echo
   echo "-------------------------------------------------------------------------------"
   echo "Users:"

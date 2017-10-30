@@ -14,7 +14,7 @@ if [[ $? ]]; then
   echo
   sleep 1
   headTest=$(curl -Is http://$IP/phpmyadmin | head -n 1 | awk -F" " '{ print $2 }')
-  if [[ "$headTest" == "301" ]]; then
+  if [[ "$headTest" =~ "301" ]]; then
     echoc v "                           "
     echoc v "   phpMyAdmin works well   "
     echoc v "                           "

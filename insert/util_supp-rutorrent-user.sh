@@ -6,7 +6,7 @@ __suppUserRuto() {
   # ${1} == $__saisieTexteBox
   clear
   # suppression du user allowed dans sshd_config
-  sed -i 's/'${1}' //' /etc/ssh/sshd_config
+  sed -i 's/'${1}'[:space:]* //' /etc/ssh/sshd_config
   __servicerestart "sshd"
 
   __suppUserRutoPasswd ${1}

@@ -1,11 +1,9 @@
 
 __firewall() {
-  read
   clear
   # récupération du port ssh
   portSSH=0
   portSSH=$(grep -E ^Port /etc/ssh/sshd_config | awk -F" " '{print$2}')
-read
   if [ $portSSH -eq 0 ]; then
     __messageBox "ssh port Error" "
       The ssh port can not be found in /etc/ssh/sshd_config

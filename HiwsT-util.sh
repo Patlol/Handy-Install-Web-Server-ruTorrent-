@@ -22,7 +22,8 @@ IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,
 readonly HOSTNAME=$(hostname -f)
 # Tableau des utilisateurs principaux 0=linux, 1=rutorrent, owncloud dans oc db
 if [[ ! -e $REPLANCE/firstusers ]]; then
-  echo; echo "The file \"firstusers\" is not available"; echo
+  echo; echo "The file \"firstusers\" is not available"
+  echo "You must use Hiwst.sh before using this script"; echo
   exit 2
 fi
 i=0
@@ -51,8 +52,8 @@ readonly N="\Zn"   # retour à la normale
 ########################################
 
 echoc() {
-  local ER="\\E[40m\\E[31m"  # fond + typo rouge
-  local EV="\\E[40m\\E[32m"  # fond + typo verte
+  local ER="\\E[40m\\E[1;31m"  # fond + typo rouge
+  local EV="\\E[40m\\E[1;32m"  # fond + typo verte
   local EN="\\E[0m"   # retour aux std
   local EF="\\E[40m"  # fond
   case ${1} in
@@ -98,7 +99,7 @@ __msgErreurBox() {   # param : commande, N° erreur
   msgErreur+="$trace\n"
   :>/tmp/trace
   msgErreur+="-------------------\n"
-  __messageBox "${R}Error message${N}" " $msgErreur$
+  __messageBox "${R}Error message${N}" " $msgErreur
     ${R}See the wiki on github${N}
     https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
     The error message is stored in ${I}/tmp/trace.log${N}" "NOtimeout"
@@ -147,8 +148,7 @@ __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password: " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
     reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
 
-    if [[ $(echo "$reponse" | grep -Ec ".*[[:space:]].*[[:space:]].*") -ne 0 ]] || \
-    [[ $(echo "$reponse" | grep -Ec "[\\]") -ne 0 ]]; then
+    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || [[ "$reponse" =~ [\\] ]]; then
       __messageBox "${1}" "
         The password can't contain spaces or \\.
         "
@@ -181,8 +181,7 @@ __saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vér
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
     reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
     if [[ $? == 1 ]]; then return 1; fi
-    if [[ $(echo "$reponse" | grep -Ec ".*[[:space:]].*[[:space:]].*") -ne 0 ]] ||\
-    [[ $(echo "$reponse" | grep -Ec "[\\]") -ne 0 ]]; then
+    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || [[ "$reponse" =~ [\\] ]]; then
       __messageBox "${1}" "
         The password can't contain spaces or \\.
         "
@@ -467,7 +466,6 @@ __ssmenuSuppUtilisateur() {
             "
           if [[ $__ouinonBox -eq 0 ]]; then
             if [[ $userR -eq 0 ]] && [[ $userL -eq 0 ]] && [ "${FIRSTUSER[0]}" != "$__saisieTexteBox" ]; then
-              #  $ __saisieTexteBox
               cmd="__suppUserRuto $__saisieTexteBox"; $cmd || __msgErreurBox "$cmd" $?
               __messageBox "Delete a Linux user" " Treatment completed
                 Linux/ruTorrent user ${R}$__saisieTexteBox${N} deleted

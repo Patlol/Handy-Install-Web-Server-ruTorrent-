@@ -48,16 +48,16 @@ headTest1=$(curl -Is http://$IP/info.php/| head -n 1)
 headTest2=$(curl -Is http://$IP/| head -n 1)
 headTest1=$(echo "$headTest1" | awk -F" " '{ print $3 }')
 headTest2=$(echo "$headTest2" | awk -F" " '{ print $3 }')
-if [[ "$headTest1" == OK* ]] && [[ "$headTest2" == OK* ]]
+if [[ "$headTest1" =~ "OK" ]] && [[ "$headTest2" =~ "OK" ]]
 then
   echoc v "                              "
   echoc v "   Apache and php work well   "
   echoc v "                              "
   sleep 1
   rm $REPWEB/info.php
-elif [[ "$headTest1" != OK* ]]; then
+elif [[ ! "$headTest1" =~ "OK" ]]; then
   __msgErreurBox "curl -Is http://\$IP/info.php/| head -n 1 | awk -F\" \" '{ print \$3 }' return $headTest1" "http $headTest1"
-elif [[ "$headTest2" != OK* ]]; then
+elif [[ ! "$headTest2" =~ "OK" ]]; then
   __msgErreurBox "curl -Is http://\$IP/| head -n 1 | awk -F\" \" '{ print \$3 }' return $headTest2" "http $headTest2"
 fi
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/.htaccess

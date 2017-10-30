@@ -65,18 +65,18 @@ __creaUserRuto () {
 
   #  partie rutorrent -----------------------------------------------------------
   # dossier conf/users/userRuto
-  mkdir -p "$REPWEB/rutorrent/conf/users/${1}"
-  cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini "$REPWEB/rutorrent/conf/users/${1}"
-  cp $REPLANCE/fichiers-conf/ruto_multi_config.php "$REPWEB/rutorrent/conf/users/${1}/config.php"
-  sed -i -e 's/<port>/'$port'/' -e 's/<username>/'${1}'/' "$REPWEB/rutorrent/conf/users/${1}/config.php"
-  chown -R www-data:www-data "$REPWEB/rutorrent/conf/users/${1}"
+  mkdir -p $REPWEB/rutorrent/conf/users/${1}
+  cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/${1}
+  cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/${1}/config.php
+  sed -i -e 's/<port>/'$port'/' -e 's/<username>/'${1}'/' $REPWEB/rutorrent/conf/users/${1}/config.php
+  chown -R www-data:www-data $REPWEB/rutorrent/conf/users/${1}
 
   # déactivation du plugin linkcakebox
-  mkdir -p "$REPWEB/rutorrent/share/users/${1}/torrents"
-  mkdir "$REPWEB/rutorrent/share/users/${1}/settings"
-  chmod -R 777 "$REPWEB/rutorrent/share/users/${1}"
-  echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > "$REPWEB/rutorrent/share/users/${1}/settings/plugins.dat"
-  chmod 666 "$REPWEB/rutorrent/share/users/${1}/settings/plugins.dat"
+  mkdir -p $REPWEB/rutorrent/share/users/${1}/torrents
+  mkdir $REPWEB/rutorrent/share/users/${1}/settings
+  chmod -R 777 $REPWEB/rutorrent/share/users/${1}
+  echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
+  chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
   chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
 
   echoc v " Directory users/${1} created on ruTorrent "; echo
@@ -85,10 +85,10 @@ __creaUserRuto () {
 
   # modif pour sftp / sécu sftp __creaUserRuto  ---------------------------------
   # pour user en sftp interdit le shell en fin de traitement; bloque le daemon
-  usermod -s /bin/false "${1}"
+  usermod -s /bin/false ${1}
   # pour interdire de sortir de /home/user  en sftp
-  chown root:root "/home/${1}"
-  chmod 0755 "/home/${1}"
+  chown root:root /home/${1}
+  chmod 0755 /home/${1}
 
   # modif sshd_config  -------------------------------------------------------
   sed -i 's/AllowUsers.*/& '${1}'/' /etc/ssh/sshd_config
