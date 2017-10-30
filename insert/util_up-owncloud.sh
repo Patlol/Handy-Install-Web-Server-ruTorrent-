@@ -51,6 +51,13 @@ __backupDir() {
   done
 }  # return $__backupDir et $dataBkupOk [yY.]
 
+ocVer=$(sudo -u $htuser $ocpath/occ -V)
+if [[ "$ocVer" == "ownCloud $ocNewVersion" ]]; then
+  __messageBox "Owncloud upgrade" "
+    Your $ocVer is uptodate!"
+  continue
+fi
+
 cmd="sudo -u $htuser php $ocpath/occ maintenance:mode --on"; $cmd || __msgErreurBox "$cmd" $?
 
 echo
@@ -103,7 +110,7 @@ echoc v " Sets permissions of the owncloud instance for updating "
 echo
 
 
-# # maintenant utilisons l'app updater ...
+# # maintenant utilisons l'app updater ... non finalement !
 echoc v " clean the cache "
 sudo -u www-data php $ocpath/updater/application.php upgrade:cleanCache
 
