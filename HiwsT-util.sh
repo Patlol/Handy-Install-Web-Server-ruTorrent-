@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent
+# Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent, owncloud
+# installation d'openvpn, ownCloud, phpmyadmin, let's encrypt
 # L'ajout ou la suppression d'utilisateurs
 # Changement de mot de passe
-#
-# installation d'openvpn et ownCloud
-# L'ajout ou la suppression d'utilisateurs
 
 # testée sur ubuntu et debian server vps Ovh
 # et sur kimsufi. A tester sur autres hébergeurs
@@ -26,6 +24,7 @@ if [[ ! -e $REPLANCE/firstusers ]]; then
   echo "You must use Hiwst.sh before using this script"; echo
   exit 2
 fi
+
 i=0
 while read user; do  # [0]=linux, [1]=ruTorrent
   FIRSTUSER[$i]=$user
@@ -34,113 +33,16 @@ done < $REPLANCE/firstusers
 declare -ar FIRSTUSER  # -r readonly
 readonly REPUL="/home/${FIRSTUSER[0]}"
 # dialog param --backtitle --aspect --colors
-readonly TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - openVPN - ownCloud"
-readonly TIMEOUT=20  # __messageBox
-readonly RATIO=12
-readonly R="\Z1"
-readonly BK="\Z0"  # black
-readonly G="\Z2"
-readonly Y="\Z3"
-readonly BL="\Z4"  # blue
-readonly W="\Z7"
-readonly BO="\Zb"  # bold
-readonly I="\Zr"   # vidéo inversée
-readonly N="\Zn"   # retour à la normale
+TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - openVPN - ownCloud"
+TIMEOUT=30  # __messageBox
+RATIO=12
 
 ########################################
 #       Fonctions utilitaires
 ########################################
 
-echoc() {
-  local ER="\\E[40m\\E[1;31m"  # fond + typo rouge
-  local EV="\\E[40m\\E[1;32m"  # fond + typo verte
-  local EN="\\E[0m"   # retour aux std
-  local EF="\\E[40m"  # fond
-  case ${1} in
-    r)
-      echo -e "\t${ER}${2}${EN}"
-    ;;
-    v)
-      echo -e "\t${EV}${2}${EN}"
-    ;;
-    b)
-      echo -e "\t${EF}${2}${EN}"
-    ;;
-    *)
-      echo -e "\t${1}"
-    ;;
-  esac
-  sleep 0.2
-}
-
-__ouinonBox() {    # param : titre, texte  sortie $__ouinonBox 0 ou 1
-  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --yesno "
-${2}" 0 0 )
-  choix=$("${CMD[@]}" 2>&1 > /dev/tty)
-  __ouinonBox=$?
-}    #  fin ouinon
-
-__messageBox() {   # param : titre, texte, timeout : vide=timeout on
-  local argTimeOut; local choix
-  if [[ -z ${3} ]]; then
-    argTimeOut="--timeout $TIMEOUT"
-  fi
-  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --scrollbar --trim --cr-wrap $argTimeOut --msgbox "${2}" 0 0)
-  choix=$("${CMD[@]}" 2>&1 > /dev/tty)
-}
-
-__msgErreurBox() {   # param : commande, N° erreur
-  local msgErreur; local ref
-  ref=$(caller 0)
-  err=$2
-  msgErreur="------------------\n"
-  msgErreur+="Line N°$ref\n${BO}$R$1${N}\nError N° $R$err${N}\n"
-  trace=$(tail -n 10 /tmp/trace)
-  msgErreur+="$trace\n"
-  :>/tmp/trace
-  msgErreur+="-------------------\n"
-  __messageBox "${R}Error message${N}" " $msgErreur
-    ${R}See the wiki on github${N}
-    https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
-    The error message is stored in ${I}/tmp/trace.log${N}" "NOtimeout"
-  echo -e "${msgErreur}" | sed -r 's/------------------//g' > /tmp/trace.log
-  sed -i -e 's/\\Zb//g' -e 's/\\Z1//g' -e 's/\\Zn//g' /tmp/trace.log
-  __ouinonBox "Error" "
-    Do you want continue anyway?
-    "
-  if [[ $__ouinonBox -ne 0 ]]; then exit $err; fi
-  return $err
-}  # fin messageErreur
-
-__saisieTexteBox() {   # param : titre, texte
-  local codeRetour=""
-  until false; do
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --help-button --help-label "Users list" --max-input 15 --inputbox "${2}" 0 0)
-    __saisieTexteBox=$("${CMD[@]}" 2>&1 > /dev/tty)
-    codeRetour=$?
-
-    if [ $codeRetour == 2 ]; then  # bouton "liste" (help) renvoie code sortie 2
-      cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
-      # l'appelle de la f() boucle jusqu'à code sortie == 0
-    elif [ $codeRetour == 1 ]; then return 1
-    elif [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
-      __saisieTexteBox=$(echo "$__saisieTexteBox" | tr '[:upper:]' '[:lower:]')
-      break
-    else
-      __messageBox "Validation entry" "
-        Only alphanumeric characters
-        Between 2 and 15 characters"
-    fi
-  done
-}
-
-__trap() {  # pour exit supprime affiche la dernière erreur
-  export -n OC_PASS
-  if [ -s /tmp/trace.log ]; then  # taille fichier > 0 ;)
-    echo "/tmp/trace.log:"; echo
-    cat /tmp/trace.log
-  fi
-}
+. $REPLANCE/insert/helper-dialog.sh
+. $REPLANCE/insert/helper-scripts.sh
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
@@ -347,13 +249,6 @@ __saisieDomaineBox() {  # param : titre, texte, lignes sous-boite
   done
 } # fin __saisieDomaineBox()
 
-__servicerestart() {
-  local codeSortie
-  service $1 restart
-  codeSortie=$?
-  cmd="service $1 status"; $cmd || __msgErreurBox "$cmd" $?
-  return $codeSortie
-} # fin __servicerestart()
 
 ################################################################################
 #       Fonctions principales

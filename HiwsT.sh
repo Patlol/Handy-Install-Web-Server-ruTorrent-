@@ -48,108 +48,16 @@ readonly miniDispoRoot=334495744   # 319 Go minimum pour alerete place \
 readonly miniDispoHome=313524224   # 299 Go disponible sur disque
 readonly serveurHttp="apache2"
 # dialog param --backtitle --aspect --colors
-readonly TITRE="HiwsT : Installation rtorrent - ruTorrent"
-readonly TIMEOUT=30  # __messageBox
-readonly RATIO=12
-readonly R="\Z1"
-readonly BK="\Z0"  # black
-readonly G="\Z2"
-readonly Y="\Z3"
-readonly BL="\Z4"  # blue
-readonly W="\Z7"
-readonly BO="\Zb"  # bold
-readonly I="\Zr"   # vidéo inversée
-readonly N="\Zn"   # retour à la normale
+TITRE="HiwsT : Installation rtorrent - ruTorrent"
+TIMEOUT=30  # __messageBox
+RATIO=12
 
 ######################################
 #       Fonctions utilitaires
 ######################################
-\E[40m\E[1;31m
-echoc() {
-  local ER="\\E[40m\\E[1;31m"  # fond + typo rouge
-  local EV="\\E[40m\\E[1;32m"  # fond + typo verte
-  local EN="\\E[0m"   # retour aux std
-  local EF="\\E[40m"  # fond
-  case ${1} in
-    r)
-      echo -e "\t${ER}${2}${EN}"
-    ;;
-    v)
-      echo -e "\t${EV}${2}${EN}"
-    ;;
-    b)
-      echo -e "\t${EF}${2}${EN}"
-    ;;
-    *)
-      echo -e "\t${1}"
-    ;;
-  esac
-  sleep 0.2
-}
 
-__trap() {  # pour exit supprime info.php et affiche dernier message d'erreur
-  if [ -e $REPWEB/info.php ]; then rm $REPWEB/info.php; fi
-  if [ -s /tmp/trace.log ]; then
-    echo "/tmp/trace.log:"
-    echo
-    cat /tmp/trace.log
-  fi
-}
-
-__ouinonBox() {    # param : titre, texte  sortie $__ouinonBox oui : 0 ou non : 1
-  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap  --yesno "${2}" 0 0 )
-  choix=$("${CMD[@]}" 2>&1 > /dev/tty)
-  __ouinonBox=$?
-}  # fin ouinon
-
-__messageBox() {   # param : titre, texte, timeout : vide=timeout on
-  local argTimeOut
-  if [[ -z ${3} ]]; then
-    argTimeOut="--timeout $TIMEOUT"
-  fi
-  CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --scrollbar $argTimeOut --msgbox "${2}" 0 0)
-  choix=$("${CMD[@]}" 2>&1 > /dev/tty)
-}
-
-__msgErreurBox() {   # param : commande, N° erreur
-  local msgErreur; local ref
-  ref=$(caller 0)
-  err=${2}
-  msgErreur="------------------\n"
-  msgErreur+="Line N°${ref}\n${BO}${R}${1}${N}\nError N° ${R}${err}${N}\n"
-  trace=$(tail -n 10 /tmp/trace)
-  msgErreur+="${trace}\n"
-  msgErreur+="-------------------\n"
-  :>/tmp/trace
-  __messageBox "${R}Error message${N}" " ${msgErreur}  ${R}
-    See the wiki on github ${N}
-    https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/something-wrong
-    The error message is stored in ${I}/tmp/trace.log${N}" "NOtimeout"
-  echo -e ${msgErreur} | sed -r 's/------------------//g' > /tmp/trace.log
-  sed -i -e 's/\\Zb//g' -e 's/\\Z1//g' -e 's/\\Zn//g' /tmp/trace.log
-  __ouinonBox "Error" "
-    Do you want continue anyway?
-    "
-  if [[ $__ouinonBox -ne 0 ]]; then exit $err; fi
-  return $err
-}  # fin messageErreur
-
-__saisieTexteBox() {   # param : titre, texte
-  until false; do
-    CMD=(dialog --aspect $RATIO --colors --nocancel --backtitle "$TITRE" --title "${1}" --trim --cr-wrap --max-input 15 --inputbox "${2}" 0 0)
-    __saisieTexteBox=$("${CMD[@]}" 2>&1 >/dev/tty)
-    if [ $? == 1 ]; then return 1; fi
-    if [[ "$__saisieTexteBox" =~ ^[a-zA-Z0-9]{2,15}$ ]]; then
-      __saisieTexteBox=$(echo $__saisieTexteBox | tr '[:upper:]' '[:lower:]')
-      break
-    else
-      __messageBox "Entry validation" "
-        Only alphanumeric characters
-        Between 2 and 15 characters
-        "
-    fi
-  done
-}
+. $REPLANCE/insert/helper-dialog.sh
+. $REPLANCE/insert/helper-scripts.sh
 
 __saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
   local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
@@ -187,13 +95,6 @@ __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
   CMD=(dialog --backtitle "$TITRE" --exit-label "Continued from installation" --title "${1}" --hline "${3}" --textbox  "${2}" 0 0)
   ("${CMD[@]}" 2>&1 > /dev/tty)
 }
-
-__servicerestart() {
-  service "${1}" restart
-  codeSortie=$?
-  cmd="service ${1} status"; $cmd || __msgErreurBox "$cmd" $?
-  return $codeSortie
-}  #  fin __servicerestart
 
 
 ###############################################################
