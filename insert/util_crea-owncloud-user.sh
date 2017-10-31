@@ -8,12 +8,15 @@ readonly ocDataDir=$(grep "datadirectory" < $ocpath/config/config.php | awk -F"=
 __creaUserOCBox() {   # arg : titre, texte, l sous-boite
   __erreurSaise() {  # arg champs
     __messageBox "Creating ownCloud user" "
-    Input mistake on ${BO}${1}${N}
-    No space and \\ for the Password
-    No \\ for the Full name and Group
-    Email address in the format: xxxxxxx@xxxx.xxxx
-    External storage and Audioplayer Y|y|N|n
-    Give fullpath direcory for Local \"External\" Storage"
+    ${R}Input mistake on ${BO}${1}${N}
+    No space and \\ for the ${BO}Password${N}
+    No \\ for the ${BO}Full name${N} and ${BO}Group${N}
+    ${BO}Email address${N} in the format: xxxxxxx@xxxx.xxxx
+    ${BO}External storage${N} and ${BO}Audioplayer${N} Y|y|N|n
+
+    If ${BO}External storage${N} is enabled:
+    Give fullpath direcory for ${BO}Local \"External\" Storage${N}
+    This directory must exist"
   }
   local inputItem="" reponse=""
   addStorage="Y"; addAudioPlayer="Y"
@@ -64,15 +67,15 @@ __creaUserOCBox() {   # arg : titre, texte, l sous-boite
       __erreurSaise "Email adress:"
       newUserMail=""
       inputItem="Email adress:"
-    elif [[ ! $addStorage =~ ^[YyNn]$ ]]; then
-      __erreurSaise "External storage"
-      addStorage=""
-      inputItem="External storage [Y/N]:"
     elif [[ ! $addAudioPlayer =~ ^[YyNn]$ ]]; then
       __erreurSaise "AudioPlayer refresh"
       addAudioPlayer=""
       inputItem="AudioPlayer [Y/N]:"
-    elif [[ ! -d "$mountDir" ]]; then
+    elif [[ ! $addStorage =~ ^[YyNn]$ ]]; then
+      __erreurSaise "External storage"
+      addStorage=""
+      inputItem="External storage [Y/N]:"
+    elif [[ ! -d "$mountDir" ]] && [[ $addStorage =~ ^[Yy]$ ]]; then
       __erreurSaise "Full path of local directory to mount:"
       mountDir=""
       inputItem="Full path of local directory to mount:"
@@ -152,3 +155,14 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
     sleep 4
   fi
 fi
+
+__messageBox "Creating ownCloud user" " If setting-up completed
+  $newUserName user created with
+  Password:         $newUserPw
+  Full name:        $newFullUserName
+  Group:            $newUserGroup
+  email:            $newUserMail
+  External storege: $addStorage
+  Audioplayer:      $addAudioPlayer
+  The app External Storage is $flagFiles_external
+  The app Audioplayer is $flagAudioplayer"

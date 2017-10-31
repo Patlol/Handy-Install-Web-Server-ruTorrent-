@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Installation apache2, php, rtorrent, rutorrent, WebMin
+# Installation apache2, php, rtorrent, rutorrent
 # testée sur ubuntu et debian server vps Ovh
 # et sur kimsufi. A tester sur autres hébergeurs
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
 
 
-##################################################
-#     variables install paquets Ubuntu/Debian
-##################################################
+############################################################
+##        variables install paquets Ubuntu/Debian
+############################################################
 #  Debian 8
 #  liste sans serveur http
 paquetsWebD8="git mc nano aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
@@ -35,7 +35,7 @@ paquetsRtoU="xmlrpc-api-utils libtorrent19 rtorrent"
 
 paquetsMediaU="mediainfo ffmpeg"
 
-#------------------------------------------------------------------------------
+############################################################
 readonly HOSTNAME=$(hostname -f)
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
@@ -52,57 +52,20 @@ TITRE="HiwsT : Installation rtorrent - ruTorrent"
 TIMEOUT=30  # __messageBox
 RATIO=12
 
-######################################
-#       Fonctions utilitaires
-######################################
+
+############################################################
+##                Fonctions utilitaires
+############################################################
 
 . $REPLANCE/insert/helper-dialog.sh
 . $REPLANCE/insert/helper-scripts.sh
 
-__saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
-  local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
-  until false; do
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
-    reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
-    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || [[ "$reponse" =~ [\\] ]]; then
-      __messageBox "${1}" "
-        The password can't contain spaces or \\.
-        "
-    else
-      pw1=$(echo $reponse | awk -F" " '{ print $1 }')
-      pw2=$(echo $reponse | awk -F" " '{ print $2 }')
-      case $pw1 in
-        "" )
-          __messageBox "${1}" "
-            The password can't be empty.
-            "
-        ;;
-        $pw2 )
-          __saisiePwBox=$pw1
-          break
-        ;;
-        * )
-          __messageBox "${1}" "
-            The 2 inputs are not identical.
-            "
-        ;;
-      esac
-    fi
-  done
-}  #  Fin __saisiePwBox
 
-__textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
-  CMD=(dialog --backtitle "$TITRE" --exit-label "Continued from installation" --title "${1}" --hline "${3}" --textbox  "${2}" 0 0)
-  ("${CMD[@]}" 2>&1 > /dev/tty)
-}
-
-
-###############################################################
-#                Début du script                              #
-###############################################################
+############################################################
+##                   Début du script
+############################################################
 
 # root ?
-
 if [[ $(id -u) -ne 0 ]]; then
   echo
   echoc r "This script needs to be run with sudo."
@@ -111,9 +74,9 @@ if [[ $(id -u) -ne 0 ]]; then
 fi
 clear
 
-#########################################
-## localisation et infos système        #
-#########################################
+############################################################
+##            localisation et infos système
+############################################################
 
 # Complèter la localisation (vps)
 lang=$(grep -E "^[a-z].*UTF-8$" /etc/locale.gen | awk -F" " '{ print $1 }')
@@ -172,7 +135,6 @@ while [ $portSSH -le $PLANCHER ]; do
 done
 
 # ubuntu / debian et bonne version ?
-
 if [[ "$nameDistrib" == "Debian" && "$os_version_M" -gt 9 ]] || [[ "$nameDistrib" == "Ubuntu" && "$os_version_M" -gt 16 ]]; then
   __ouinonBox "Distribution check" "
     You are using $description
@@ -226,12 +188,12 @@ elif [[ $serveurHttpN -eq 0 ]]; then
     will be replaced by the script configuration (apache2)"
   if [[ $__ouinonBox -eq 1 ]]; then clear; exit 1; fi
 fi
-#--------------------------------------------------------------
 
-#############################
-#    Partie interactive
-#    ID, PW, questions
-#############################
+
+############################################################
+##                    Partie interactive
+##                    ID, PW, questions
+############################################################
 
 __messageBox "${R}Important message${N}" "
 
@@ -316,12 +278,6 @@ __saisiePwBox "ruTorrent user" "
   Password for $userRuto:" 4
 pwRuto="$__saisiePwBox"
 
-#  webmin
-__ouinonBox "Webmin" "
-  Would you like to install Webmin?
-  "
-installWebMin=$__ouinonBox
-
 # port ssh
 __ouinonBox "Secure ssh/sftp" "
   In order to secure SSH and SFTP it's proposed to change the standard port (22)
@@ -379,14 +335,6 @@ Password Linux user:      $pwLinux
 
 ruTorrent username:       $userRuto
 Password ruTorrent user:  $pwRuto
-
-$(if [[ $installWebMin -ne 0 ]]
-then
-  echo "You don't want to install WebMin"
-else
-  echo "You want install WebMin"
-  echo "The user will be root with his password"
-fi)
 EOF
 
 __textBox "Installation Summary" "$REPLANCE/RecapInstall.txt"
@@ -396,9 +344,9 @@ Do you want start installation?
 if [ $__ouinonBox -ne 0 ]; then exit 0; fi
 
 
-############################################
-#            Début de la fin
-############################################
+############################################################
+##                    Début de la fin
+############################################################
 
 clear
 ## gestion des erreurs stderr par __msgErreurBox()
@@ -423,43 +371,33 @@ echoc v "      Update completed        "
 echoc v "                              "
 sleep 1
 
-##############################
-#  Création de linux user    #
-##############################
+############################################################
+##                Création de linux user
+
 . ${REPLANCE}/insert/install_linuxuser.sh
 
-############################################
-#      Installation du serveur http        #
-############################################
-service nginx stop &> /dev/null
+############################################################
+##              Installation du serveur http
+
 . ${REPLANCE}/insert/install_apache.sh
 
-############################################
-#           installation rtorrent          #
-############################################
+############################################################
+##              installation rtorrent
+
 . ${REPLANCE}/insert/install_rtorrent.sh
 
-############################################
-#        installation de rutorrent         #
-############################################
+############################################################
+##              installation de rutorrent
+
 . ${REPLANCE}/insert/install_rutorrent.sh
 
-#######################################################
-#             installation de WebMin                  #
-#######################################################
-if [[ $installWebMin -eq 0 ]]; then
-  . ${REPLANCE}/insert/install_webmin.sh
-fi
-
-########################################
-#            sécuriser ssh             #
-########################################
-#  des choses à faire de tte façon
+############################################################
+##                   sécuriser ssh
+##           des choses à faire de tte façon
 . ${REPLANCE}/insert/install_ssh.sh
 
-####################################
-#     Nettoyage, finalisation      #
-####################################
+############################################################
+##            Nettoyage, finalisation
 
 ## copie les scripts dans home
 cp -r  ${REPLANCE} $REPUL/HiwsT
@@ -474,9 +412,10 @@ chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
 cp -t $REPUL/HiwsT /tmp/trace.log
 rm -r ${REPLANCE}
 
-########################################
-#            générique de fin          #
-########################################
+
+############################################################
+##                  générique de fin
+############################################################
 
 cat << EOF > $REPUL/HiwsT/RecapInstall.txt
 
@@ -493,19 +432,11 @@ Your system
 To access ruTorrent:
   http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
   or http(s)://$HOSTNAME/rutorrent
-  With https, accept the Self Signed Certificate and
-  the exception for this certificate!
+  If you not again use Let's Encrypt, with https, accept
+  the Self Signed Certificate and the exception
+  for this certificate!
 
-$(if [[ $installWebMin -eq 0 ]]; then
-  echo "To access WebMin:"
-  echo -e "\thttps://$IP:10000"
-  echo -e "\tor https://$HOSTNAME:10000"
-  echo -e "\tID : root  PW : your root password"
-  echo -e "\tAccept the Self Signed Certificate and"
-  echo -e "\tthe exception for this certificate!"
-  echo " "
-fi)
-In case of issues strictly concerning this script, you can go consult the wiki:
+In case of issues strictly concerning this script, you can consult the wiki:
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki
 and post  https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/issues
 
@@ -516,20 +447,20 @@ $(if [[ $changePort -eq 0 ]]; then   # ssh sécurisé
   echo "***********************************************"
   echo
   echo "To access your server in ssh:"
-  echo "On Linux console:"
+  echo "On Linux terminal:"
   echo -e "\tssh -p$portSSH  $userLinux@$IP"
   echo "On windows use PuTTY"
-
+  echo " "
   echo "To access files via SFTP:"
-  echo -e "\tHost          : $IP (ou $HOSTNAME)"
+  echo -e "\tHost          : $IP (or $HOSTNAME)"
   echo -e "\tPort          : $portSSH"
   echo -e "\tProtocol      : SFTP-SSH File Transfer Peotocol"
-  echo -e "\tAuthentication: normale"
+  echo -e "\tAuthentication: normal"
   echo -e "\tLogin         : $userLinux"
   echo -e "\tYour $userLinux password"
 else   # ssh n'est pas sécurisé
   echo "To access your server via ssh:"
-  echo "On Linux console:"
+  echo "On Linux terminal:"
   echo -e "\tssh root@$IP"
   echo -e "\tOn server console 'su $userLinux'"
   echo "On windows use PuTTY"
@@ -556,6 +487,7 @@ if [ $__ouinonBox -eq 0 ]; then
     Are you sure?"
   if [ $__ouinonBox -eq 0 ]; then sleep 1; reboot; fi
 fi
+
 clear
 echo
 echoc b "   Au revoir   "  # french touch ;)

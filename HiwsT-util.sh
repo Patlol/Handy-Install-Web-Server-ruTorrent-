@@ -13,7 +13,6 @@
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
-readonly REPInstVpn=$REPLANCE
 readonly ocpath='/var/www/owncloud' # pour letsencrypt, owncloud, up-owncloud et crea-owncloud-user
 # pas readonly pour IP car modifié dans openvpninstall
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -o -E '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
@@ -37,226 +36,29 @@ TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - openVPN - ownCloud"
 TIMEOUT=30  # __messageBox
 RATIO=12
 
-########################################
-#       Fonctions utilitaires
-########################################
+############################################################
+##                Fonctions utilitaires
+############################################################
 
 . $REPLANCE/insert/helper-dialog.sh
 . $REPLANCE/insert/helper-scripts.sh
-
-__saisiePwBox() {  # param : titre, texte, nbr de ligne sous boite
-  local pw1=""; local pw2=""; local codeSortie=""; local reponse=""
-  until false; do
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --nocancel --passwordform "${2}" 0 0 ${3} "Password: " 2 4 "" 2 25 25 25 "Retype: " 4 4 "" 4 25 25 25 )
-    reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
-
-    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || [[ "$reponse" =~ [\\] ]]; then
-      __messageBox "${1}" "
-        The password can't contain spaces or \\.
-        "
-    else
-      pw1=$(echo $reponse | awk -F" " '{ print $1 }')
-      pw2=$(echo $reponse | awk -F" " '{ print $2 }')
-      case $pw1 in
-        "" )
-          __messageBox "${1}" "
-            The password can't be empty.
-            "
-        ;;
-        $pw2 )
-          __saisiePwBox=$pw1
-          break
-        ;;
-        * )
-          __messageBox "${1}" "
-            The 2 inputs are not identical.
-            "
-        ;;
-      esac
-    fi
-  done
-}
-
-__saisiePwOcBox() {  # param : titre, texte, nbr de ligne sous boite, pw à vérifier
-  local pw1=""; local codeSortie=""; local reponse=""
-  until false; do
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --insecure --trim --cr-wrap --passwordform "${2}" 0 0 ${3} "Retype password: " 2 4 "" 2 21 25 25)
-    reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
-    if [[ $? == 1 ]]; then return 1; fi
-    if [[ "$reponse" =~ .*[[:space:]].*[[:space:]].* ]] || [[ "$reponse" =~ [\\] ]]; then
-      __messageBox "${1}" "
-        The password can't contain spaces or \\.
-        "
-    else
-      pw1=$(echo $reponse | awk -F" " '{ print $1 }')
-      case $pw1 in
-        "" )
-          __messageBox "${1}" "
-            The password can't be empty.
-            "
-        ;;
-        ${4} )  # password linux or database
-          break
-        ;;
-        * )
-          __messageBox "${1}" "
-            The 2 inputs are not identical.
-            "
-        ;;
-      esac
-    fi
-  done
-}  # fin __saisiePwOcBox()
-
-__verifPwd() {
-  local userNameInput; local inputPass; local origPass; local algo; local salt
-  local genPass
-  userNameInput=$1
-  inputPass=$2
-  origPass=$(grep -w "$userNameInput" /etc/shadow | cut -d":" -f2)
-  algo=$(echo $origPass | cut -d"$" -f2)
-  salt=$(echo $origPass | cut -d"$" -f3)
-  if [[ "$algo" == "$salt" ]]; then
-    # toto02:zzDxrNjXuUs3U:17469:0:99999:7:::   avec crypt() et useradd : création de user
-    salt="$(expr substr $origPass 1 2)"
-    genPass="$(perl -e 'print crypt($ARGV[0], $ARGV[1])' $inputPass $salt)"
-  else
-    # toto02:$6$rLklwx9K$Brv4lvNjR.S7f8i.Lmt8.iv8pgcbKhwDgINzhT1XwCBbD7XkB98lCtwUK3/4hdylkganoLuh/eIc38PtMArgZ/:17469:0:99999:7:::
-    # avec echo "${userNameInput}:${newPwd}" | chpasswd    # modif mot de passe
-    genPass="$(perl -e 'print crypt($ARGV[0],"\$$ARGV[1]\$$ARGV[2]\$")' $inputPass $algo $salt)"
-  fi
-  if [ "$genPass" == "$origPass" ]; then
-     # Valid Password
-     return 0
-  else
-     # Invalid Password
-     return 1
-  fi
-}
-
-__saisieOCBox() {  # POUR OWNCLOUD param : titre, texte, nbr de ligne sous boite
-  __helpOC() {
-    dialog --backtitle "$TITRE" --title "ownCloud help" --exit-label "Back to input" --textbox  "insert/helpOC" "51" "71"
-  }  # fin __helpOC()
-
-  ## debut __saisieOCBox()  $2 texte $3 Nbr lignes de la sous-boite
-  local reponse="" codeRetour="" inputItem=""   # champs ou a été actionné le help-button
-  pwFirstuser=""; userBdD=""; pwBdD=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
-  until false; do
-    # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
-    # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux/admin ownCloud user:" 1 2 "${FIRSTUSER[0]}" 1 29 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 29 25 25 1 "OC Database admin:" 5 2 "$userBdD" 5 29 16 15 0 "Password database admin:" 7 2 "$pwBdD" 7 29 25 25 1 "Max files size:" 9 2 "$fileSize" 9 29 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 29 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 29 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 29 2 1 0)
-    reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
-    codeRetour=$?
-
-    # bouton "Aide" (help) renvoie code sortie 2
-    if [[ $codeRetour == 2 ]]; then
-      __helpOC
-      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
-      # format de $reponse : HELP PW Linux user:\qsdf\ddddd\...
-      inputItem=$(echo "$reponse" | awk -F"\\" '{ print $1 }' | cut -d \  -f 2-) # pour placer le curseur
-      pwFirstuser=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
-      userBdD=$(echo "$reponse" | awk -F"\\" '{ print $3 }')
-      pwBdD=$(echo "$reponse" | awk -F"\\" '{ print $4 }')
-      fileSize=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
-      ocDataDir=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
-      addStorage=$(echo "$reponse" | awk -F"\\" '{ print $7 }')
-      addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $8 }')
-    else
-      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
-      # format de "$reponse" : zesfg\zf\azdzad\....
-      pwFirstuser=$(echo "$reponse" | awk -F"\\" '{ print $1 }')
-      userBdD=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
-      pwBdD=$(echo "$reponse" | awk -F"\\" '{ print $3 }')
-      fileSize=$(echo "$reponse" | awk -F"\\" '{ print $4 }')
-      ocDataDir=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
-      addStorage=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
-      addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $7 }')
-      # vide le champs incriminé et place le curseur si erreur
-      __verifPwd ${FIRSTUSER[0]} $pwFirstuser
-      if  [[ $? -ne 0 ]] || [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ -z $pwFirstuser ]]; then
-        __helpOC
-        pwFirstuser=""
-        inputItem="PW Linux user:"
-      elif [[ $userBdD =~ [[:space:]\\] ]] || [[ -z $userBdD ]]; then
-        __helpOC
-        userBdD=""
-        inputItem="OC Database admin:"
-      elif [[ $pwBdD =~ [[:space:]\\] ]] || [[ -z $pwBdD ]]; then
-        __helpOC
-        pwBdD=""
-        inputItem="Password database admin:"
-      elif [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]]; then
-        __helpOC
-        fileSize="513M"
-        inputItem="Max files size:"
-      elif [[ $ocDataDir =~ [[:space:]\\] ]] || [[ -z $ocDataDir ]]; then
-        __helpOC
-        ocDataDir="/var/www/owncloud/data"
-        inputItem="Data directory location:"
-      elif [[ ! $addStorage =~ ^[YyNn]$ ]]; then
-        __helpOC
-        addStorage=""
-        inputItem="External storage [Y/N]:"
-      elif [[ ! $addAudioPlayer =~ ^[YyNn]$ ]]; then
-        __helpOC
-        addAudioPlayer=""
-        inputItem="AudioPlayer [Y/N]:"
-      else
-        __saisiePwOcBox "Validation password entry" "Database admin password" 2 $pwBdD  && \
-        break
-      fi
-    fi  # fin $codeRetour == 2
-  done  # fin until infinie
-}  # fin __saisieOCBox()
-
-__saisieDomaineBox() {  # param : titre, texte, lignes sous-boite
-  local reponse="" message=""
-  installCert="Y"
-  until false; do
-    until false; do
-      CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --separator "\\" --default-item "$inputItem" --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Domain name:" 1 2 "$__saisieDomaineBox1" 1 28 44 43 0 "Cert Let's Encrypt [Y/N]:" 3 2 "$installCert" 3 28 2 1 0)
-      reponse=$("${CMD[@]}" 2>&1 > /dev/tty)  # ezfezf.ff\Y\
-      if [[ $? == 1 ]]; then return 1; fi  # bouton cancel
-      __saisieDomaineBox1=$(echo $reponse | awk -F"\\" '{ print $1 }')
-      installCert=$(echo $reponse | awk -F"\\" '{ print $2 }')
-      if [[ "$__saisieDomaineBox1" =~ ^([[:digit:]a-z-]+\.[a-z\.]{2,})$ ]] && \
-      [[ $(echo $__saisieDomaineBox1 | grep -E "^w{3}\.") == "" ]]; then
-        __saisieDomaineBox2="www.$__saisieDomaineBox1"
-        break
-      else
-                __messageBox "Entry validation" "
-          Enter a valid domain name.
-          Only unaccented alphanumeric characters,
-          without http(s):// and www."
-          inputItem="Domain name:"
-      fi
-      if [[ ! $installCert =~ ^[YyNn]$ ]]; then
-        __messageBox "Entry validation" "
-          Enter a valid reply:
-          Y y N n in \"Cert Let's Encrypt\""
-        installCert="Y"
-        inputItem="Cert Let's Encrypt [Y/N]:"
-      fi
-    done
-    if [[ $installCert =~ ^[Yy]$ ]]; then message="${BO}Vous allez installer Let'sEncrypt${N}"; fi
-    __ouinonBox "Confirmation" " The domain names concerned are well:
-      ${R}$__saisieDomaineBox1${N}
-      and
-      ${R}$__saisieDomaineBox2${N}
-      $message"
-    if [[ $__ouinonBox -eq 0 ]]; then break; fi
-  done
-} # fin __saisieDomaineBox()
+. $REPLANCE/insert/util_apache.sh
+. $REPLANCE/insert/util_listeusers.sh
+. $REPLANCE/insert/util_diag.sh
+. $REPLANCE/insert/util_firewall.sh
+. $REPLANCE/insert/util_supp-rutorrent-user.sh
+. $REPLANCE/insert/util_crea-rutorrent-user.sh
+. $REPLANCE/insert/util_phpmyadmin.sh
+. $REPLANCE/insert/util_vpn.sh
 
 
-################################################################################
-#       Fonctions principales
-########################################
+############################################################
+##           Fonctions principales ss menus
+############################################################
 
-#################################################
-##  ajout utilisateur sous menu et traitements
-#################################################
+############################################################
+##      ajout utilisateur sous menu et traitements
+############################################################
 __ssmenuAjoutUtilisateur() {
 local typeUser=""; local codeSortie=1
 
@@ -276,7 +78,7 @@ until false; do
     if [[ $typeUser -ne 3 ]]; then  # 3 = users list
       __saisieTexteBox "Creating user" "
         Input the name of new user${R}
-        Neither space nor special characters${N}"
+        Neither space nor special characters${N}" h
       if [[ $? -eq 1 ]]; then   # 1 si bouton cancel
         typeUser=""
       fi
@@ -322,16 +124,6 @@ until false; do
               "
           else
             . $REPLANCE/insert/util_crea-owncloud-user.sh
-            __messageBox "Creating ownCloud user" " Setting-up completed
-            $newUserName user created with
-            Password:         $newUserPw
-            Full name:        $newFullUserName
-            Group:            $newUserGroup
-            email:            $newUserMail
-            External storege: $mountDir
-            Audioplayer:      $addAudioPlayer
-            The app External Storage is $flagFiles_external
-            The app Audioplayer is $flagAudioplayer"
           fi
         else # ownCloud pas installé
           __messageBox "Creating ownCloud user" "
@@ -348,9 +140,11 @@ until false; do
 done
 }   #  fin __ssmenuAjoutUtilisateur()
 
-######################################################
-##  supprimer utilisateur sous menu et traitements
-######################################################
+
+############################################################
+##    supprimer utilisateur sous menu et traitements
+############################################################
+
 __ssmenuSuppUtilisateur() {
   local typeUser=""; local codeSortie=1
 
@@ -372,7 +166,7 @@ __ssmenuSuppUtilisateur() {
       # filtrer le choix 2 : liste user
       if [[ $typeUser -ne 2 ]]; then
         __saisieTexteBox "Delete a user" "
-          Input a user name:"
+          Input a user name:" h
         if [[ $? -eq 1 ]]; then  # 1 si bouton cancel
           typeUser=""
         else
@@ -409,9 +203,10 @@ __ssmenuSuppUtilisateur() {
   done
 }
 
-#########################################
-##  Changement pw Menu + traitement
-#########################################
+
+############################################################
+##          Changement pw Menu + traitement
+############################################################
 
 __changePW() {
   local typeUser=""; local user=""; local codeSortie=1
@@ -431,7 +226,7 @@ __changePW() {
         1 )   ###  utilisateur Linux
           __saisieTexteBox "Change Password" "
             Input a Linux user name
-            Linux password also valid for sftp!!!"
+            Linux password also valid for sftp!!!" h
           if [[ $? -eq 0 ]]; then  # 1 si bouton cancel
             # user linux
             clear
@@ -457,7 +252,7 @@ __changePW() {
         ;;
         [2] )   ###  utilisateur ruTorrent
           __saisieTexteBox "Change Password" "
-            Input a ruTorrent user name"
+            Input a ruTorrent user name" h
           if [[ $? -eq 0 ]]; then
             # user ruTorrent ?
             __userExist "$__saisieTexteBox"  # insert/util_apache.sh
@@ -492,87 +287,74 @@ __changePW() {
 } # fin __changePW
 
 
-############################
-##  Menu principal
-############################
+############################################################
+##                   Menu principal
+############################################################
+
 __menu() {
   local choixMenu=""; local item=1
   until false; do
-    # /!\ 7) doit être firewall (retour test openvpn avec $item) et openvpn 5) item=x
+    # /!\ 8) doit être firewall (retour test openvpn avec $item) et openvpn 6) item=x
     # --menu text height width menu-height
     CMD=(dialog --backtitle "$TITRE" --title "Main menu" --trim --cr-wrap --cancel-label "Exit" --default-item "$item" --menu "
       To be used after installation with HiwsT
 
-      Your choice:" 22 70 12 \
+      Your choice:" 23 70 13 \
       1 "Create a user Linux, ruTorrent, ownCloud" \
       2 "Change user password" \
       3 "Delete a user" \
       4 "List existing users" \
-      5 "Install/uninstall OpenVPN, a openVPN user" \
-      6 "Install/update ownCloud" \
-      7 "Firewall" \
-      8 "Add domain name & Install free cert Let's Encrypt" \
-      9 "Install phpMyAdmin" \
-      10 "Restart rtorrent manually" \
-      11 "Diagnostic" \
-      12 "Reboot the server")
+      5 "Install webMin"
+      6 "Install/uninstall OpenVPN, a openVPN user" \
+      7 "Install/update ownCloud" \
+      8 "Firewall" \
+      9 "Add domain name & Install free cert Let's Encrypt" \
+      10 "Install phpMyAdmin" \
+      11 "Restart rtorrent manually" \
+      12 "Diagnostic" \
+      13 "Reboot the server")
     choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 
     if [[ $? -eq 0 ]]; then
       case $choixMenu in
-        1 )  ################ ajouter user  ################################
+        1 )  ######  ajouter user  #########################
           __ssmenuAjoutUtilisateur
         ;;
-        2 ) ################# modifier pw utilisateur  ############################
+        2 )  ######  modifier pw utilisateur  ##############
           cmd="__changePW"; $cmd || __msgErreurBox "$cmd" $?
         ;;
-        3 ) ################# supprimer utilisateur  ############################
+        3 )  ###### supprimer utilisateur  #################
           cmd="__ssmenuSuppUtilisateur"; $cmd || __msgErreurBox "$cmd" $?
         ;;
-        4 )  ################# liste utilisateurs #######################
+        4 )  ######liste utilisateurs ######################
           cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
         ;;
-        5 )  ######### VPN  ###################################
+        5 )  ######  WebMin   ##############################
+          if [[ -d /var/webmin ]]; then
+            __messageBox "Install webMin" "
+              webMin is already installed."
+            continue
+          fi
+          . ${REPLANCE}/insert/util_webmin.sh
+        ;;
+        6 )  ######  VPN   #################################
           # si firewall off et vpn pas installé
           if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]  && [[ ! -e /etc/openvpn/server.conf ]]; then
             __ouinonBox "Install openVPN" "${R}${BO} Turn ON the firewall BEFORE
               installing the VPN !!!${N}
               "
             if [[ $__ouinonBox -eq 0 ]]; then
-              item=7  # menu => Firewall
+              item=8  # menu => Firewall
               continue
             else
               continue
             fi
           fi
-          __ouinonBox "openVPN" "
-            VPN installed with the${R}Angristan script${N}(MIT  License),
-            with his kind permission. Thanks to him
-
-            github repository: https://github.com/Angristan/OpenVPN-install
-            Angristan's blog: https://angristan.fr/installer-facilement-serveur-openvpn-debian-ubuntu-centos/
-
-            Excellent security-enhancing script, allowing trouble-free installation
-            on Debian, Ubuntu, CentOS et Arch Linux servers.
-            Do not reinvent the wheel (less well), that's the Oppen Source
-            ${R}${BO}
-            -----------------------------------------------------------------------------------------
-            |  - To the question 'Tell me a name for the client cert'
-            |    Give the name of the linux user to which the vpn is intended.
-            |  - If you restart this script you can add or remove
-            |    a user, uninstall the VPN.
-            |  - The configuration file will be located in the corresponding /home if his name exist.
-            ------------------------------------------------------------------------------------------${N}" 22 100
-          if [[ $__ouinonBox -eq 0 ]]; then
-            __vpn
-            cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
-
-OpenVpn is installed
-EOF
-          fi
+          __vpn
           item=1  # menu => Create a user
         ;;
-        6 )  ###################### ownCloud #############################
+        7 )  ######  ownCloud ##############################
+          # owncloud installé ?
           pathOCC=$(find /var -name occ 2>/dev/null)
           if [[ -n $pathOCC ]]; then
             __ouinonBox "Install/update ownCloud" "
@@ -580,50 +362,21 @@ EOF
               Do you want update it?
               "
             if [[ $__ouinonBox -ne 0 ]]; then
-              continue
+              continue  # sortie vers le main menu
             else
               . ${REPLANCE}/insert/util_up-owncloud.sh
-              __messageBox "Owncloud upgrade" " Treatment completed.
-              Your new ownCloud version: $ocVer is ok
-              "
-              continue
+              continue  # sortie vers le main menu
             fi
-          fi
-          __saisieOCBox "ownCloud setting" "${R}Consult the help${N}" 15   # lignes ss-boite
-
+          fi  # fin si déjà installé
           . ${REPLANCE}/insert/util_owncloud.sh
-          varOwnCloud="owncloud"
-          __messageBox "${ocVer} install" " Treatment completed.
-            Your ownCloud website https://$HOSTNAME/owncloud or
-            https://$IP/owncloud
-            Accept the Self Signed Certificate and the exception for this certificate!
-
-            ${BO}Note that ${N}${I}${FIRSTUSER[0]}$N${BO} and his password is your account and ownCloud administrator account.
-            The administrator of mysql database $varOwnCloud is${N} ${I}$userBdD${N} and his password ${I}$pwBdD${N}
-
-            This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
-          cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
-
-To access your private cloud:
-  https://$HOSTNAME/owncloud ou $IP/owncloud
-  User (and administrator): ${FIRSTUSER[0]}
-  Password: $pwFirstuser
-  Administrator of OC database: $userBdD
-  Password: $pwBdD
-EOF
         ;;
-        7 )  #####################  firewall  ############################
-          __messageBox "Firewall and ufw" "
-
-
-            ${I}Warning !!!${N}
-            The following setting only takes into account the installations
-            execute with HiwsT" 12 75
-          . insert/util_firewall.sh
+        8 )  ######  firewall  #############################
+          . ${REPLANCE}/insert/util_firewall.sh
           cmd="__firewall"; $cmd || __msgErreurBox "$cmd" $?
-          if [[ $item -eq 7 ]]; then item=5; fi  # menu : si on vient de openvpn on y retourne
+          # menu : si on vient de openvpn on y retourne
+          if [[ $item -eq 8 ]]; then item=6; fi
         ;;
-        8 )  #################  domain & letsencrypt ###################
+        9 )  ######  domain & letsencrypt ##################
           which certbot 2>&1 > /dev/null
           if [ $? -eq 0 ]; then
             __messageBox "Domain & Let's Encrypt" "
@@ -631,27 +384,9 @@ EOF
               "
             continue
           fi
-          __saisieDomaineBox "Domain name registration" "
-            If you have provided a domain name for ${IP}/ruTorrent /ownCloud
-            ${R}AND${N} the DNS servers are uptodate, enter here your domain name.
-
-            This domain will be used for the ${BO}Apache${N} and ${BO}Let's Encrypt${N} (free ssl certificate) configuration.
-
-            Example: ${I}my-domain-name.co.uk${N} or ${I}22my-22domaine-name.commmm${N} etc. ...
-
-            ${R}Do not enter www. or http:// The two domains ${BO}www.mydomainname.com${N}${R}
-            and ${BO}mydomainname.com${N}${R} will be automatically used${N}" 3
-          if [[ $? -eq 0 ]]; then   # not cancel
-            . ${REPLANCE}/insert/util_letsencrypt.sh
-            cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
-
-Certificate is installed with Let's Encrypt
-  Domaines names: $__saisieDomaineBox1 and
-                  $__saisieDomaineBox2
-EOF
-          fi
+          . ${REPLANCE}/insert/util_letsencrypt.sh
         ;;
-        9 )  ########################  phpMyAdmin  #####################
+        10 )  ######  phpMyAdmin  ###########################
           pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
           if [[ -n $pathPhpMyAdmin ]]; then
             __messageBox "Install phpMyAdmin" "
@@ -659,13 +394,9 @@ EOF
               "
             continue
           fi
-          . ${REPLANCE}/insert/util_phpmyadmin.sh
-          cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
-
-PhpMyAdmin is installed
-EOF
+          __phpmyadmin
         ;;
-        10 )  ########################  Relance rtorrent  ######################
+        11 )  ######  Relance rtorrent  ####################
           __messageBox "Message" "
             Restart rtorrentd daemon
             " 10 35
@@ -676,10 +407,10 @@ EOF
             sleep 4
           fi
         ;;
-        11 )  ################# Diagnostiques ###############################
+        12 )  ######  Diagnostiques ########################
           __diag
         ;;
-        12 )  ###########################  REBOOT  #######################
+        13 )  ######  REBOOT  ##############################
           __ouinonBox "${R}${BO}Server Reboot${N}"
           if [[ $__ouinonBox -eq 0 ]]; then
             clear
@@ -695,11 +426,12 @@ EOF
 
 }  # fin menu
 
-################################################################################
-##                              Début du script
-################################################################################
-# root ?
 
+############################################################
+##                    Début du script
+############################################################
+
+# root ?
 if [[ $(id -u) -ne 0 ]]; then
   echo
   echo "This script needs to be run with sudo."
@@ -709,9 +441,8 @@ if [[ $(id -u) -ne 0 ]]; then
   exit 1
 fi
 
-################################################################################
+############################################################
 # apache vs nginx ?
-
 service nginx status  2>&1 > /dev/null
 sortieN=$?  # 0 actif, 1 erreur == inactif
 service apache2 status 2>&1 > /dev/null
@@ -736,17 +467,6 @@ if [[ $sortieN -ne 0 ]] && [[ $sortieA -ne 0 ]]; then
 fi
 SERVEURHTTP="Apache2"
 
-################################################################################
-#  chargement des f() apache, liste users ...
-. $REPLANCE/insert/util_apache.sh
-. $REPLANCE/insert/util_listeusers.sh
-. $REPLANCE/insert/util_diag.sh
-. $REPLANCE/insert/util_firewall.sh
-. $REPLANCE/insert/util_vpn.sh
-. $REPLANCE/insert/util_supp-rutorrent-user.sh
-. $REPLANCE/insert/util_crea-rutorrent-user.sh
-
-################################################################################
 #  debian ou ubuntu et version  pour ownCloud et diag
 nameDistrib=$(lsb_release -si)  # "Debian" ou "Ubuntu"
 os_version=$(lsb_release -sr)   # 18 , 8.041 ...
@@ -757,8 +477,14 @@ else
   readonly PHPVER="php5-fpm"
 fi
 
-################################################################################
+############################################################
 # gestion de la sortie de openvpn-install.sh
+# to do: ajout dans RecapInstall
+#   cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
+#
+# OpenVpn is installed
+# EOF
+
 
 if [[ ! -z "$ERRVPN" && $ERRVPN -ne 0 ]]; then  # sortie avec un code != 0 et non vide
   __messageBox "OpenVPN installation output" "
@@ -795,7 +521,7 @@ elif [[ ! -z "$ERRVPN" && $ERRVPN -eq 0 ]]; then # sortie avec un code == 0 et n
   trap - EXIT
 fi  # code ERRVPN vide veut dire openvpn-install pas exécuté
 
-################################################################################
+############################################################
 #  gestion errueurs
 trap "__trap" EXIT
 
@@ -804,11 +530,11 @@ trap "__trap" EXIT
 :>/tmp/trace.log # fichier msg d'erreur
 exec 3>&2 2>/tmp/trace
 
-################################################################################
+############################################################
 # boucle menu / sortie
 __menu
 
-################################################################################
+############################################################
 # Sortie
 clear
 echo

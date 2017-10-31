@@ -1,5 +1,11 @@
 
 __firewall() {
+  __messageBox "Firewall and ufw" "
+
+    ${I}Warning !!!${N}
+    The following setting only takes into account the installations
+    execute with HiwsT" 12 75
+
   clear
   # récupération du port ssh
   portSSH=0

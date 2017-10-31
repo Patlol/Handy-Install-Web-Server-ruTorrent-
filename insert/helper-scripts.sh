@@ -17,3 +17,13 @@ __servicerestart() {
   cmd="service ${1} status"; $cmd || __msgErreurBox "$cmd" $?
   return $codeSortie
 }  #  fin __servicerestart
+
+# Va chercher un UID et PW de mysql dans /etc/mysql/debian.cnf
+# ARG : no
+# RETUN : $userBdD et $pwBdD
+__mySqlDebScript() {
+  userBdD=$(grep -m 1 "user" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || \
+      __msgErreurBox "userBdD=$(grep -m 1 user /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }')" $?
+  pwBdD=$(grep -m 1 "password" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || \
+      __msgErreurBox "pwBdD=$(grep -m 1 password /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }')" $?
+}

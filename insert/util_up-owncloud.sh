@@ -87,10 +87,7 @@ fi
 
 # BACKUP DE LA BdD
 # use debian script user
-userBdD=$(grep -m 1 "user" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || \
-    __msgErreurBox "userBdD=$(grep -m 1 user /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }')" $?
-pwBdD=$(grep -m 1 "password" /etc/mysql/debian.cnf | awk -F"= " '{ print $2 }') || \
-    __msgErreurBox "pwBdD=$(grep -m 1 password /etc/mysql/debian.cnf | awk -F\"= \" '{ print $2 }')" $?
+__mySqlDebScript   # helper-scripts.sh RETUN : $userBfD et $pwBdD
 nameTableFile="/$__backupDir/ocdbBackup_$(date +"%Y%m%d").bak"
 if [[ -z $pwBdD ]]; then
   mysqldump --opt -u $userBdD $ocDbName > $nameTableFile || __msgErreurBox "mysqldump --opt -u $userBdD $ocDbName > $nameTableFile" $?
@@ -229,3 +226,7 @@ if [[ $? -eq 0 ]]; then
 fi
 ocVer=$(sudo -u $htuser $ocpath/occ -V)
 sleep 3
+
+__messageBox "Owncloud upgrade" " Treatment completed.
+Your new ownCloud version: $ocVer is ok
+"
