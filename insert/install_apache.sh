@@ -1,10 +1,10 @@
 # installation des paquets
 if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
-  paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD8
+  paquetsWeb="apache2 apache2-utils libapache2-mod-php5 libapache2-mod-php "$paquetsWebD8
 elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
-  paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebD9
+  paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 libapache2-mod-php "$paquetsWebD9
 else
-  paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
+  paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 libapache2-mod-php "$paquetsWebU
 fi
 cmd="apt-get install -yq $paquetsWeb"; $cmd || __msgErreurBox "$cmd" $?
 echo
