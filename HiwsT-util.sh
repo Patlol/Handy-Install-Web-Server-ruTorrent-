@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Enemble d'utilitaires pour la gestion des utilisateurs linux, rutorrent, owncloud
-# installation d'openvpn, ownCloud, phpmyadmin, let's encrypt
-# L'ajout ou la suppression d'utilisateurs
-# Changement de mot de passe
 
-# testée sur ubuntu et debian server vps Ovh
-# et sur kimsufi. A tester sur autres hébergeurs
+# Enemble of utilities for linux, rutorrent, owncloud.
+# Installation of openvpn, ownCloud, webmin, phpmyadmin, let's encrypt
+# Users management: Adding or deleting users, changing password.
+# Firewall. Server system's status
+#
+# Tested on ubuntu and debian server vps Ovh and on kimsufi.
+# To be tested on other hosting providers
 # https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
-
 
 readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
@@ -31,6 +31,7 @@ while read user; do  # [0]=linux, [1]=ruTorrent
 done < $REPLANCE/firstusers
 declare -ar FIRSTUSER  # -r readonly
 readonly REPUL="/home/${FIRSTUSER[0]}"
+readonly userLinux="${FIRSTUSER[0]}"
 # dialog param --backtitle --aspect --colors
 TITRE="Utilitaire HiwsT : rtorrent - ruTorrent - openVPN - ownCloud"
 TIMEOUT=30  # __messageBox
@@ -69,8 +70,8 @@ until false; do
     A ruTorrent user can only be created with a Linux user
 
     Create a user:" 18 65 3 \
-    1 "Linux + ruTorrent"
-    2 "OwnCloud"
+    1 "Linux + ruTorrent" \
+    2 "OwnCloud" \
     3 "Users list")
 
   typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
@@ -157,7 +158,7 @@ __ssmenuSuppUtilisateur() {
       will also be deleted.
 
       Delete a user:" 18 65 2 \
-      1 "Linux + ruTorrent"
+      1 "Linux + ruTorrent" \
       2 "Users list")
 
     typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
@@ -217,8 +218,8 @@ __changePW() {
 
       What user kind do you want change?
       " 18 65 3 \
-      1 "Linux"
-      2 "ruTorrent"
+      1 "Linux" \
+      2 "ruTorrent" \
       3 "users list")
     typeUser=$("${CMD[@]}"  2>&1 > /dev/tty)
     if [[ $? -eq 0 ]]; then
@@ -294,25 +295,26 @@ __changePW() {
 __menu() {
   local choixMenu=""; local item=1
   until false; do
-    # /!\ 8) doit être firewall (retour test openvpn avec $item) et openvpn 6) item=x
+    # /!\ 9) doit être firewall (retour test openvpn avec $item) et openvpn 7) item=x
     # --menu text height width menu-height
     CMD=(dialog --backtitle "$TITRE" --title "Main menu" --trim --cr-wrap --cancel-label "Exit" --default-item "$item" --menu "
       To be used after installation with HiwsT
 
-      Your choice:" 23 70 13 \
+      Your choice:" 24 70 14 \
       1 "Create a user Linux, ruTorrent, ownCloud" \
       2 "Change user password" \
       3 "Delete a user" \
       4 "List existing users" \
-      5 "Install webMin"
-      6 "Install/uninstall OpenVPN, a openVPN user" \
-      7 "Install/update ownCloud" \
-      8 "Firewall" \
-      9 "Add domain name & Install free cert Let's Encrypt" \
-      10 "Install phpMyAdmin" \
-      11 "Restart rtorrent manually" \
-      12 "Diagnostic" \
-      13 "Reboot the server")
+      5 "Install rtorrent/ruTorrent" \
+      6 "Install webMin" \
+      7 "Install/uninstall OpenVPN, a openVPN user" \
+      8 "Install/update ownCloud" \
+      9 "Firewall" \
+      10 "Add domain name & Install free cert Let's Encrypt" \
+      11 "Install phpMyAdmin" \
+      12 "Restart rtorrent manually" \
+      13 "Diagnostic" \
+      14 "Reboot the server")
     choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 
     if [[ $? -eq 0 ]]; then
@@ -329,7 +331,16 @@ __menu() {
         4 )  ######liste utilisateurs ######################
           cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
         ;;
-        5 )  ######  WebMin   ##############################
+        5 )  ######  rtorrent & ruTorrent
+            if [[ -d /var/www/html/rutorrent ]]; then
+              __messageBox "Install rTorrent & ruTorrent" "
+                rTorrent and ruTorrent are already installed."
+              continue
+            fi
+            . $REPLANCE/insert/util_rtorrent.sh
+            . $REPLANCE/insert/util_rutorrent.sh
+        ;;
+        6 )  ######  WebMin   ##############################
           if [[ -d /var/webmin ]]; then
             __messageBox "Install webMin" "
               webMin is already installed."
@@ -337,14 +348,14 @@ __menu() {
           fi
           . ${REPLANCE}/insert/util_webmin.sh
         ;;
-        6 )  ######  VPN   #################################
+        7 )  ######  VPN   #################################
           # si firewall off et vpn pas installé
           if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]  && [[ ! -e /etc/openvpn/server.conf ]]; then
             __ouinonBox "Install openVPN" "${R}${BO} Turn ON the firewall BEFORE
               installing the VPN !!!${N}
               "
             if [[ $__ouinonBox -eq 0 ]]; then
-              item=8  # menu => Firewall
+              item=9  # menu => Firewall
               continue
             else
               continue
@@ -353,7 +364,7 @@ __menu() {
           __vpn
           item=1  # menu => Create a user
         ;;
-        7 )  ######  ownCloud ##############################
+        8 )  ######  ownCloud ##############################
           # owncloud installé ?
           pathOCC=$(find /var -name occ 2>/dev/null)
           if [[ -n $pathOCC ]]; then
@@ -370,13 +381,13 @@ __menu() {
           fi  # fin si déjà installé
           . ${REPLANCE}/insert/util_owncloud.sh
         ;;
-        8 )  ######  firewall  #############################
+        9 )  ######  firewall  #############################
           . ${REPLANCE}/insert/util_firewall.sh
           cmd="__firewall"; $cmd || __msgErreurBox "$cmd" $?
           # menu : si on vient de openvpn on y retourne
-          if [[ $item -eq 8 ]]; then item=6; fi
+          if [[ $item -eq 8 ]]; then item=7; fi # => goto vpn
         ;;
-        9 )  ######  domain & letsencrypt ##################
+        10 )  ######  domain & letsencrypt ##################
           which certbot 2>&1 > /dev/null
           if [ $? -eq 0 ]; then
             __messageBox "Domain & Let's Encrypt" "
@@ -386,7 +397,7 @@ __menu() {
           fi
           . ${REPLANCE}/insert/util_letsencrypt.sh
         ;;
-        10 )  ######  phpMyAdmin  ###########################
+        11 )  ######  phpMyAdmin  ###########################
           pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
           if [[ -n $pathPhpMyAdmin ]]; then
             __messageBox "Install phpMyAdmin" "
@@ -396,7 +407,7 @@ __menu() {
           fi
           __phpmyadmin
         ;;
-        11 )  ######  Relance rtorrent  ####################
+        12 )  ######  Relance rtorrent  ####################
           __messageBox "Message" "
             Restart rtorrentd daemon
             " 10 35
@@ -407,10 +418,10 @@ __menu() {
             sleep 4
           fi
         ;;
-        12 )  ######  Diagnostiques ########################
+        13 )  ######  Diagnostiques ########################
           __diag
         ;;
-        13 )  ######  REBOOT  ##############################
+        14 )  ######  REBOOT  ##############################
           __ouinonBox "${R}${BO}Server Reboot${N}"
           if [[ $__ouinonBox -eq 0 ]]; then
             clear
@@ -419,7 +430,7 @@ __menu() {
           fi
         ;;
       esac  # $choixMenu
-    else
+    else  # Bouton exit de main menu
       break
     fi  # Bouton ok/exit
   done  # Boucle infinie menu

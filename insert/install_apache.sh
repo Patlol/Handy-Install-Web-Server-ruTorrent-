@@ -32,16 +32,6 @@ echoc v "                                       "
 echo
 sleep 1
 
-# mot de passe user rutorrent  htpasswd
-(echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) > $REPAPA2/.htpasswd
-sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
-
-# Modifier la configuration du site par défaut (pour rutorrent)
-cp $REPAPA2/sites-available/000-default.conf $REPAPA2/sites-available/000-default.conf.old
-cp ${REPLANCE}/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
-sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
-__servicerestart "apache2"
-
 # vérif bon fonctionnement apache et php
 echo "<?php phpinfo(); ?>" >$REPWEB/info.php
 headTest1=$(curl -Is http://$IP/info.php/| head -n 1)
@@ -66,10 +56,6 @@ echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from al
 openssl req -new -x509 -days 365 -nodes -newkey rsa:2048 -out $REPAPA2/apache.pem -keyout $REPAPA2/apache.pem -subj "/C=FR/ST=Paris/L=Paris/O=Global Security/OU=RUTO Department/CN=$IP"
 
 chmod 600 $REPAPA2/apache.pem
-
-cp $REPAPA2/sites-available/default-ssl.conf $REPAPA2/sites-available/default-ssl.conf.old
-
-sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" $REPAPA2/sites-available/default-ssl.conf
 
 a2ensite default-ssl
 __servicerestart "apache2"

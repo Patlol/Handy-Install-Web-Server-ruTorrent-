@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# Installation apache2, php, rtorrent, rutorrent
-# testée sur ubuntu et debian server vps Ovh
-# et sur kimsufi. A tester sur autres hébergeurs
-# https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-
-
+# Installing apache2, php
+# tested on ubuntu and debian server vps Ovh and on kimsufi.
+# To be tested on other hosting providers
+# https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent
 
 ############################################################
 ##        variables install paquets Ubuntu/Debian
@@ -13,27 +12,13 @@
 #  liste sans serveur http
 paquetsWebD8="git mc nano aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php5 php5-cli php5-dev php5-fpm php5-curl php5-geoip php5-mcrypt php5-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
 
-paquetsRtoD8="xmlrpc-api-utils libtorrent14 rtorrent"
-
-sourceMediaD8="deb http://www.deb-multimedia.org jessie main non-free"
-paquetsMediaD8="mediainfo ffmpeg"
-
 #  Debian 9 stretch
 # liste sans serveur http - autoconf build-essential comerr-dev libcloog-ppl-dev libcppunit-dev libcurl4-openssl-dev libncurses5-dev libxml2-dev libsigc++-2.0-dev libperl-dev libssl-dev php7.0-dev  manpages-dev
 paquetsWebD9="git mc nano aptitude ca-certificates curl cfv dtach htop irssi libcurl3 libterm-readline-gnu-perl libtool ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev manpages libfile-fcntllock-perl bzip2 xz-utils geoip-database libltdl-dev libxml-sax-expat-perl xml-core unar"
 
-paquetsRtoD9="xmlrpc-api-utils libtorrent19 rtorrent"
-
-# sourceMediaD9="deb http://www.deb-multimedia.org stretch main non-free" sur les repository standards
-paquetsMediaD9="mediainfo ffmpeg"
-
 # Ubuntu 16
 # liste sans serveur http
 paquetsWebU="git mc nano aptitude autoconf build-essential ca-certificates comerr-dev curl cfv dtach htop irssi libcloog-ppl-dev libcppunit-dev libcurl3 libcurl4-openssl-dev libncurses5-dev libterm-readline-gnu-perl libsigc++-2.0-dev libperl-dev libssl-dev libtool libxml2-dev ncurses-base ncurses-term ntp openssl patch pkg-config php7.0 php7.0-cli php7.0-dev php7.0-fpm php7.0-curl php-geoip php7.0-mcrypt php7.0-xmlrpc pkg-config python-scgi screen ssl-cert subversion texinfo unrar-free unzip zlib1g-dev"
-
-paquetsRtoU="xmlrpc-api-utils libtorrent19 rtorrent"
-
-paquetsMediaU="mediainfo ffmpeg"
 
 ############################################################
 readonly HOSTNAME=$(hostname -f)
@@ -41,14 +26,11 @@ readonly REPWEB="/var/www/html"
 readonly REPAPA2="/etc/apache2"
 readonly REPLANCE=$(pwd)
 REPUL=""    # repertoire user Linux dans __creauser
-readonly PORT_SCGI=5000  # port 1er Utilisateur
 readonly PLANCHER=20001  # bas fourchette port ssh
 readonly ECHELLE=65534  # ht de la fourchette
-readonly miniDispoRoot=334495744   # 319 Go minimum pour alerete place \
-readonly miniDispoHome=313524224   # 299 Go disponible sur disque
 readonly serveurHttp="apache2"
 # dialog param --backtitle --aspect --colors
-TITRE="HiwsT : Installation rtorrent - ruTorrent"
+TITRE="HiwsT : Installation server Apache2-php"
 TIMEOUT=30  # __messageBox
 RATIO=12
 
@@ -218,24 +200,6 @@ __messageBox "Your system" " ${BO}
   Your root partition (/) has $(( $rootDispo/1024/1024 )) Go free.
   $info"  # $info valeur suivant $homeDispo cf. # espace dispo
 
-if [ -z "$homeDispo" ]; then  # /
-  if [ "$rootDispo" -lt $miniDispoRoot ]; then
-    __messageBox "Important message" "
-      ${BO}${R}
-      WARNING ${N}
-
-      Only ${R}$(( $rootDispo/1024/1024 )) Go${N}, on / to store downloaded files"
-  fi
-else  # /home
-  if [ "$homeDispo" -lt $miniDispoHome ];then
-    __messageBox "Important message" "
-      ${BO}$R
-      WARNING $N
-
-      Only ${R}$(( $homeDispo/1024/1024 )) Go${N}, on /home to store downloaded files"
-  fi
-fi
-
 # utilisateur linux
 usernameOk=0
 until [[ $usernameOk -ne 0 ]]; do
@@ -256,27 +220,6 @@ done
 __saisiePwBox "Linux user" "
     Password for $userLinux:" 4
 pwLinux=$__saisiePwBox
-
-# Rutorrent user
-usernameOk=0
-until [[ $usernameOk -ne 0 ]]; do
-  __saisieTexteBox "ruTorrent user" "
-
-    It's more secure to choose a different name
-    than the Linux user
-    Choose a ruTorrent username${R} (neither space nor \)$N: "
-  userRuto="$__saisieTexteBox"
-  grep -E "^$userRuto:" /etc/passwd >/dev/null
-  usernameOk=$?
-  if [[ $usernameOk -eq 0 ]] && [[ "$userRuto" != "$userLinux" ]]; then
-    __messageBox "ruTorrent user" "
-      $userRuto already exists, choose another username
-      "
-  fi
-done
-__saisiePwBox "ruTorrent user" "
-  Password for $userRuto:" 4
-pwRuto="$__saisiePwBox"
 
 # port ssh
 __ouinonBox "Secure ssh/sftp" "
@@ -332,9 +275,6 @@ SSh port: $portSSH
 
 Linux username:           $userLinux
 Password Linux user:      $pwLinux
-
-ruTorrent username:       $userRuto
-Password ruTorrent user:  $pwRuto
 EOF
 
 __textBox "Installation Summary" "$REPLANCE/RecapInstall.txt"
@@ -382,16 +322,6 @@ sleep 1
 . ${REPLANCE}/insert/install_apache.sh
 
 ############################################################
-##              installation rtorrent
-
-. ${REPLANCE}/insert/install_rtorrent.sh
-
-############################################################
-##              installation de rutorrent
-
-. ${REPLANCE}/insert/install_rutorrent.sh
-
-############################################################
 ##                   sécuriser ssh
 ##           des choses à faire de tte façon
 . ${REPLANCE}/insert/install_ssh.sh
@@ -428,13 +358,6 @@ Your system
 
   Linux username  : $userLinux
   Password        : $pwLinux
-
-To access ruTorrent:
-  http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
-  or http(s)://$HOSTNAME/rutorrent
-  If you not again use Let's Encrypt, with https, accept
-  the Self Signed Certificate and the exception
-  for this certificate!
 
 In case of issues strictly concerning this script, you can consult the wiki:
 https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki

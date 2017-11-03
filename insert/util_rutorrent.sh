@@ -1,17 +1,27 @@
-############################################
-#        installation de rutorrent         #
-############################################
+############################################################
+##               installation de rutorrent
+############################################################
+
+# deb 8
+sourceMediaD8="deb http://www.deb-multimedia.org jessie main non-free"
+paquetsMediaD8="mediainfo ffmpeg"
+# deb 9
+# sourceMediaD9="deb http://www.deb-multimedia.org stretch main non-free" sur les repository standards
+paquetsMediaD9="mediainfo ffmpeg"
+# ubuntu  16
+paquetsMediaU="mediainfo ffmpeg"
 
 # création de userRuto dans install_apache.sh
 # Modifier la configuration du site par défaut (pour rutorrent) dans install_apache.sh
 
 # téléchargement
-mkdir $REPWEB/source
-cd $REPWEB/source
+mkdir $REPWEB/sources
+cd $REPWEB/sources
 cmd="wget https://github.com/Novik/ruTorrent/archive/master.zip"; $cmd || __msgErreurBox "$cmd" $?
 unzip -o master.zip
 mv -f ruTorrent-master $REPWEB/rutorrent
 chown -R www-data:www-data $REPWEB/rutorrent
+rm -r $REPWEB/sources
 
 # fichier de config config.php générique ( modif dans conf/user/nonuser/)
 mv $REPWEB/rutorrent/conf/config.php $REPWEB/rutorrent/conf/config.php.old
@@ -21,13 +31,14 @@ chmod -R 755 $REPWEB/rutorrent
 
 # modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
+# modif du setup apache
+__setupApacheRuto
 
 # modif du thème de rutorrent
 mkdir -p $REPWEB/rutorrent/share/users/$userRuto/torrents
 mkdir $REPWEB/rutorrent/share/users/$userRuto/settings
 chown -R www-data:www-data $REPWEB/rutorrent/share/users/$userRuto
 chmod -R 777 $REPWEB/rutorrent/share/users/$userRuto
-
 echo 'O:6:"rTheme":2:{s:4:"hash";s:9:"theme.dat";s:7:"current";s:8:"Oblivion";}' > $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
 chmod u+rwx,g+rx,o+rx $REPWEB/rutorrent/share/users/$userRuto
 chmod 666 $REPWEB/rutorrent/share/users/$userRuto/settings/theme.dat
@@ -97,6 +108,25 @@ if [[ "$headTest" =~ "Unauthorized" ]]; then
   echoc v "      ruTorrent works correctly         "
   echoc v "                                        "
   sleep 2
+
+  echo $userRuto >> $REPUL/HiwsT/firstusers
+
+  __messageBox "Install rTorrent & ruTorrent" "
+    To access ruTorrent:
+    http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
+    or http(s)://$HOSTNAME/rutorrent
+    If you not again use Let's Encrypt, with https, accept
+    the Self Signed Certificate and the exception
+    for this certificate!"
+  cat << EOF > $REPUL/HiwsT/RecapInstall.txt
+
+To access ruTorrent:
+    http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
+    or http(s)://$HOSTNAME/rutorrent
+    If you not again use Let's Encrypt, with https, accept
+    the Self Signed Certificate and the exception
+    for this certificate!
+EOF
 else
   __msgErreurBox "curl -Is http://$IP/rutorrent/ | head -n 1 | awk -F\" \" '{ print $3 }' return $headTest" "http $headTest"
 fi

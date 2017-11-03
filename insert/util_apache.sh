@@ -35,3 +35,21 @@ __changePWRuto() {   #  appelée par __changePW  ${1} user  ${2} pw
   let "total = $sortieCmd1 + $sortieCmd2 + $sortieCmd3"
   return $total
 }
+
+
+__setupApacheRuto() {
+  # mot de passe user rutorrent  htpasswd
+  (echo -n "$userRuto:rutorrent:" && echo -n "$userRuto:rutorrent:$pwRuto" | md5sum) > $REPAPA2/.htpasswd
+  sed -i 's/[ ]*-$//' $REPAPA2/.htpasswd
+
+  # Modifier la configuration du site par défaut (pour rutorrent)
+  cp $REPAPA2/sites-available/000-default.conf $REPAPA2/sites-available/000-default.conf.old
+  cp ${REPLANCE}/fichiers-conf/apa_000-default.conf $REPAPA2/sites-available/000-default.conf
+  sed -i 's/<server IP>/'$IP'/g' $REPAPA2/sites-available/000-default.conf
+
+  cp $REPAPA2/sites-available/default-ssl.conf $REPAPA2/sites-available/default-ssl.conf.old
+
+  sed -i "/<\/VirtualHost>/i \<Location /rutorrent>\nAuthType Digest\nAuthName \"rutorrent\"\nAuthDigestDomain \/var\/www\/html\/rutorrent\/ http:\/\/$IP\/rutorrent\n\nAuthDigestProvider file\nAuthUserFile \/etc\/apache2\/.htpasswd\nRequire valid-user\nSetEnv R_ENV \"\/var\/www\/html\/rutorrent\"\n<\/Location>\n" $REPAPA2/sites-available/default-ssl.conf
+
+  __servicerestart "apache2"
+}
