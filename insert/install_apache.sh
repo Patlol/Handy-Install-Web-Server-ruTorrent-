@@ -1,10 +1,19 @@
+
 # installation des paquets
+# pour les paquets debian officiels
+listePaquets=$(aptitude search libapache2-mod-php)
+paquetModPhp="libapache2-mod-php"
+selec=$(echo "$listePaquets" | grep -E "libapache2-mod-php[0-9]{0,1}[\.0-9]{0,2}\b" | awk -F" " '{print $2}' )
+selec=$(echo "$selec" | grep -E "libapache2-mod-php[0-9][\.0-9]{0,2}")
+if [[ $? -eq 0 ]]; then
+  paquetModPhp=$selec
+fi
 if [[ $nameDistrib == "Debian" && $os_version_M -eq 8 ]]; then
-  paquetsWeb="apache2 apache2-utils libapache2-mod-php5 "$paquetsWebD8
+  paquetsWeb="apache2 apache2-utils $paquetModPhp $paquetsWebD8"
 elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
-  paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebD9
+  paquetsWeb="apache2 apache2-utils $paquetModPhp $paquetsWebD9"
 else
-  paquetsWeb="apache2 apache2-utils libapache2-mod-php7.0 "$paquetsWebU
+  paquetsWeb="apache2 apache2-utils $paquetModPhp $paquetsWebU"
 fi
 cmd="apt-get install -yq $paquetsWeb"; $cmd || __msgErreurBox "$cmd" $?
 echo
