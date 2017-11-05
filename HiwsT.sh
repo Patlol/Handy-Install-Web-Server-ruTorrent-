@@ -194,7 +194,7 @@ __messageBox "Your system" " ${BO}
   Your IP      : ${N}$IP ${BO}
   The script runs under: ${N}$user
   ${BO}
-  Execution duration: ${N}about 8mn
+  Execution duration: ${N}about 5mn
 
   Amount of disk space available${BO}
   Your root partition (/) has $(( $rootDispo/1024/1024 )) Go free.

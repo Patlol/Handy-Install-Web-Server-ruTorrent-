@@ -46,7 +46,7 @@ __saisieOCBox() {
   }  # fin __helpOC()
 
   ## debut __saisieOCBox()
-  local reponse="" codeRetour="" inputItem=""   # champs ou a été actionné le help-button
+  local reponse=""; local codeRetour=""; local inputItem=""   # champs ou a été actionné le help-button
   pwFirstuser=""; userBdDOC=""; pwBdDOC=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
   until false; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"

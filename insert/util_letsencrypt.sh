@@ -3,7 +3,7 @@
 # ARG : titre, texte, lignes sous-boite
 # RETURN : $__saisieDomaineBox1, $__saisieDomaineBox2 (www.), $installCert (y|Y|n|N)
 __saisieDomaineBox() {
-  local reponse="", message="", inputItem=""
+  local reponse=""; local message=""; local inputItem=""
   installCert="Y"  # retournée à l'appelant
   __saisieDomaineBox1=""; __saisieDomaineBox2=""   # retournée à l'appelant
   until false; do

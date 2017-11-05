@@ -64,15 +64,17 @@ __messageBox() {
 # ARG : titre, texte, [h] for help, optional for HiwsT-util
 # RETURN : $__saisieTexteBox one string all lower $? 0 or 1 (cancel)
 __saisieTexteBox() {
-  local codeRetour="", argHelp="", label="Users List"
+  local codeRetour=""; local argHelp=""; local label="Users List"
   if [[ ${3} == "h" ]]; then
     argHelp="--help-button --help-label label"
   fi
   until false; do
+  #  declare -a CMD
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap $argHelp --max-input 15 --inputbox "${2}" 0 0)
-
-    # dialog --aspect 12 --colors --backtitle HiwsT : Installation rtorrent - ruTorrent[5] --title Creating user[7] --trim --cr-wrap --help-button --help-label label[12] --max-input 15 --inputbox
-    CMD[12]="$label"   # si non "Users" [12] et "List" [13]
+    # dialog[0] --aspect[1] 12[2] --colors[3] --backtitle[4] HiwsT : Installation rtorrent - ruTorrent[5] --title[6] Creating user[7] --trim[8] --cr-wrap[9] --help-button[10] --help-label[11] label[12] --max-input 15 --inputbox[15] ... $CMD array
+    if [[ -n $argHelp ]]; then
+      CMD[12]="$label"   # si inséré directement dans CMD=() dialog voie 2 éléments différents "Users" [12] et "List" [13] du tableau
+    fi
     __saisieTexteBox=$("${CMD[@]}" 2>&1 > /dev/tty)
     codeRetour=$?
 
