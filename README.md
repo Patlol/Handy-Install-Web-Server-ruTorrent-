@@ -1,23 +1,14 @@
 # HiwsT
-Handy Install a Web Server with ruTorrent --HwsT--  
-_ruTorrent multiuser and Apache2_  
+Handy Install a Web Server with
+_Apache2 and php_  
 
-### We no longer offer Cakebox and nginx:
-### * :warning: Cakebox is DEPRECATED :warning: <a href="https://github.com/cakebox/cakebox">see here</a> and <a href="https://github.com/cakebox/cakebox/issues/216">here</a> :warning:  
+##### We no longer offer Cakebox and nginx:
+##### :warning: Cakebox is DEPRECATED <a href="https://github.com/cakebox/cakebox">see here</a> and <a href="https://github.com/cakebox/cakebox/issues/216">here</a> :warning:  
 
-Install on Debian 8 and 9 or Ubuntu 16 server
-- apache
-- php
-- rtorrent
- - librtorrent
- - xmlrpc
-- <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> multiuser
- - mediainfo
- - ffmpeg
-- <a href="http://www.webmin.com/">WebMin</a>
-
-![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:07:57.png)  
-![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:08:15.png)  
+Install on Debian 8 and 9 or Ubuntu 16 fresh server
+- apache2
+- php5 / php7.0  
+ ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-intro.png)
 ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-port.png)  
 
 # HiwsT-util
@@ -36,6 +27,13 @@ With this utility you can
   - Creates a certificate with Lets Encrypt / certbot
   - Modifies the certificate on the WebMin server
   - Adds a cron task to renew certificate
+- rtorrent
+ - librtorrent
+ - xmlrpc
+- <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> multiuser
+ - mediainfo
+ - ffmpeg
+- <a href="http://www.webmin.com/">WebMin</a>
 - Add a VPN (openVPN)
   - Install / uninstall
   - Creates / remove new user
@@ -46,7 +44,9 @@ With this utility you can
 - Add phpMyAdmin
 - Perform a system diagnosis  
 
-![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsTU-menu.png)
+![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsTU-menu.png)  
+![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:07:57.png)  
+![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:08:15.png)
 
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/Home">Wiki</a> in french  
 Please read <a href="https://github.com/Patlol/Install-Handy-Web-Server-ruTorrent-/wiki/Home-en">Wiki</a> in english
