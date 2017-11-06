@@ -34,7 +34,7 @@ EOF
   # menu
   until false ; do
     echo
-    echo "Do you want"
+    echoc v " Do you want "
     echo -e "\t1) List/Add and enable basic rules with ufw"
     echo -e "\t2) List/Delete the enabled ufw rules (all policy ACCEPT)"
     echo -e "\t3) Stopped and disabled on system startup the firewall"
@@ -55,7 +55,7 @@ EOF
       ;;
       1 )  #  Lister/Ajouter et activer les règles minimums
         echo
-        echoc r "** Rules added by the script **"
+        echoc r " ** Rules added by the script ** "
         echo "Accept port $portSSH/tcp Chain INPUT (port ssh)"
         echo "Accept port 80 Chain INPUT (http)"
         echo "Accept port 443 Chain INPUT (https)"
@@ -67,7 +67,7 @@ EOF
         echo "Drop others ports in Chain INPUT (policy DROP)"
         echo "Accept all ports in Chain OUTPUT (policy ACCEPT)"
         echo
-        echo "Do you want"
+        echoc r " Do you want "
         echo -e "\t1) Add the rules above"
         echo -e "\t2) Back to menu"
         until false ; do
@@ -104,15 +104,15 @@ EOF
       ;;
       2 )  #  Lister/Supprimer les règles en place
         echo
-        echoc r "** Rules currently enabled: **"
+        echoc r " ** Rules currently enabled: ** "
         if [ $(ufw show added | grep None) ]; then
-          echoc r "      No rule enabled         "
+          echoc r "       No rule enabled          "
           echo
           sleep 1; continue
         else
           ufw status verbose
           echo
-          echo "Do you want"
+          echoc v " Do you want "
           echo -e "\t1) Remove the above rules"
           echo -e "\t2) Back to menu"
           until false ; do
@@ -142,20 +142,20 @@ EOF
       ;;
       5 )
         echo
-        echo "*************************************************************************"
+        echoc v "*************************************************************************"
         echo
         iptables -L
-        echo "*************************************************************************"
+        echoc v "*************************************************************************"
       ;;
       6 )
         echo
-        echo "*************************************************************************"
+        echoc v "*************************************************************************"
         echo
         iptables -t nat -n -L
-        echo "*************************************************************************"
+        echoc v "*************************************************************************"
       ;;
       * )
-        echoc r "Invalid input"
+        echoc r " Invalid input "
         sleep 1
       ;;
     esac

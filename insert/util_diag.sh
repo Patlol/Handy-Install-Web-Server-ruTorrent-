@@ -8,61 +8,62 @@ __diag() {
   echo "IP: $IP"
   echo "Host Name: $HOSTNAME"
   serverName=$(grep -E "^ServerName" $REPAPA2/sites-available/000-default.conf | awk -F" " '{print $2}')
-  if [[ -n $serverName ]]; then   # Si nom de domaine
+  if [[ -n "$serverName" ]]; then   # Si nom de domaine
     echo "Domain name: $serverName"
     echo
     echo "Certificates ssl"
     certbot certificates
   fi
   echo
-  echo "RAM: "
-  echo "----"
+  echoc v "  RAM:  "
+  echo
   free -h
   echo
   echo "-------------------------------------------------------------------------------"
-  echo "Disks:"
-  echo "------"
+  echoc v "  Disks:  "
+  echo
   df -h
   echo
   echo "-------------------------------------------------------------------------------"
-  echo "firewall: ufw show listening"
-  echo "----------------------------"
+  echoc v "  firewall: ufw show listening  "
+  echo
   ufw show listening 2>/dev/null
-  [[ $? -ne 0 ]] && echo "Ufw is not installed"
+  [[ $? -ne 0 ]] && echoc r " Ufw is not installed "
   echo "-------------------------------------------------------------------------------"
-  echo "firewall: ufw status verbose"
-  echo "----------------------------"
+  echoc v "  firewall: ufw status verbose  "
+  echo
   ufw status verbose 2>/dev/null
-  [[ $? -ne 0 ]] && echo "Ufw is not installed"
+  [[ $? -ne 0 ]] && echoc r " Ufw is not installed "
   echo "-------------------------------------------------------------------------------"
-  echo "apache2:"
-  echo "--------"
+  echoc v "  apache2:  "
+  echo
   service apache2 status
   echo
   echo "-------------------------------------------------------------------------------"
-  echo "php-fpm:"
-  echo "--------"
+  echoc v "  php-fpm:  "
+  echo
   service $PHPVER status
   echo
   echo "-------------------------------------------------------------------------------"
-  echo "sshd:"
-  echo "-----"
+  echoc v "  sshd:  "
+  echo
   service sshd status
   echo
   echo "-------------------------------------------------------------------------------"
-  echo "rtorrentd:"
-  echo "----------"
+  echoc v "  rtorrentd:  "
+  echo
   service rtorrentd status
   echo
   ps -aux | grep '.torrent$'
   echo
   echo "-------------------------------------------------------------------------------"
-  echo "Users:"
-  echo "------"
+  echoc v "  Users:  "
+  echo
   __listeUtilisateurs "texte"
   cat /tmp/liste
 
   until false; do
+    echo
     echoc r "Scroll up to see the beginning"
     echo
     echo -e "\t1) See iptables rules, 'filter' table"
@@ -81,26 +82,26 @@ __diag() {
         break
       ;;
       1 )
-        echo "------------------------------------------------------------------------"
+        echoc v "------------------------------------------------------------------------"
         iptables -n -L
-        echo "------------------------------------------------------------------------"
+        echoc v "------------------------------------------------------------------------"
       ;;
       2 )
-        echo "------------------------------------------------------------------------"
+        echoc v "------------------------------------------------------------------------"
         iptables -t nat -n -L
-        echo "------------------------------------------------------------------------"
+        echoc v "------------------------------------------------------------------------"
       ;;
       3 )
         echo "------------------------------------------------------------------------"
-        echo "netstat:"
-        echo "--------"
+        echoc v "  netstat:  "
+        echo
         netstat -tap
         echo "------------------------------------------------------------------------"
       ;;
       4 )
         echo "------------------------------------------------------------------------"
-        echo "netstat:"
-        echo "--------"
+        echoc v "  netstat:  "
+        echo
         netstat -tap | grep -E "ESTABLISHED | LISTEN | SYN_SENT |SYN_RECV | CONNECTING | CONNECTED | SYN_RECV"
         echo "------------------------------------------------------------------------"
       ;;
