@@ -8,7 +8,7 @@ _Apache2 and php_
 Install on Debian 8 and 9 or Ubuntu 16 fresh server
 - apache2
 - php5 / php7.0  
- ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-intro2.png)
+ ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-intro2.png)  
 ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-port.png)  
 
 # HiwsT-util
