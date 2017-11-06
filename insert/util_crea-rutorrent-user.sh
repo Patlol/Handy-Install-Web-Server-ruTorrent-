@@ -32,18 +32,18 @@ __creaUserRuto () {
   #  partie rtorrent __creaUserRuto------------------------------------------------
   # incrémenter le port scgi, écrir le fichier témoin
   if [ -e $REPWEB/rutorrent/conf/scgi_port ]; then
-    port=$(cat $REPWEB/rutorrent/conf/scgi_port)
+    PORT_SCGI=$(cat $REPWEB/rutorrent/conf/scgi_port)
   else
-    port=5000
+    PORT_SCGI=5000
   fi
 
-  let "port += 1"
-  echo $port > $REPWEB/rutorrent/conf/scgi_port
+  let "PORT_SCGI += 1"
+  echo $PORT_SCGI > $REPWEB/rutorrent/conf/scgi_port
 
   # rtorrent.rc
   cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/${1}/.rtorrent.rc
   sed -i 's/<username>/'${1}'/g' /home/${1}/.rtorrent.rc
-  sed -i 's/<port>/'$port'/' /home/${1}/.rtorrent.rc  #  port scgi
+  sed -i 's/<port>/'$PORT_SCGI'/' /home/${1}/.rtorrent.rc  #  port scgi
 
   echoc v " /home/${1}/rtorrent.rc created "; echo
 
@@ -69,7 +69,7 @@ __creaUserRuto () {
   mkdir -p $REPWEB/rutorrent/conf/users/${1}
   cp $REPWEB/rutorrent/conf/access.ini $REPWEB/rutorrent/conf/plugins.ini $REPWEB/rutorrent/conf/users/${1}
   cp $REPLANCE/fichiers-conf/ruto_multi_config.php $REPWEB/rutorrent/conf/users/${1}/config.php
-  sed -i -e 's/<port>/'$port'/' -e 's/<username>/'${1}'/' $REPWEB/rutorrent/conf/users/${1}/config.php
+  sed -i -e 's/<port>/'$PORT_SCGI'/' -e 's/<username>/'${1}'/' $REPWEB/rutorrent/conf/users/${1}/config.php
   chown -R www-data:www-data $REPWEB/rutorrent/conf/users/${1}
 
   # déactivation du plugin linkcakebox
