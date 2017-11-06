@@ -129,6 +129,7 @@ md5sum -c owncloud-$ocVersion.tar.bz2.md5 < owncloud-$ocVersion.tar.bz2 || __msg
 wget https://owncloud.org/owncloud.asc
 wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.asc
 gpg --import owncloud.asc &>/dev/null
+gpg --import owncloud.asc > /dev/null 2>&1
 gpg --verify owncloud-$ocVersion.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-$ocVersion.tar.bz2.asc" $?
 
 tar -xjf "owncloud-$ocVersion.tar.bz2"
@@ -153,7 +154,7 @@ if [[ $? -eq 0 ]]; then
 fi
 ################################################################################
 # install de postfix et mailutils si pas présents
-which mailutils 2>&1 > /dev/null
+which mailutils > /dev/null 2>&1
 if [ $? != 0 ]; then
   __messageBox "postfix/mailutils install" "
     Validate the default values"

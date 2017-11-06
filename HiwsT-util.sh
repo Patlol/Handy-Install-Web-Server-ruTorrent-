@@ -231,7 +231,7 @@ __changePW() {
           if [[ $? -eq 0 ]]; then  # 1 si bouton cancel
             # user linux
             clear
-            grep -E "^$__saisieTexteBox:" /etc/passwd >/dev/null
+            grep -E "^$__saisieTexteBox:" /etc/passwd > /dev/null 2>&1
             if [[ $? -eq 0 ]]; then
               __saisiePwBox "Change Password Linux" "$__saisieTexteBox user" 4
               echo "$__saisieTexteBox:$__saisiePwBox" | chpasswd
@@ -454,9 +454,9 @@ fi
 
 ############################################################
 # apache vs nginx ?
-service nginx status  2>&1 > /dev/null
+service nginx status > /dev/null 2>&1
 sortieN=$?  # 0 actif, 1 erreur == inactif
-service apache2 status 2>&1 > /dev/null
+service apache2 status > /dev/null 2>&1
 sortieA=$?
 if [[ $sortieN -eq 0 ]] && [[ $sortieA -eq 0 ]]; then
   echo
@@ -542,7 +542,7 @@ trap "__trap" EXIT
 exec 3>&2 2>/tmp/trace
 
 ############################################################
-# boucle menu / sortie
+# boucle main menu / sortie
 __menu
 
 ############################################################

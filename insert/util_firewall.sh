@@ -19,10 +19,11 @@ __firewall() {
   fi
 
   # ufw si pas installé, installer
-  which ufw 2>&1 > /dev/null
+  which ufw > /dev/null 2>&1
   if [ $? != 0 ]; then
     apt-get update
     cmd="apt-get -yq install ufw"; $cmd || __msgErreurBox "$cmd" $?
+    if [[ $? -eq 0 ]] ; then echoc v " ufw installed "; fi
     cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
 Firewall (ufw) is installed

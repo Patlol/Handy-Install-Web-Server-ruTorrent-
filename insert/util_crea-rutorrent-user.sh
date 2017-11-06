@@ -4,7 +4,7 @@
 __creaUserRuto () {
   # param : ${1} name user ${2} pw user"
   local codeSortie
-  grep -E "^sftp" /etc/group > /dev/null
+  grep -E "^sftp" /etc/group > /dev/null 2>&1
   if [[ $? -ne 0 ]]; then
     addgroup sftp
   fi

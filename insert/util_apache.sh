@@ -1,10 +1,10 @@
 
 __userExist() {   #  appelée par __IDuser  et autres f()  $user = ${1}
   # user linux ?
-  grep -E "^${1}:" /etc/passwd >/dev/null
+  grep -E "^${1}:" /etc/passwd > /dev/null 2>&1
   userL=$?
   # user ruTorrent ?
-  grep -E "^${1}:rutorrent" $REPAPA2/.htpasswd > /dev/null
+  grep -E "^${1}:rutorrent" $REPAPA2/.htpasswd > /dev/null 2>&1
   userR=$?
   # renvoie $userR $userL = 0 existe = 1 n'existe pas
 }

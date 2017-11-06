@@ -75,17 +75,17 @@ locale-gen
 apt-get update
 
 # installe dialog si pas installé
-which dialog &>/dev/null
+which dialog >/dev/null 2>&1
 if [ $? -ne 0 ]; then
   apt-get install -yq dialog
 fi
 # installe lsb_release si pas installé
-which lsb_release &>/dev/null
+which lsb_release >/dev/null 2>&1
 if [ $? -ne 0 ]; then
   apt-get install -yq lsb-release
 fi
 # installe sudo si pas installé
-which sudo &>/dev/null
+which sudo >/dev/null 2>&1
 if [ $? -ne 0 ]; then
   apt-get install -yq sudo
 fi
@@ -144,12 +144,12 @@ if [[ "$nameDistrib" != "Debian" && "$nameDistrib" != "Ubuntu" ]]; then
 fi
 
 # Vérif serveur hhtp
-service apache2 restart &> /dev/null
-service nginx restart &> /dev/null
-service apache2 status &> /dev/null; serveurHttpA=$?
-service nginx status &> /dev/null; serveurHttpN=$?
-service apache2 stop &> /dev/null
-service nginx stop &> /dev/null
+service apache2 restart > /dev/null 2>&1
+service nginx restart > /dev/null 2>&1
+service apache2 status > /dev/null 2>&1 ; serveurHttpA=$?
+service nginx status > /dev/null 2>&1 ; serveurHttpN=$?
+service apache2 stop > /dev/null 2>&1
+service nginx stop > /dev/null 2>&1
 
 if [[ $serveurHttpN -eq 0 ]] && [[ $serveurHttpA -eq 0 ]]; then
   __ouinonBox "Http server" "
@@ -194,7 +194,7 @@ __messageBox "Your system" " ${BO}
   Your IP      : ${N}$IP ${BO}
   The script runs under: ${N}$user
   ${BO}
-  Execution duration: ${N}about 5mn
+  Execution duration: ${N}about 6mn
 
   Amount of disk space available${BO}
   Your root partition (/) has $(( $rootDispo/1024/1024 )) Go free.
@@ -208,7 +208,7 @@ until [[ $usernameOk -ne 0 ]]; do
     Choose a linux username${R}
     (neither space nor \)${N}: "
   userLinux="$__saisieTexteBox"
-  grep -E "^$userLinux:" /etc/passwd >/dev/null
+  grep -E "^$userLinux:" /etc/passwd >/dev/null 2>&1
   usernameOk=$?
   if [[ $usernameOk -eq 0 ]]; then
     __messageBox "Linux user" "
