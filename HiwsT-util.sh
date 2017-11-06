@@ -62,56 +62,65 @@ RATIO=12
 ##      ajout utilisateur sous menu et traitements
 ############################################################
 __ssmenuAjoutUtilisateur() {
-local typeUser=""; local codeSortie=1
+  local typeUser=""; local codeSortie=1
 
-until false; do
-  # Create a user:" 22 70 4 \
-  CMD=(dialog --backtitle "$TITRE" --title "Add a user" --trim --cr-wrap --cancel-label "Exit" --menu "
+  until false; do
+    # Create a user:" 22 70 4 \
+    CMD=(dialog --backtitle "$TITRE" --title "Add a user" --trim --cr-wrap --cancel-label "Exit" --menu "
 
-    A ruTorrent user can only be created with a Linux user
+      A ruTorrent user can only be created with a Linux user
 
-    Create a user:" 18 65 3 \
-    1 "Linux + ruTorrent" \
-    2 "OwnCloud" \
-    3 "Users list")
+      Create a user:" 18 65 3 \
+      1 "Linux + ruTorrent" \
+      2 "OwnCloud" \
+      3 "Users list")
 
-  typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
-  if [[ $? -eq 0 ]]; then  # pas cancel
-    if [[ $typeUser -ne 3 ]]; then  # 3 = users list
-      __saisieTexteBox "Creating user" "
-        Input the name of new user${R}
-        Neither space nor special characters${N}" h
-      if [[ $? -eq 1 ]]; then   # 1 si bouton cancel
-        typeUser=""
-      fi
-    fi
-    case $typeUser in
-      1 )  #  créa linux ruto
-        __userExist "$__saisieTexteBox"    # insert/util_apache.sh renvoie userL userR 0 = existe
-        if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
-          __messageBox "Creating Linux/ruTorrent user" "
-            The $__saisieTexteBox user already exists
-            "
-        else
-          __ouinonBox "Creating Linux/ruTorrent user" " - The new user will have SFTP access with his/her name and password,
-            same port as all users.
-            - His/her access is limited at /home directory.
-            - No access to ssh$R
-            Confirm $__saisieTexteBox as new user?"
-          if [[ $__ouinonBox -eq 0 ]]; then
-            __saisiePwBox "User $__saisieTexteBox setting-up" "
-              Input user password" 0 0
-            clear;
-            cmd="__creaUserRuto $__saisieTexteBox $__saisiePwBox"; $cmd || __msgErreurBox "$cmd" $?
-            __messageBox "Creating Linux/ruTorrent user" " Setting-up completed
-              $__saisieTexteBox user created
-              Password $__saisiePwBox"
-          fi
+    typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
+    if [[ $? -eq 0 ]]; then  # pas cancel
+      if [[ $typeUser -ne 3 ]]; then  # 3 = users list
+        if [[ $typeUser -eq 1 ]] && [[ ! -d /var/www/html/rutorrent ]]; then
+          __messageBox "Creating user" "
+            rTorrent and ruTorrent  are not installed!"
+          continue
         fi
-      ;;
-      2 )  # créa owncloud user "a-z", "A-Z", "0-9", "_@-" et "." (le point)
         pathOCC=$(find /var -name occ 2>/dev/null)
-        if [[ -n $pathOCC ]]; then  # owncloud installé
+        if [[ $typeUser -eq 2 ]] && [[ -z $pathOCC ]]; then
+          __messageBox "Creating ownCloud user" "
+            Owncloud is not installed!"
+          continue
+        fi
+        __saisieTexteBox "Creating user" "
+          Input the name of new user${R}
+          Neither space nor special characters${N}" h  # h pour bouton help = liste users
+        if [[ $? -eq 1 ]]; then   # 1 si bouton cancel
+          typeUser=""
+        fi
+      fi
+      case $typeUser in
+        1 )  #  créa linux ruto
+          __userExist "$__saisieTexteBox"    # insert/util_apache.sh renvoie userL userR 0 = existe
+          if [[ $userL -eq 0 ]] || [[ $userR -eq 0 ]]; then
+            __messageBox "Creating Linux/ruTorrent user" "
+              The $__saisieTexteBox user already exists
+              "
+          else
+            __ouinonBox "Creating Linux/ruTorrent user" " - The new user will have SFTP access with his/her name and password,
+              same port as all users.
+              - His/her access is limited at /home directory.
+              - No access to ssh$R
+              Confirm $__saisieTexteBox as new user?"
+            if [[ $__ouinonBox -eq 0 ]]; then
+              __saisiePwBox "User $__saisieTexteBox setting-up" "
+                Input user password" 0 0
+              clear;
+              cmd="__creaUserRuto $__saisieTexteBox $__saisiePwBox"; $cmd || __msgErreurBox "$cmd" $?
+              __messageBox "Creating Linux/ruTorrent user" " Setting-up completed
+                $__saisieTexteBox user created
+                Password $__saisiePwBox"
+            fi
+          fi
+        ;;
+        2 )  # créa owncloud user "a-z", "A-Z", "0-9", "_@-" et "." (le point)
           if [[ ! "$__saisieTexteBox" =~ ^[[:alnum:]_@\.-]{1,}$ ]]; then
             __messageBox "Creating ownCloud user" "
             It's the UID, you can use only
@@ -127,19 +136,15 @@ until false; do
           else
             . $REPLANCE/insert/util_crea-owncloud-user.sh
           fi
-        else # ownCloud pas installé
-          __messageBox "Creating ownCloud user" "
-            Owncloud is not installing!"
-        fi
-      ;;
-      3 )
-        cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
-      ;;
-    esac
-  else  # === si sortie du menu $? -ne 0 = bouton cancel
-    break
-  fi
-done
+        ;;
+        3 )
+          cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
+        ;;
+      esac
+    else  # === si sortie du menu $? -ne 0 = bouton cancel
+      break
+    fi
+  done
 }   #  fin __ssmenuAjoutUtilisateur()
 
 
@@ -166,6 +171,17 @@ __ssmenuSuppUtilisateur() {
     if [[ $? -eq 0 ]]; then
       # filtrer le choix 2 : liste user
       if [[ $typeUser -ne 2 ]]; then
+        if [[ $typeUser -eq 1 ]] && [[ ! -d /var/www/html/rutorrent ]]; then
+          __messageBox "Delete a Linux/ruTorrent user" "
+            rTorrent and ruTorrent  are not installed!"
+            continue
+        fi
+        # pathOCC=$(find /var -name occ 2>/dev/null)
+        # if [[ $typeUser -eq 2 ]] && [[ -z $pathOCC ]]; then
+        #   __messageBox "Delete ownCloud user" "
+        #     Owncloud is not installed!"
+        #     continue
+        # fi
         __saisieTexteBox "Delete a user" "
           Input a user name:" h
         if [[ $? -eq 1 ]]; then  # 1 si bouton cancel
@@ -252,6 +268,11 @@ __changePW() {
           fi
         ;;
         [2] )   ###  utilisateur ruTorrent
+          if [[ $typeUser -eq 2 ]] && [[ ! -d /var/www/html/rutorrent ]]; then
+            __messageBox "Change Password ruTorrent user" "
+              rTorrent and ruTorrent  are not installed!"
+              continue
+          fi
           __saisieTexteBox "Change Password" "
             Input a ruTorrent user name" h
           if [[ $? -eq 0 ]]; then
@@ -295,74 +316,60 @@ __changePW() {
 __menu() {
   local choixMenu=""; local item=1
   until false; do
-    # /!\ 9) doit être firewall (retour test openvpn avec $item) et openvpn 7) item=x
+    # /!\ 5) doit être firewall (retour test openvpn avec $item) et openvpn 9) item=x
     # --menu text height width menu-height
     CMD=(dialog --backtitle "$TITRE" --title "Main menu" --trim --cr-wrap --cancel-label "Exit" --default-item "$item" --menu "
       To be used after installation with HiwsT
 
       Your choice:" 24 70 14 \
-      1 "Create a user Linux, ruTorrent, ownCloud" \
-      2 "Change user password" \
-      3 "Delete a user" \
-      4 "List existing users" \
-      5 "Install rtorrent/ruTorrent" \
-      6 "Install webMin" \
-      7 "Install/uninstall OpenVPN, a openVPN user" \
+      1 "List existing users" \
+      2 "Create a user Linux, ruTorrent, ownCloud" \
+      3 "Change user password" \
+      4 "Delete a user" \
+      5 "Firewall" \
+      6 "System status" \
+      7 "Install rtorrent/ruTorrent" \
       8 "Install/update ownCloud" \
-      9 "Firewall" \
-      10 "Add domain name & Install free cert Let's Encrypt" \
+      9 "Install/uninstall OpenVPN, a openVPN user" \
+      10 "Install webMin" \
       11 "Install phpMyAdmin" \
-      12 "Restart rtorrent manually" \
-      13 "Diagnostic" \
+      12 "Add domain name & Install free cert Let's Encrypt" \
+      13 "Restart rtorrent manually" \
       14 "Reboot the server")
     choixMenu=$("${CMD[@]}" 2>&1 > /dev/tty)
 
     if [[ $? -eq 0 ]]; then
       case $choixMenu in
-        1 )  ######  ajouter user  #########################
-          __ssmenuAjoutUtilisateur
-        ;;
-        2 )  ######  modifier pw utilisateur  ##############
-          cmd="__changePW"; $cmd || __msgErreurBox "$cmd" $?
-        ;;
-        3 )  ###### supprimer utilisateur  #################
-          cmd="__ssmenuSuppUtilisateur"; $cmd || __msgErreurBox "$cmd" $?
-        ;;
-        4 )  ######liste utilisateurs ######################
+        1 )  ######liste utilisateurs ######################
           cmd="__listeUtilisateurs"; $cmd || __msgErreurBox "$cmd" $?
         ;;
-        5 )  ######  rtorrent & ruTorrent
+        2 )  ######  ajouter user  #########################
+          __ssmenuAjoutUtilisateur
+        ;;
+        3 )  ######  modifier pw utilisateur  ##############
+          cmd="__changePW"; $cmd || __msgErreurBox "$cmd" $?
+        ;;
+        4 )  ###### supprimer utilisateur  #################
+          cmd="__ssmenuSuppUtilisateur"; $cmd || __msgErreurBox "$cmd" $?
+        ;;
+        5 )  ######  firewall  #############################
+          . ${REPLANCE}/insert/util_firewall.sh
+          cmd="__firewall"; $cmd || __msgErreurBox "$cmd" $?
+          # menu : si on vient de openvpn on y retourne
+          if [[ $item -eq 5 ]]; then item=9; fi # => goto vpn
+        ;;
+        6 )  ######  Diagnostiques ########################
+          __diag
+        ;;
+        7 )  ######  rtorrent & ruTorrent
             if [[ -d /var/www/html/rutorrent ]]; then
               __messageBox "Install rTorrent & ruTorrent" "
-                rTorrent and ruTorrent are already installed."
+                rTorrent and ruTorrent are already
+                installed."
               continue
             fi
             . $REPLANCE/insert/util_rtorrent.sh
             . $REPLANCE/insert/util_rutorrent.sh
-        ;;
-        6 )  ######  WebMin   ##############################
-          if [[ -d /var/webmin ]]; then
-            __messageBox "Install webMin" "
-              webMin is already installed."
-            continue
-          fi
-          . ${REPLANCE}/insert/util_webmin.sh
-        ;;
-        7 )  ######  VPN   #################################
-          # si firewall off et vpn pas installé
-          if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]  && [[ ! -e /etc/openvpn/server.conf ]]; then
-            __ouinonBox "Install openVPN" "${R}${BO} Turn ON the firewall BEFORE
-              installing the VPN !!!${N}
-              "
-            if [[ $__ouinonBox -eq 0 ]]; then
-              item=9  # menu => Firewall
-              continue
-            else
-              continue
-            fi
-          fi
-          __vpn
-          item=1  # menu => Create a user
         ;;
         8 )  ######  ownCloud ##############################
           # owncloud installé ?
@@ -381,21 +388,29 @@ __menu() {
           fi  # fin si déjà installé
           . ${REPLANCE}/insert/util_owncloud.sh
         ;;
-        9 )  ######  firewall  #############################
-          . ${REPLANCE}/insert/util_firewall.sh
-          cmd="__firewall"; $cmd || __msgErreurBox "$cmd" $?
-          # menu : si on vient de openvpn on y retourne
-          if [[ $item -eq 8 ]]; then item=7; fi # => goto vpn
-        ;;
-        10 )  ######  domain & letsencrypt ##################
-          which certbot 2>&1 > /dev/null
-          if [ $? -eq 0 ]; then
-            __messageBox "Domain & Let's Encrypt" "
-              Let's Encrypt Certificates is already installed
+        9 )  ######  VPN   #################################
+          # si firewall off et vpn pas installé
+          item=1  # menu => Create a user
+          if [[ ! $(iptables -L -n | grep -E 'REJECT|DROP') ]]  && [[ ! -e /etc/openvpn/server.conf ]]; then
+            __ouinonBox "Install openVPN" "${R}${BO} Turn ON the firewall BEFORE
+              installing the VPN !!!${N}
               "
+            if [[ $__ouinonBox -eq 0 ]]; then
+              item=5  # menu => Firewall
+              continue
+            else
+              continue
+            fi
+          fi
+          __vpn
+        ;;
+        10 )  ######  WebMin   ##############################
+          if [[ -d /var/webmin ]]; then
+            __messageBox "Install webMin" "
+              webMin is already installed."
             continue
           fi
-          . ${REPLANCE}/insert/util_letsencrypt.sh
+          . ${REPLANCE}/insert/util_webmin.sh
         ;;
         11 )  ######  phpMyAdmin  ###########################
           pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
@@ -407,19 +422,34 @@ __menu() {
           fi
           __phpmyadmin
         ;;
-        12 )  ######  Relance rtorrent  ####################
-          __messageBox "Message" "
+        12 )  ######  domain & letsencrypt ##################
+          which certbot > /dev/null 2>&1
+          if [ $? -eq 0 ]; then
+            __messageBox "Domain & Let's Encrypt" "
+              Let's Encrypt Certificates is already installed
+              "
+            continue
+          fi
+          . ${REPLANCE}/insert/util_letsencrypt.sh
+        ;;
+        13 )  ######  Relance rtorrent  ####################
+          if [[ ! -d /var/www/html/rutorrent ]]; then
+            __messageBox "Restart rtorrentd daemon" "
+              rTorrent is not installed.
+              "
+            continue
+          fi
+          __ouinonBox "Message" "
             Restart rtorrentd daemon
             " 10 35
-          clear
-          __servicerestart "rtorrentd"
           if [[ $? -eq 0 ]]; then
-            service rtorrentd status
-            sleep 4
+            clear
+            __servicerestart "rtorrentd"
+            if [[ $? -eq 0 ]]; then
+              service rtorrentd status
+              sleep 4
+            fi
           fi
-        ;;
-        13 )  ######  Diagnostiques ########################
-          __diag
         ;;
         14 )  ######  REBOOT  ##############################
           __ouinonBox "${R}${BO}Server Reboot${N}"
