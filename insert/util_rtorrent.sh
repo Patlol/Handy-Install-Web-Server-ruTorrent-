@@ -34,30 +34,27 @@ else  # /home
 fi
 
 # Rutorrent user
-usernameOk=0
-until [[ $usernameOk -ne 0 ]]; do
+until false; do
   __saisieTexteBox "ruTorrent user" "
-
     It's more secure to choose a different name
-    than the Linux user
+    than a Linux user
     Choose a ruTorrent username${R} (neither space nor \)$N: "
+  if [[ $? -ne 0 ]]; then continue 2; fi  # cancel => main menu
   userRuto="$__saisieTexteBox"
-  grep -E "^$userRuto:" /etc/passwd >/dev/null
-  if [[ $? -eq 0 ]]; then
-    __ouinonBox "ruTorrent user" "
-      $userRuto already exists, is a Linux user.
-      Choose another username?
+  grep -E "^$userRuto:" /etc/passwd > /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    __messageBox "ruTorrent user" "
+      The new user ${I}$userRuto${N} must already be a linux user.
+      Choose another username.
       "
-    if [[ $__ouinonBox -ne 0 ]]; then
-      break
-    fi
+      continue
   else
+    __saisiePwBox "ruTorrent user" "
+      Password for $userRuto:" 4
+    pwRuto="$__saisiePwBox"
     break
   fi
 done
-__saisiePwBox "ruTorrent user" "
-  Password for $userRuto:" 4
-pwRuto="$__saisiePwBox"
 
 ############################################################
 ##                 installation rtorrent
@@ -71,6 +68,7 @@ elif [[ $nameDistrib == "Debian" && $os_version_M -eq 9 ]]; then
 else
   paquets=$paquetsRtoU
 fi
+echo
 cmd="apt-get install -yq $paquets"; $cmd || __msgErreurBox "$cmd" $?
 
 echo
@@ -83,27 +81,27 @@ echo
 
 
 # configuration rtorrent
-cp $REPLANCE/fichiers-conf/rto_rtorrent.rc $REPUL/.rtorrent.rc
-sed -i 's/<username>/'$userLinux'/g' $REPUL/.rtorrent.rc
-sed -i 's/<port>/'$PORT_SCGI'/' $REPUL/.rtorrent.rc
+cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/$userRuto/.rtorrent.rc
+sed -i 's/<username>/'$userRuto'/g' /home/$userRuto/.rtorrent.rc
+sed -i 's/<port>/'$PORT_SCGI'/' /home/$userRuto/.rtorrent.rc
 
-mkdir -p $REPUL/downloads/watch
-mkdir -p $REPUL/downloads/.session
-chown -R $userLinux:$userLinux $REPUL/downloads
+mkdir -p /home/$userRuto/downloads/watch
+mkdir -p /home/$userRuto/downloads/.session
+chown -R $userRuto:$userRuto /home/$userRuto/downloads
 echo
 echoc v "                                                     "
-echoc v "    .rtorrent.rc configured for main Linux user      "
+echoc v "    .rtorrent.rc configured for Linux user           "
 echoc v "                                                     "
 sleep 1
 
 # mettre rtorrent en deamon / screen
-cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/$userLinux-rtorrent.conf
-chmod u+rwx,g+rwx,o+rx  /etc/init/$userLinux-rtorrent.conf
-sed -i 's/<username>/'$userLinux'/g' /etc/init/$userLinux-rtorrent.conf
+cp $REPLANCE/fichiers-conf/rto_rtorrent.conf /etc/init/$userRuto-rtorrent.conf
+chmod u+rwx,g+rwx,o+rx  /etc/init/$userRuto-rtorrent.conf
+sed -i 's/<username>/'$userRuto'/g' /etc/init/$userRuto-rtorrent.conf
 #-----------------------------------------------------------------
 cp $REPLANCE/fichiers-conf/rto_rtorrentd.sh /etc/init.d/rtorrentd.sh
 chmod u+rwx,g+rwx,o+rx  /etc/init.d/rtorrentd.sh
-sed -i 's/<username>/'$userLinux'/g' /etc/init.d/rtorrentd.sh
+sed -i 's/<username>/'$userRuto'/g' /etc/init.d/rtorrentd.sh
 ln -s /etc/init.d/rtorrentd.sh  /etc/rc4.d/S99rtorrentd.sh
 ln -s /etc/init.d/rtorrentd.sh  /etc/rc5.d/S99rtorrentd.sh
 ln -s /etc/init.d/rtorrentd.sh  /etc/rc6.d/K01rtorrentd.sh
