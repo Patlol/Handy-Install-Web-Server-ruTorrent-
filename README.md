@@ -8,7 +8,7 @@ _Apache2 and php_
 Install on Debian 8 and 9 or Ubuntu 16 fresh server
 - apache2
 - php5 / php7.0  
- ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-intro.png)
+ ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-intro2.png)
 ![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsT-port.png)  
 
 # HiwsT-util
@@ -44,7 +44,7 @@ With this utility you can
 - Add phpMyAdmin
 - Perform a system diagnosis  
 
-![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsTU-main-menu.png)  
+![COPIE D'ECRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/HiwsTU-main-menu2.png)  
 ![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:07:57.png)  
 ![COPIE D'ÉCRAN](https://github.com/Patlol/Handy-Install-Web-Server-ruTorrent-/wiki/png/Capture2017-07-02_01:08:15.png)
 
