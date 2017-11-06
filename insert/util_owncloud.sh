@@ -3,9 +3,7 @@ clear
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
-readonly DbNameOC="owncloud"
 readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
-# ocpath=/var/www/owncloud
 readonly ocVersion="10.0.3"
 ################################################################################
 

@@ -28,11 +28,11 @@ __listeUtilisateursOC() {
   # done
   # echo ${liste[*]}
   # use debian script user
-  __mySqlDebScript  # helper-scripts.sh RETUN : $userBfD et $pwBdD
-  if [[ -z $pwBdD ]]; then
-    __listeUtilisateursOC=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+  __mySqlDebScript  # helper-scripts.sh RETUN : $userBdD et $pwBdD
+  if [[ -z ${pwBdD} ]]; then
+    __listeUtilisateursOC=$(echo "SELECT * FROM ${DbNameOC}.oc_group_user;" | mysql -BN -u ${userBdD}) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM $DbNameOC.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
   else
-    __listeUtilisateursOC=$(echo "SELECT * FROM owncloud.oc_group_user;" | mysql -BN -u $userBdD -p$pwBdD) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM owncloud.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
+    __listeUtilisateursOC=$(echo "SELECT * FROM ${DbNameOC}.oc_group_user;" | mysql -BN -u ${userBdD} -p${pwBdD}) || __msgErreurBox "__listeUtilisateursOC=$(echo \"SELECT * FROM $DbNameOC.oc_group_user;\" | mysql -BN -u $userBdD -p$pwBdD)" $?
   fi
 }
 
