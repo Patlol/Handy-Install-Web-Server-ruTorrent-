@@ -164,7 +164,6 @@ __ssmenuSuppUtilisateur() {
 
     typeUser=$("${CMD[@]}" 2>&1 > /dev/tty)
     if [[ $? -eq 0 ]]; then
-      # $type
       # filtrer le choix 2 : liste user
       if [[ $typeUser -ne 2 ]]; then
         __saisieTexteBox "Delete a user" "
@@ -368,7 +367,7 @@ __menu() {
         8 )  ######  ownCloud ##############################
           # owncloud installé ?
           pathOCC=$(find /var -name occ 2>/dev/null)
-          if [[ -n $pathOCC ]]; then
+          if [[ -n "$pathOCC" ]]; then
             __ouinonBox "Install/update ownCloud" "
               ownCloud is already installed.
               Do you want update it?
@@ -400,7 +399,7 @@ __menu() {
         ;;
         11 )  ######  phpMyAdmin  ###########################
           pathPhpMyAdmin=$(find /var/lib/apache2/conf/enabled_by_maint -name phpmyadmin)
-          if [[ -n $pathPhpMyAdmin ]]; then
+          if [[ -n "$pathPhpMyAdmin" ]]; then
             __messageBox "Install phpMyAdmin" "
               phpMyAdmin is already installed
               "

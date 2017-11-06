@@ -118,15 +118,17 @@ __saisieOCBox() {
 ##          main
 
 __saisieOCBox "ownCloud setting" "${R}Consult the help${N}" 15   # lignes ss-boite
-
-
+echo; echo
+echoc r "                                                                                                 "
+echoc r "                                This may take a while                                            "
+echoc r "  do not worry about the message \"Warning communications lost with UPS\" press the return key.  "
+echoc r "                                                                                                 "
 wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2  # old owncloud-10.0.2 new owncloud-10.0.3
 wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.md5
 md5sum -c owncloud-$ocVersion.tar.bz2.md5 < owncloud-$ocVersion.tar.bz2 || __msgErreurBox "md5sum -c owncloud-$ocVersion.tar.bz2.md5 < owncloud-$ocVersion.tar.bz2" $?
 
 wget https://owncloud.org/owncloud.asc
 wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.asc
-gpg --import owncloud.asc &>/dev/null
 gpg --import owncloud.asc > /dev/null 2>&1
 gpg --verify owncloud-$ocVersion.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-$ocVersion.tar.bz2.asc" $?
 

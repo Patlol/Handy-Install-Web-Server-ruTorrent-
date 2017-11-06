@@ -68,7 +68,7 @@ __listeUtilisateurs() {
 
   # if owncloud installed
   pathOCC=$(find /var -name occ 2>/dev/null)
-  if [[ -n $pathOCC ]]; then
+  if [[ -n "$pathOCC" ]]; then
     __listeUtilisateursOC
     if [[ -z $__listeUtilisateursOC ]]; then
       if [[ ${1} != "texte" ]]; then

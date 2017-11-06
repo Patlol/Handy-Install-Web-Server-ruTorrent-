@@ -1,3 +1,4 @@
+PAGE UP/DOWN to navigate
 
 None of the 7 entries should contain \ or space.
 The 7 fields are mandatory.
@@ -34,6 +35,7 @@ Max files size
 Data directory localisation
   The full path where the cloud files will be stored.
   Default value: /var/www/owncloud/data
+  /!\ Take care of your disk partitioning
 
 External storage (Recommended for ruTorrent)
   1 characters maximum "y" or "n" Lower case or upper case.
@@ -44,5 +46,5 @@ External storage (Recommended for ruTorrent)
 AudioPlayer (Recommended for ruTorrent)
   1 characters maximum "y" or "n" Lower case or upper case.
   Allows to install and setup Audio-Player app.
-  Also scans your data and external directories,
-  if External storage is enabled with iwatch.
+  Also scans (with iwatch) your data and external directories,
+  if External storage is enabled.

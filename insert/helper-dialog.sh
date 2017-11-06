@@ -72,7 +72,7 @@ __saisieTexteBox() {
   #  declare -a CMD
     CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --trim --cr-wrap $argHelp --max-input 15 --inputbox "${2}" 0 0)
     # dialog[0] --aspect[1] 12[2] --colors[3] --backtitle[4] HiwsT : Installation rtorrent - ruTorrent[5] --title[6] Creating user[7] --trim[8] --cr-wrap[9] --help-button[10] --help-label[11] label[12] --max-input 15 --inputbox[15] ... $CMD array
-    if [[ -n $argHelp ]]; then
+    if [[ -n "$argHelp" ]]; then
       CMD[12]="$label"   # si inséré directement dans CMD=() dialog voie 2 éléments différents "Users" [12] et "List" [13] du tableau
     fi
     __saisieTexteBox=$("${CMD[@]}" 2>&1 > /dev/tty)
@@ -169,7 +169,7 @@ __saisiePwOcBox() {
 # RETURN : nothing
 __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
   local argHLine=""
-  if [[ -n ${3} ]]; then
+  if [[ -n "${3}" ]]; then
     argHLine="--hline \"${3}\""
   fi
   CMD=(dialog --backtitle "$TITRE" --exit-label "Continued from installation" --title "${1}" $argHLine --textbox  "${2}" 0 0)
@@ -181,7 +181,7 @@ __textBox() {   # $1 titre  $2 fichier à lire  $3 texte baseline
 # ARG : commande, N° error
 # RETURN same N° error or exit N° erroro
 __msgErreurBox() {
-  local msgErreur, ref
+  local msgErreur; local ref
   ref=$(caller 0)
   err=${2}
   msgErreur="------------------\n"

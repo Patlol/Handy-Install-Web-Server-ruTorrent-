@@ -96,7 +96,7 @@ __creaUserOCBox "Creating ownCloud user" "
 if [[ $? -ne 0 ]]; then continue; fi
 export OC_PASS=$newUserPw
 argEmail=""
-if [[ -n $newUserMail ]]; then argEmail="--email=$newUserMail"; fi
+if [[ -n "$newUserMail" ]]; then argEmail="--email=$newUserMail"; fi
 su -s /bin/sh $htuser -c "php $ocpath/occ user:add --password-from-env --display-name=\"$newFullUserName\" --group=\"$newUserGroup\" $argEmail $newUserName" || \
 __msgErreurBox "$ocpath/occ user:add --password-from-env --display-name=$newFullUserName --group=$newUserGroup $argEmail $newUserName" $?
 export -n OC_PASS

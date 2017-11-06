@@ -3,7 +3,6 @@
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
-readonly ocDbName="owncloud"
 readonly ocBackup="oc-backup"
 readonly ocNewVersion="10.0.3"
 # ocpath=/var/www/owncloud
@@ -117,7 +116,7 @@ md5sum -c owncloud-$ocNewVersion.tar.bz2.md5 < owncloud-$ocNewVersion.tar.bz2 ||
 
 wget https://owncloud.org/owncloud.asc
 wget https://download.owncloud.org/community/owncloud-$ocNewVersion.tar.bz2.asc
-gpg --import owncloud.asc &>/dev/null
+gpg --import owncloud.asc > /dev/null 2>&1
 gpg --verify owncloud-$ocNewVersion.tar.bz2.asc || __msgErreurBox "gpg --verify owncloud-$ocNewVersion.tar.bz2.asc" $?
 if [[ $? -eq 0 ]]; then
   echoc v " owncloud download is ok "

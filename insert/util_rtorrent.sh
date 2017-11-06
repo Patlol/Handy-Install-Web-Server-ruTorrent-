@@ -31,7 +31,7 @@ else  # /home
 
       Only ${R}$(( $homeDispo/1024/1024 )) Go${N}, on /home to store downloaded files"
   fi
-# fi
+fi
 
 # Rutorrent user
 usernameOk=0

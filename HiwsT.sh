@@ -333,8 +333,7 @@ sleep 1
 cp -r  ${REPLANCE} $REPUL/HiwsT
 chown -R $userLinux:$userLinux $REPUL/HiwsT
 
-## complète firstusers
-echo $userRuto >> $REPUL/HiwsT/firstusers
+##  droits firstusers
 chown root:root $REPUL/HiwsT/firstusers
 chmod 400 $REPUL/HiwsT/firstusers  # r-- --- ---
 
@@ -375,7 +374,7 @@ $(if [[ $changePort -eq 0 ]]; then   # ssh sécurisé
   echo "On windows use PuTTY"
   echo " "
   echo "To access files via SFTP:"
-  echo -e "\tHost          : $IP (or $HOSTNAME)"
+  echo -e "\tHost          : $IP"
   echo -e "\tPort          : $portSSH"
   echo -e "\tProtocol      : SFTP-SSH File Transfer Peotocol"
   echo -e "\tAuthentication: normal"
@@ -389,7 +388,7 @@ else   # ssh n'est pas sécurisé
   echo "On windows use PuTTY"
   echo " "
   echo "To access files via SFTP:"
-  echo -e "\tHost          : $IP (or $HOSTNAME)"
+  echo -e "\tHost          : $IP"
   echo -e "\tPort          : 22"
   echo -e "\tProtocol      : SFTP-SSH File Transfer Protocol"
   echo -e "\tAuthentication: normal"

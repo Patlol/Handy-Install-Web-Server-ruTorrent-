@@ -74,7 +74,7 @@ sleep 2
 
 ## Modif ownCloud : domaines approuvés
 pathOCC=$(find /var -name occ 2>/dev/null)
-if [[ -n $pathOCC ]]; then
+if [[ -n "$pathOCC" ]]; then
   sed -i "/1 => '"$IP"'/a \2 => '"$domainName"',\n3 => '"$domainName2"', " $ocpath/config/config.php
   echo
   echoc v " Domain name added in owncloud trusted domain array "
