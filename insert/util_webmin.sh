@@ -36,20 +36,27 @@ headTest=$(echo "$headTest" | awk -F" " '{ print $3 }')
 if [[ "$headTest" =~ "Document" ]]; then
   echoc v "                                                     "
   echoc v "                  WebMin works well                  "
-  echoc r "    Accept exception to certificate for this site    "
-  echoc r "         if Let's Encrypt is no installed            "
   echoc v "                                                     "
   echo
-  sleep 1
-  cat << EOF > $REPUL/HiwsT/RecapInstall.txt
+  sleep 2
+  cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
 To access WebMin:
     https://$IP:10000
-    or https://$HOSTNAME:10000
     ID : root  PW : your root password
     Without Let's Encrypt accept the Self Signed Certificate
     and the exception for this certificate!
 EOF
+  __messageBox "WebMin installed" " ${I}WebMin works well${N}
+
+    To access WebMin:
+    https://$IP:10000
+    ID : root  PW : your root password
+
+    Without Let's Encrypt accept the Self Signed Certificate
+    and the exception for this certificate!
+
+    This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
 else
   __msgErreurBox "curl -Is http://$IP:10000 | head -n 1 | awk -F\" \" '{ print $3 }' renvoie '$headTest'" "http $headTest"
 fi

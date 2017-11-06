@@ -217,6 +217,7 @@ if [[ $? -ne 0 ]]; then
   echoc r "       Error creating the owncloud database!!!         "
   echoc r "  You can restart the installation of owncloud later   "
   echoc v "                                                       "
+  rm -r $ocpath
   sleep 4
   exit 1
 else
@@ -334,7 +335,8 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
       __messageBox "Audio-player install" " Successful installation
         Changes to directories owncloud/data/${FIRSTUSER[0]}
         ( and /home/${FIRSTUSER[0]}/downloads if External Storage is enabled )
-        Will be automatically updated in Audio-player (Thanks to iwatch)"
+        Will be automatically updated in Audio-player
+        (Thanks to iwatch)"
     fi
     ## logrotate
     cp $REPLANCE/fichiers-conf/scanOC-rotate /etc/logrotate.d/scanOC-rotate
@@ -443,15 +445,20 @@ __messageBox "${ocVer} install" " Treatment completed.
   Accept the Self Signed Certificate and the exception for this certificate!
 
   ${BO}Note that ${N}${I}${FIRSTUSER[0]}$N${BO} and his password is your account and ownCloud administrator account.
-  The administrator of mysql database owncloud is${N} ${I}$userBdDOC${N} and his password ${I}$pwBdDOC${N}
+  The administrator of mysql database $DbNameOC is${N} ${I}$userBdDOC${N} and his password ${I}$pwBdDOC${N}
+
+  Without Let's Encrypt accept the Self Signed Certificate
+  and the exception for this certificate!
 
   This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
   cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
 To access your private cloud:
-  https://$HOSTNAME/owncloud ou $IP/owncloud
-  User (and administrator): ${FIRSTUSER[0]}
-  Password: $pwFirstuser
-  Administrator of OC database: $userBdDOC
-  Password: $pwBdDOC
+    https://$IP/owncloud
+    User (and administrator): ${FIRSTUSER[0]}
+    Password: $pwFirstuser
+    Administrator of OC database: $userBdDOC
+    Password: $pwBdDOC
+    Without Let's Encrypt accept the Self Signed Certificate
+    and the exception for this certificate!
 EOF

@@ -21,8 +21,22 @@ __phpmyadmin() {
       sleep 3
       cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
-    PhpMyAdmin is installed
+To access phpMyAdmin:
+    https://$IP/phpmyadmin
+    ID : phpmyadmin  PW : the password you entered during installation
+    Without Let's Encrypt accept the Self Signed Certificate
+    and the exception for this certificate!
 EOF
+    __messageBox "phpMyAdmin installed" " ${I}phpMyAdmin works well${N}
+
+      To access phpMyAdmin
+      https://$IP/phpmyadmin
+      ID : phpmyadmin  PW : the password you just entered
+
+      Without Let's Encrypt accept the Self Signed Certificate
+      and the exception for this certificate!
+
+      This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
     else
       __msgErreurBox "curl -Is http://$IP/phpmyadmin | head -n 1 | awk -F\" \" '{ print $2 }' renvoie '$headTest'" "http $headTest"
     fi

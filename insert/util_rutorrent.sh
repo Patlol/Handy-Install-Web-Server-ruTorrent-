@@ -105,27 +105,27 @@ headTest=$(curl -Is http://$IP/rutorrent/ | head -n 1 | awk -F" " '{ print $3 }'
 if [[ "$headTest" =~ "Unauthorized" ]]; then
   echo
   echoc v "                                        "
-  echoc v "      ruTorrent works correctly         "
+  echoc v "        ruTorrent works well            "
   echoc v "                                        "
   sleep 2
 
   echo $userRuto >> $REPUL/HiwsT/firstusers
 
-  __messageBox "Install rTorrent & ruTorrent" "
+  __messageBox "rTorrent & ruTorrent installed" " ${I}ruTorrent works well${N}
     To access ruTorrent:
     http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
-    or http(s)://$HOSTNAME/rutorrent
-    If you not again use Let's Encrypt, with https, accept
-    the Self Signed Certificate and the exception
-    for this certificate!"
-  cat << EOF > $REPUL/HiwsT/RecapInstall.txt
+
+    Without Let's Encrypt accept the Self Signed Certificate
+    and the exception for this certificate!
+
+    This information is added to the file $REPUL/HiwsT/RecapInstall.txt"
+
+  cat << EOF >> $REPUL/HiwsT/RecapInstall.txt
 
 To access ruTorrent:
     http(s)://$IP/rutorrent   ID : $userRuto  PW : $pwRuto
-    or http(s)://$HOSTNAME/rutorrent
-    If you not again use Let's Encrypt, with https, accept
-    the Self Signed Certificate and the exception
-    for this certificate!
+    Without Let's Encrypt accept the Self Signed Certificate
+    and the exception for this certificate!"
 EOF
 else
   __msgErreurBox "curl -Is http://$IP/rutorrent/ | head -n 1 | awk -F\" \" '{ print $3 }' return $headTest" "http $headTest"
