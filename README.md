@@ -25,7 +25,7 @@ With this utility you can
 - Delete user Linux + ruTorrent and its directories
 - Add a firewall (ufw) and basic rules
 - Perform a system status
-- Install - <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> and a first user with
+- Install <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> and a first user with
   - rtorrent daemon multiuser
   - librtorrent, xmlrpc, mediainfo, ffmpeg, plugin onoff ...
 - Add ownCloud ~~10.0.2~~ **10.0.3** (optionally with Audioplayer and External storage)
