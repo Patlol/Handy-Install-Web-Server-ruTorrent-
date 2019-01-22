@@ -106,7 +106,10 @@ if [[ $installCert =~ ^[YyNn]$ ]]; then
     apt-get update
     cmd="apt-get install -yq python-certbot-apache"; $cmd || __msgErreurBox "$cmd" $?
   fi
-  cmd="certbot --apache certonly -d $domainName -d $domainName2"; $cmd || __msgErreurBox "$cmd" $?
+service apache2 stop
+cmd="certbot --authenticator standalone --installer apache -d $domainName -d $domainName2"
+$cmd || __msgErreurBox "$cmd" $?
+service apache2 start
   if [[ $? -ne 0 ]]; then
     __messageBox "Let's Encrypt install" "
       ${BO}There are a issue on cerbot:${N}
