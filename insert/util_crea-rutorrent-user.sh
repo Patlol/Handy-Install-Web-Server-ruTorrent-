@@ -39,6 +39,7 @@ __creaUserRuto () {
 
   let "PORT_SCGI += 1"
   echo $PORT_SCGI > $REPWEB/rutorrent/conf/scgi_port
+  echo $PORT_SCGI; sleep 2
 
   # rtorrent.rc
   cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/${1}/.rtorrent.rc
@@ -79,6 +80,12 @@ __creaUserRuto () {
   echo 'a:2:{s:8:"__hash__";s:11:"plugins.dat";s:11:"linkcakebox";b:0;}' > $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
   chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/plugins.dat
   chown -R www-data:www-data $REPWEB/rutorrent/share/users/${1}
+
+  # modif du thème de rutorrent
+  echo 'O:6:"rTheme":2:{s:4:"hash";s:9:"theme.dat";s:7:"current";s:8:"Oblivion";}' > $REPWEB/rutorrent/share/users/${1}/settings/theme.dat
+  chmod u+rwx,g+rx,o+rx $REPWEB/rutorrent/share/users/${1}
+  chmod 666 $REPWEB/rutorrent/share/users/${1}/settings/theme.dat
+  chown www-data:www-data $REPWEB/rutorrent/share/users/${1}/settings/theme.dat
 
   echoc v " Directory users/${1} created on ruTorrent "; echo
 
