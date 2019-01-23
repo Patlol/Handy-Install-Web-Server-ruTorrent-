@@ -31,7 +31,7 @@ __creaUserRuto () {
 
   #  partie rtorrent __creaUserRuto------------------------------------------------
   # incrémenter le port scgi, écrir le fichier témoin
-  if [ -e $REPWEB/rutorrent/conf/scgi_port ]; then
+  if [[ -e $REPWEB/rutorrent/conf/scgi_port ]]; then
     PORT_SCGI=$(cat $REPWEB/rutorrent/conf/scgi_port)
   else
     PORT_SCGI=5000
@@ -39,7 +39,7 @@ __creaUserRuto () {
 
   let "PORT_SCGI += 1"
   echo $PORT_SCGI > $REPWEB/rutorrent/conf/scgi_port
-  echo $PORT_SCGI; sleep 2
+  echoc v "SCGI port used for this new user: ${PORT_SCGI}"; echo
 
   # rtorrent.rc
   cp $REPLANCE/fichiers-conf/rto_rtorrent.rc /home/${1}/.rtorrent.rc
