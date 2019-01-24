@@ -14,7 +14,7 @@ __creaUserRuto () {
   useradd -m -G sftp -p $pass ${1}
   codeSortie=$?
   if [[ $codeSortie -ne 0 ]]; then
-    __messageBox "Setting-up rutorrent user" "
+    __messageBox "Setting-up Linux user" "
       Unable to create Linux user ${1}
       'useradd' error"
     __msgErreurBox "useradd -m -G sftp -p $pass ${1}" $codeSortie
@@ -30,12 +30,13 @@ __creaUserRuto () {
   echoc v " Directory/subdirectories /home/${1} created "; echo
 
   #  partie rtorrent __creaUserRuto------------------------------------------------
-  # incrémenter le port scgi, écrir le fichier témoin
-  if [[ -e $REPWEB/rutorrent/conf/scgi_port ]]; then
-    PORT_SCGI=$(cat $REPWEB/rutorrent/conf/scgi_port)
-  else
-    PORT_SCGI=5000
-  fi
+  #  incrémenter le port scgi, écrire le fichier témoin
+  #if [[ -e $REPWEB/rutorrent/conf/scgi_port ]]; then
+  PORT_SCGI=$(cat $REPWEB/rutorrent/conf/scgi_port)
+  # else
+  #  touch $REPWEB/rutorrent/conf/scgi_port
+  #  PORT_SCGI=5000
+  # fi
 
   let "PORT_SCGI += 1"
   echo $PORT_SCGI > $REPWEB/rutorrent/conf/scgi_port

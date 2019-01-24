@@ -29,6 +29,10 @@ cp $REPLANCE/fichiers-conf/ruto_config.php $REPWEB/rutorrent/conf/config.php
 chown -R www-data:www-data $REPWEB/rutorrent
 chmod -R 755 $REPWEB/rutorrent
 
+# fichier témoin du dernier port SCGI utilisé
+touch $REPWEB/rutorrent/conf/scgi_port
+echo 5000 > $REPWEB/rutorrent/conf/scgi_port
+
 # modif .htaccess dans /rutorrent  le passwd paramétré dans sites-available
 echo -e 'Options All -Indexes\n<Files .htaccess>\norder allow,deny\ndeny from all\n</Files>' > $REPWEB/rutorrent/.htaccess
 # modif du setup apache

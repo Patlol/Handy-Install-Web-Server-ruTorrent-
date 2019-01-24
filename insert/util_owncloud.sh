@@ -121,7 +121,7 @@ __saisieOCBox "ownCloud setting" "${R}Consult the help${N}" 15   # lignes ss-boi
 echo; echo
 echoc r "                                                                                                 "
 echoc r "                                This may take a while                                            "
-echoc r "  do not worry about the message \"Warning communications lost with UPS\" press the return key.  "
+echoc r "   do not worry about the message \"Warning communications lost with UPS\" press the return key.   "
 echoc r "                                                                                                 "
 wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2  # old owncloud-10.0.2 new owncloud-10.0.3
 wget https://download.owncloud.org/community/owncloud-$ocVersion.tar.bz2.md5
