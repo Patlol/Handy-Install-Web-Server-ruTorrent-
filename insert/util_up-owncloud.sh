@@ -50,7 +50,7 @@ __backupDir() {
   done
 }  # return $__backupDir et $dataBkupOk [yY.]
 
-ocVer=$(sudo -u $htuser $ocpath/occ -V)
+ocVer=$(sudo -u $htuser php $ocpath/occ -V)
 if [[ "$ocVer" == "ownCloud $ocNewVersion" ]]; then
   __messageBox "Owncloud upgrade" "
     Your $ocVer is uptodate!"
@@ -223,7 +223,7 @@ if [[ $? -eq 0 ]]; then
   echoc v " Scan the data files "
   echo
 fi
-ocVer=$(sudo -u $htuser $ocpath/occ -V)
+ocVer=$(sudo -u $htuser php $ocpath/occ -V)
 sleep 3
 
 __messageBox "Owncloud upgrade" " Treatment completed.

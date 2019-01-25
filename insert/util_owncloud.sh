@@ -204,12 +204,11 @@ fi
 
 ################################################################################
 ## création base de données
-__mySqlDebScript   # helper-scripts.sh  RETUN : $userBdD et $pwBdD
+__mySqlDebScript   # in helper-scripts.sh  RETUN : $userBdD et $pwBdD, UID et PW de mysql dans /etc/mysql/debian.cnf
+sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
 if [[ -z $pwBdD ]]; then
-  sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
   echo $sqlCmd | mysql -BN -u $userBdD
 else
-  sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
   echo $sqlCmd | mysql -BN -u $userBdD -p$pwBdD
 fi
 if [[ $? -ne 0 ]]; then
@@ -231,7 +230,7 @@ fi
 ## finalisation de l'installation remplace la GUI
 # maintenance:install [--database DATABASE] [--database-name DATABASE-NAME] [--database-host DATABASE-HOST] [--database-user DATABASE-USER] [--database-pass [DATABASE-PASS]] [--database-table-prefix [DATABASE-TABLE-PREFIX]] [--admin-user ADMIN-USER] [--admin-pass ADMIN-PASS] [--data-dir DATA-DIR]
 chown -R ${htuser}:${htgroup} ${ocpath}/  # autoriser l'exécution de occ et l'accès à www-data
-sudo -u $htuser $ocpath/occ  maintenance:install --database "mysql" --database-name $DbNameOC  --database-user $userBdDOC --database-pass $pwBdDOC --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
+sudo -u $htuser php $ocpath/occ  maintenance:install --database "mysql" --database-name $DbNameOC  --database-user $userBdDOC --database-pass $pwBdDOC --admin-user ${FIRSTUSER[0]} --admin-pass $pwFirstuser --data-dir $ocDataDir
 if [[ $? -ne 0 ]]; then
   echo
   echoc r " Error in owncloud finalizing the installation "
@@ -274,12 +273,12 @@ fi
 ################################################################################
 ## partage du rep downloads de l'utilisateur et install audioplayer
 if [[ $addStorage =~ [yY] ]]; then
-  sudo -u $htuser $ocpath/occ app:enable files_external
-  sudo -u $htuser $ocpath/occ files_external:create Downloads \\OC\\Files\\Storage\\Local null::null
-  sudo -u $htuser $ocpath/occ files_external:config 1 datadir \/home\/${FIRSTUSER[0]}\/downloads
-  sudo -u $htuser $ocpath/occ files_external:option 1 enable_sharing true
-  sudo -u $htuser $ocpath/occ files_external:applicable --add-user=${FIRSTUSER[0]} 1
-  verify=$(sudo -u $htuser $ocpath/occ files_external:verify 1)
+  sudo -u $htuser php $ocpath/occ app:enable files_external
+  sudo -u $htuser php $ocpath/occ files_external:create Downloads \\OC\\Files\\Storage\\Local null::null
+  sudo -u $htuser php $ocpath/occ files_external:config 1 datadir \/home\/${FIRSTUSER[0]}\/downloads
+  sudo -u $htuser php $ocpath/occ files_external:option 1 enable_sharing true
+  sudo -u $htuser php $ocpath/occ files_external:applicable --add-user=${FIRSTUSER[0]} 1
+  verify=$(sudo -u $htuser php $ocpath/occ files_external:verify 1)
   if [[ ! $(grep ok <<< "$verify") ]]; then
     echoc r "                                                "
     echoc r "        Error setting external storage          "
@@ -299,7 +298,7 @@ if [[ $addAudioPlayer =~ [yY] ]]; then
   cmd="unzip $ocpath/apps/audioplayer-2.1.0.zip -d $ocpath/apps"; $cmd || __msgErreurBox "$cmd" $?
   rm $ocpath/apps/audioplayer-2.1.0.zip
   chown -R $htuser:$htgroup $ocpath/apps/audioplayer
-  verify=$(sudo -u $htuser $ocpath/occ app:enable audioplayer)
+  verify=$(sudo -u $htuser php $ocpath/occ app:enable audioplayer)
   if [[ ! $(grep enabled <<< "$verify") ]]; then
     echoc r "                                                "
     echoc r "           Error Audio Player install           "
@@ -428,7 +427,7 @@ rm $REPLANCE/owncloud*.*
 echoc v "                                     "
 echoc v "   Permissions and owners modified   "
 echoc v "                                     "
-ocVer=$(sudo -u $htuser $ocpath/occ -V)
+ocVer=$(sudo -u $htuser php $ocpath/occ -V)
 echoc b "          $ocVer            "
 echoc v "                                     "
 echoc v "       Installation completed        "

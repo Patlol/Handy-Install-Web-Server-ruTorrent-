@@ -112,13 +112,13 @@ if [[ $addStorage =~ [yY] ]]; then
   else
     flagFiles_external="enabled"
   fi
-  id=$(sudo -u $htuser $ocpath/occ files_external:create Local-storage \\OC\\Files\\Storage\\Local null::null)
+  id=$(sudo -u $htuser php $ocpath/occ files_external:create Local-storage \\OC\\Files\\Storage\\Local null::null)
   id=$(expr match "$id" '.*\(.[0-9]\)')  # 1 ou 2 digits
   # ajout de \ a mountDir \/home\/${$newUserL}\/downloads
-  sudo -u $htuser $ocpath/occ files_external:config $id datadir $mountDir
-  sudo -u $htuser $ocpath/occ files_external:option $id enable_sharing true
-  sudo -u $htuser $ocpath/occ files_external:applicable --add-user=${newUserName} $id
-  cmd="sudo -u $htuser $ocpath/occ files_external:verify $id"; $cmd || __msgErreurBox "$cmd" $?
+  sudo -u $htuser php $ocpath/occ files_external:config $id datadir $mountDir
+  sudo -u $htuser php $ocpath/occ files_external:option $id enable_sharing true
+  sudo -u $htuser php $ocpath/occ files_external:applicable --add-user=${newUserName} $id
+  cmd="sudo -u $htuser php $ocpath/occ files_external:verify $id"; $cmd || __msgErreurBox "$cmd" $?
   if [[ $? -eq 0 ]]; then
     echoc v "                                      "
     echoc v "     External storage support ok      "
