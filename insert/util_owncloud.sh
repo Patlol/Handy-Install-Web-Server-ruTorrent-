@@ -4,7 +4,7 @@ readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
 readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
-readonly ocVersion="10.0.3"
+readonly ocVersion="10.0.10"
 ################################################################################
 
 # Vérifie que le mot de passe correspond à celui de /tmp/shadow
@@ -36,7 +36,7 @@ __verifPwd() {
   fi
 }  # fin __verifPwd()
 
-# Saise de toutes les infos pour l'install d'owncloud
+# Saisie de toutes les infos pour l'install d'owncloud
 # ARG : titre, texte, nbr de ligne sous boite
 __saisieOCBox() {
   __helpOC() {

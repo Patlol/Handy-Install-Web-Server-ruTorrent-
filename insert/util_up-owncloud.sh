@@ -4,7 +4,7 @@ readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
 readonly ocBackup="oc-backup"
-readonly ocNewVersion="10.0.3"
+readonly ocNewVersion="10.0.10"
 # ocpath=/var/www/owncloud
 
 # get infos in config.php
