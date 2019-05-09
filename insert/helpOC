@@ -8,14 +8,15 @@ Linux/admin ownCloud user
   This is the main Linux user, AND OwnCloud administrator.
 
 PW Linux user
-  Enter the password of the linux user above. This password
-  is also the password of the ownCloud administrator
+  Can't be modified.
+  This is the main Linux user password. This password is
+  also the password of the ownCloud administrator.
 
 OC Database admin
   15 characters maximum.
   Can be the main Linux user or any other name.
 
-Password OC database admin
+PW OC Database admin:
   15 characters maximum. No space, no \
 
 Max files size
