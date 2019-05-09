@@ -203,9 +203,20 @@ if [[ "${ocDataDir}" != "/var/www/owncloud/data" ]]; then
 fi
 
 ################################################################################
-## création base de données
+# ## création base de données
+# __mySqlDebScript   # in helper-scripts.sh  RETUN : $userBdD et $pwBdD, UID et PW de mysql dans /etc/mysql/debian.cnf
+# sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
+
+## création base de données et utilisateur administrateur de la base de données
 __mySqlDebScript   # in helper-scripts.sh  RETUN : $userBdD et $pwBdD, UID et PW de mysql dans /etc/mysql/debian.cnf
-sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
+sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; use $DbNameOC; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';FLUSH PRIVILEGES;"
+# on root
+# drop database owncloud;
+# show tables;
+# select * from mysql.user;
+# drop user pat;
+# echo "entrer"; read a
+
 if [[ -z $pwBdD ]]; then
   echo $sqlCmd | mysql -BN -u $userBdD
 else
