@@ -192,7 +192,8 @@ service apache2 start
       sed -i 's/# renew_before_expiry = 30 days/renew_before_expiry = 30 days/' /etc/letsencrypt/renewal/$domainName.conf
       cp $REPLANCE/insert/letsencrypt-cron.sh /etc/letsencrypt/letsencrypt-cron.sh
       chmod 755 /etc/letsencrypt/letsencrypt-cron.sh
-      cp $REPLANCE/fichiers-conf/letsencrypt-hiwst
+      # cron for renew cert.
+      cat $REPLANCE/fichiers-conf/letsencrypt-hiwst >> /etc/crontab
       __servicerestart "cron"
       codeSortie1=$?
       cp $REPLANCE/fichiers-conf/letsencrypt-rotate /etc/logrotate.d/letsencrypt-rotate
