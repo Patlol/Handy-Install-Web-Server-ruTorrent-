@@ -5,6 +5,7 @@ readonly htgroup='www-data'
 readonly rootuser='root'
 readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
 readonly ocVersion="10.1.1"
+# ocpath in HiwsT-util.sh = '/var/www/owncloud'
 ################################################################################
 
 # Vérifie que le mot de passe correspond à celui de /tmp/shadow
@@ -137,7 +138,8 @@ mv owncloud "$ocpath"
 if [[ "$nameDistrib" == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
   cmd="apt-get -yq install mariadb-server php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server libzip2 php-pclzip php5-imap"; $cmd || __msgErreurBox "$cmd" $?
 elif [[ "$nameDistrib" == "Debian" ]] && [[ $os_version_M -eq 9 ]]; then
-  cmd="apt-get -yq install default-mysql-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
+  # cmd="apt-get -yq install default-mysql-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
+  cmd="apt-get -yq install mariadb-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
 else  # Ubuntu
   cmd="apt-get -yq install mariadb-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php-imagick php-apcu apcupsd php-redis redis-server libzip4 php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
 fi
@@ -209,7 +211,7 @@ fi
 
 ## création base de données et utilisateur administrateur de la base de données
 __mySqlDebScript   # in helper-scripts.sh  RETUN : $userBdD et $pwBdD, UID et PW de mysql dans /etc/mysql/debian.cnf
-sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; use $DbNameOC; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';FLUSH PRIVILEGES;"
+sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; use $DbNameOC; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC'; FLUSH PRIVILEGES;"
 # on root
 # drop database owncloud;
 # show tables;
