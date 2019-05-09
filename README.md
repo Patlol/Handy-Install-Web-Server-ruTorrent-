@@ -28,10 +28,10 @@ With this utility you can
 - Install <a href="https://github.com/Novik/ruTorrent/">ruTorrent</a> and a first user with
   - rtorrent daemon multiuser
   - librtorrent, xmlrpc, mediainfo, ffmpeg, plugin onoff ...
-- Add ownCloud ~~10.0.2~~ **10.0.3** (optionally with Audioplayer and External storage)
+- Add ownCloud ~~10.0.2~~ ~~10.0.3~~ **10.1.1** (optionally with Audioplayer and External storage)
   - With app external storage (for ruTorrent downloads directory or other)
   - and Audioplayer with automatic scanning of new files (iwatch)
-- Upgrade an installed ownCloud 10.0.2 => 10.0.3, with backup
+- Upgrade an installed ownCloud 10.0.3 => 10.1.1, with backup
 - Install / uninstall a VPN (openVPN)
   - Creates / remove new cetificate user
   - Add the necessary iptables rules for openVpn
