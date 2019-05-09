@@ -4,7 +4,7 @@ readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
 readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
-readonly ocVersion="10.0.10"
+readonly ocVersion="10.1.1"
 ################################################################################
 
 # Vérifie que le mot de passe correspond à celui de /tmp/shadow
