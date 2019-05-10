@@ -1,1 +1,1 @@
- 00 */6 * * * root /etc/letsencrypt/letsencrypt-cron.sh
+ 00 00 * * * /etc/letsencrypt/letsencrypt-cron.sh
