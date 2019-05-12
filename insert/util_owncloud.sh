@@ -221,9 +221,9 @@ sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; use $DbNameOC; 
 # echo "entrer"; read a
 
 if [[ -z $pwBdD ]]; then
-  echo $sqlCmd | mysql -BN -u $userBdD
+  echo "$sqlCmd" | mysql -BN -u $userBdD
 else
-  echo $sqlCmd | mysql -BN -u $userBdD -p$pwBdD
+  echo "$sqlCmd" | mysql -BN -u $userBdD -p$pwBdD
 fi
 if [[ $? -ne 0 ]]; then
   echoc v "                                                       "
