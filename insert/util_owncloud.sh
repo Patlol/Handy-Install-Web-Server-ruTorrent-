@@ -7,34 +7,34 @@ readonly ocVersion="10.1.1"
 # ocpath in HiwsT-util.sh = '/var/www/owncloud'
 ################################################################################
 
-# Vérifie que le mot de passe correspond à celui de /tmp/shadow
+# Vérifie que le mot de passe correspond à celui de /etc/shadow
 # ARG : nom utilisateur (firstuser[0]), mot de passe à vérifier
 # RETURN 0 ok ou 1 nok
-# __verifPwd() {
-#   local userNameInput; local inputPass; local origPass; local algo; local salt
-#   local genPass
-#   userNameInput=$1
-#   inputPass=$2
-#   origPass=$(grep -w "$userNameInput" /etc/shadow | cut -d":" -f2)
-#   algo=$(echo $origPass | cut -d"$" -f2)
-#   salt=$(echo $origPass | cut -d"$" -f3)
-#   if [[ "$algo" == "$salt" ]]; then
-#     # toto02:zzDxrNjXuUs3U:17469:0:99999:7:::   avec crypt() et useradd : création de user
-#     salt="$(expr substr $origPass 1 2)"
-#     genPass="$(perl -e 'print crypt($ARGV[0], $ARGV[1])' $inputPass $salt)"
-#   else
-#     # toto02:$6$rLklwx9K$Brv4lvNjR.S7f8i.Lmt8.iv8pgcbKhwDgINzhT1XwCBbD7XkB98lCtwUK3/4hdylkganoLuh/eIc38PtMArgZ/:17469:0:99999:7:::
-#     # avec echo "${userNameInput}:${newPwd}" | chpasswd    # modif mot de passe
-#     genPass="$(perl -e 'print crypt($ARGV[0],"\$$ARGV[1]\$$ARGV[2]\$")' $inputPass $algo $salt)"
-#   fi
-#   if [ "$genPass" == "$origPass" ]; then
-#      # Valid Password
-#      return 0
-#   else
-#      # Invalid Password
-#      return 1
-#   fi
-# }  # fin __verifPwd()
+__verifPwd() {
+  local userNameInput; local inputPass; local origPass; local algo; local salt
+  local genPass
+  userNameInput=$1
+  inputPass=$2
+  origPass=$(grep -w "$userNameInput" /etc/shadow | cut -d":" -f2)
+  algo=$(echo $origPass | cut -d"$" -f2)
+  salt=$(echo $origPass | cut -d"$" -f3)
+  if [[ "$algo" == "$salt" ]]; then
+    # toto02:zzDxrNjXuUs3U:17469:0:99999:7:::   avec crypt() et useradd : création de user
+    salt="$(expr substr $origPass 1 2)"
+    genPass="$(perl -e 'print crypt($ARGV[0], $ARGV[1])' $inputPass $salt)"
+  else
+    # toto02:$6$rLklwx9K$Brv4lvNjR.S7f8i.Lmt8.iv8pgcbKhwDgINzhT1XwCBbD7XkB98lCtwUK3/4hdylkganoLuh/eIc38PtMArgZ/:17469:0:99999:7:::
+    # avec echo "${userNameInput}:${newPwd}" | chpasswd    # modif mot de passe
+    genPass="$(perl -e 'print crypt($ARGV[0],"\$$ARGV[1]\$$ARGV[2]\$")' $inputPass $algo $salt)"
+  fi
+  if [ "$genPass" == "$origPass" ]; then
+     # Valid Password
+     return 0
+  else
+     # Invalid Password
+     return 1
+  fi
+}  # fin __verifPwd()
 
 # Saisie de toutes les infos pour l'install d'owncloud
 # ARG : titre, texte, nbr de ligne sous boite
@@ -45,12 +45,11 @@ __saisieOCBox() {
 
   ## debut __saisieOCBox()
   local reponse=""; local codeRetour=""; local inputItem=""   # champs ou a été actionné le help-button
-  pwFirstuser=$(grep -w "${FIRSTUSER[0]}" /etc/shadow | cut -d":" -f2)
-  userBdDOC=""; pwBdDOC=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
+  pwFirstuser=""; userBdDOC=""; pwBdDOC=""; fileSize="513M"; addStorage=""; addAudioPlayer=""; ocDataDir="/var/www/owncloud/data"
   until false; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
     # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux/admin ownCloud user:" 1 2 "${FIRSTUSER[0]}" 1 29 -16 0 2 "PW Linux user:" 3 2 "${pwFirstuser}" 3 29 -25 0 1 "OC Database admin:" 5 2 "$userBdDOC" 5 29 16 15 0 "PW OC Database admin:" 7 2 "$pwBdDOC" 7 29 25 25 1 "Max files size:" 9 2 "$fileSize" 9 29 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 29 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 29 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 29 2 1 0)
+    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux/admin ownCloud user:" 1 2 "${FIRSTUSER[0]}" 1 29 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 29 25 25 1 "OC Database admin:" 5 2 "$userBdDOC" 5 29 16 15 0 "PW OC Database admin:" 7 2 "$pwBdDOC" 7 29 25 25 1 "Max files size:" 9 2 "$fileSize" 9 29 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 29 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 29 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 29 2 1 0)
     reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
     codeRetour=$?
 
@@ -60,30 +59,30 @@ __saisieOCBox() {
       # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
       # format de $reponse : HELP PW Linux user:\qsdf\ddddd\...
       inputItem=$(echo "$reponse" | awk -F"\\" '{ print $1 }' | cut -d \  -f 2-) # pour placer le curseur
-      # pwFirstuser=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
+      pwFirstuser=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
+      userBdDOC=$(echo "$reponse" | awk -F"\\" '{ print $3 }')
+      pwBdDOC=$(echo "$reponse" | awk -F"\\" '{ print $4 }')
+      fileSize=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
+      ocDataDir=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
+      addStorage=$(echo "$reponse" | awk -F"\\" '{ print $7 }')
+      addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $8 }')
+    else
+      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
+      # format de "$reponse" : zesfg\zf\azdzad\....
+      pwFirstuser=$(echo "$reponse" | awk -F"\\" '{ print $1 }')
       userBdDOC=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
       pwBdDOC=$(echo "$reponse" | awk -F"\\" '{ print $3 }')
       fileSize=$(echo "$reponse" | awk -F"\\" '{ print $4 }')
       ocDataDir=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
       addStorage=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
       addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $7 }')
-    else
-      # FIRSTUSER[0] n'est pas dans reponse, n'étant pas modifiable (-16)
-      # format de "$reponse" : zesfg\zf\azdzad\....
-      # pwFirstuser=$(echo "$reponse" | awk -F"\\" '{ print $1 }')
-      userBdDOC=$(echo "$reponse" | awk -F"\\" '{ print $1 }')
-      pwBdDOC=$(echo "$reponse" | awk -F"\\" '{ print $2 }')
-      fileSize=$(echo "$reponse" | awk -F"\\" '{ print $3 }')
-      ocDataDir=$(echo "$reponse" | awk -F"\\" '{ print $4 }')
-      addStorage=$(echo "$reponse" | awk -F"\\" '{ print $5 }')
-      addAudioPlayer=$(echo "$reponse" | awk -F"\\" '{ print $6 }')
       # vide le champs incriminé et place le curseur si erreur
-      # __verifPwd ${FIRSTUSER[0]} $pwFirstuser
-      # if  [[ $? -ne 0 ]] || [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ -z $pwFirstuser ]]; then
-      #   __helpOC
-      #   pwFirstuser=""
-      #   inputItem="PW Linux user:"
-      if [[ $userBdDOC =~ [[:space:]\\] ]] || [[ -z $userBdDOC ]]; then
+      __verifPwd ${FIRSTUSER[0]} $pwFirstuser
+      if  [[ $? -ne 0 ]] || [[ $pwFirstuser =~ [[:space:]\\] ]] || [[ -z $pwFirstuser ]]; then
+        __helpOC
+        pwFirstuser=""
+        inputItem="PW Linux user:"
+      elif [[ $userBdDOC =~ [[:space:]\\] ]] || [[ -z $userBdDOC ]]; then
         __helpOC
         userBdDOC=""
         inputItem="OC Database admin:"
