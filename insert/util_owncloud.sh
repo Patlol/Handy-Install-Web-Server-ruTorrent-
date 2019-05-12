@@ -3,7 +3,6 @@ clear
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
-readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
 readonly ocVersion="10.1.1"
 # ocpath in HiwsT-util.sh = '/var/www/owncloud'
 ################################################################################
@@ -198,6 +197,7 @@ if [[ $? -ne 0 ]]; then
 fi
 ################################################################################
 ## si $ocDataDir modifié le créer et lui donner le bon proprio
+readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
 if [[ "${ocDataDir}" != "/var/www/owncloud/data" ]]; then
   mkdir -p ${ocDataDir}
   cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDirRoot}/.htaccess
