@@ -3,11 +3,11 @@ clear
 readonly htuser='www-data'
 readonly htgroup='www-data'
 readonly rootuser='root'
-readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
-readonly ocVersion="10.0.10"
+readonly ocVersion="10.1.1"
+# ocpath in HiwsT-util.sh = '/var/www/owncloud'
 ################################################################################
 
-# Vérifie que le mot de passe correspond à celui de /tmp/shadow
+# Vérifie que le mot de passe correspond à celui de /etc/shadow
 # ARG : nom utilisateur (firstuser[0]), mot de passe à vérifier
 # RETURN 0 ok ou 1 nok
 __verifPwd() {
@@ -49,7 +49,7 @@ __saisieOCBox() {
   until false; do
     # --help-status donne les champs déjà saisis dans $reponse en plus du tag HELP "HELP nom du champs\sasie1\saide2\\saise4\"
     # --default-item "nom du champs" place le curseur sur le champs ou à été pressé le bouton help
-    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux/admin ownCloud user:" 1 2 "${FIRSTUSER[0]}" 1 29 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 29 25 25 1 "OC Database admin:" 5 2 "$userBdDOC" 5 29 16 15 0 "Password database admin:" 7 2 "$pwBdDOC" 7 29 25 25 1 "Max files size:" 9 2 "$fileSize" 9 29 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 29 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 29 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 29 2 1 0)
+    CMD=(dialog --aspect $RATIO --colors --backtitle "$TITRE" --title "${1}" --nocancel --help-button --default-item "$inputItem" --help-status --separator "\\" --insecure --trim --cr-wrap --mixedform "${2}" 0 0 ${3} "Linux/admin ownCloud user:" 1 2 "${FIRSTUSER[0]}" 1 29 -16 0 2 "PW Linux user:" 3 2 "$pwFirstuser" 3 29 25 25 1 "OC Database admin:" 5 2 "$userBdDOC" 5 29 16 15 0 "PW OC Database admin:" 7 2 "$pwBdDOC" 7 29 25 25 1 "Max files size:" 9 2 "$fileSize" 9 29 6 5 0 "Data directory location:" 11 2 "$ocDataDir" 11 29 25 35 0 "External storage [Y/N]:" 13 2 "$addStorage" 13 29 2 1 0 "AudioPlayer [Y/N]:" 15 2 "$addAudioPlayer" 15 29 2 1 0)
     reponse=$("${CMD[@]}" 2>&1 > /dev/tty)
     codeRetour=$?
 
@@ -89,7 +89,7 @@ __saisieOCBox() {
       elif [[ $pwBdDOC =~ [[:space:]\\] ]] || [[ -z $pwBdDOC ]]; then
         __helpOC
         pwBdDOC=""
-        inputItem="Password database admin:"
+        inputItem="PW OC Database admin:"
       elif [[ ! $fileSize =~ ^[1-9][0-9]{0,3}[GM]$ ]]; then
         __helpOC
         fileSize="513M"
@@ -137,7 +137,8 @@ mv owncloud "$ocpath"
 if [[ "$nameDistrib" == "Debian" ]] && [[ $os_version_M -eq 8 ]]; then
   cmd="apt-get -yq install mariadb-server php5-gd php5-mysql php5-intl imagemagick-6.defaultquantum php5-imagick php5-apcu apcupsd php5-redis redis-server libzip2 php-pclzip php5-imap"; $cmd || __msgErreurBox "$cmd" $?
 elif [[ "$nameDistrib" == "Debian" ]] && [[ $os_version_M -eq 9 ]]; then
-  cmd="apt-get -yq install default-mysql-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
+  # cmd="apt-get -yq install default-mysql-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
+  cmd="apt-get -yq install mariadb-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php7.0-imagick php-apcu apcupsd php-redis redis-server libzip4  php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
 else  # Ubuntu
   cmd="apt-get -yq install mariadb-server php7.0-mbstring php7.0-xml php7.0-gd php7.0-mysql php7.0-intl php-imagick php-apcu apcupsd php-redis redis-server libzip4 php7.0-zip php7.0-imap"; $cmd || __msgErreurBox "$cmd" $?
 fi
@@ -195,6 +196,7 @@ if [[ $? -ne 0 ]]; then
 fi
 ################################################################################
 ## si $ocDataDir modifié le créer et lui donner le bon proprio
+readonly ocDataDirRoot=$(sed 's/\/data\/*$//' <<< "$ocDataDir")
 if [[ "${ocDataDir}" != "/var/www/owncloud/data" ]]; then
   mkdir -p ${ocDataDir}
   cp $REPLANCE/fichiers-conf/ocdata-htaccess ${ocDataDirRoot}/.htaccess
@@ -203,13 +205,24 @@ if [[ "${ocDataDir}" != "/var/www/owncloud/data" ]]; then
 fi
 
 ################################################################################
-## création base de données
+# ## création base de données
+# __mySqlDebScript   # in helper-scripts.sh  RETUN : $userBdD et $pwBdD, UID et PW de mysql dans /etc/mysql/debian.cnf
+# sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
+
+## création base de données et utilisateur administrateur de la base de données
 __mySqlDebScript   # in helper-scripts.sh  RETUN : $userBdD et $pwBdD, UID et PW de mysql dans /etc/mysql/debian.cnf
-sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC';"
+sqlCmd="CREATE DATABASE IF NOT EXISTS $DbNameOC; show databases; use $DbNameOC; GRANT ALL PRIVILEGES ON $DbNameOC.* TO '$userBdDOC'@'localhost' IDENTIFIED BY '$pwBdDOC'; FLUSH PRIVILEGES;"
+# on root
+# drop database owncloud;
+# show tables;
+# select * from mysql.user;
+# drop user pat;
+# echo "entrer"; read a
+
 if [[ -z $pwBdD ]]; then
-  echo $sqlCmd | mysql -BN -u $userBdD
+  echo "$sqlCmd" | mysql -BN -u $userBdD
 else
-  echo $sqlCmd | mysql -BN -u $userBdD -p$pwBdD
+  echo "$sqlCmd" | mysql -BN -u $userBdD -p$pwBdD
 fi
 if [[ $? -ne 0 ]]; then
   echoc v "                                                       "

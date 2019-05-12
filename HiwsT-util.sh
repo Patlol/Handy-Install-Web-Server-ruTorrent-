@@ -514,7 +514,7 @@ os_version=$(lsb_release -sr)   # 18 , 8.041 ...
 os_version_M=$(echo "$os_version" | awk -F"." '{ print $1 }' | awk -F"," '{ print $1 }')  # version majeur 18, 8 ...
 if [[ "$nameDistrib" == "Ubuntu" ]] || [[ "$nameDistrib" == "Debian" && $os_version_M -eq 9 ]]; then
   readonly PHPVER="php7.0-fpm"
-else
+else # debian 8
   readonly PHPVER="php5-fpm"
 fi
 

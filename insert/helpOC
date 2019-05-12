@@ -3,7 +3,7 @@ PAGE UP/DOWN to navigate
 None of the 7 entries should contain \ or space.
 The 7 fields are mandatory.
 
-Linux user
+Linux/admin ownCloud user
   Can't be modified.
   This is the main Linux user, AND OwnCloud administrator.
 
@@ -15,7 +15,7 @@ OC Database admin
   15 characters maximum.
   Can be the main Linux user or any other name.
 
-Password OC database admin
+PW OC Database admin:
   15 characters maximum. No space, no \
 
 Max files size
